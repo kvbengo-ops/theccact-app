@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PrivacyPage from '../components/PrivacyPage.astro';
+import { PRIVACY_PAGE } from '../content/pages.mjs';
+---
+
+<BaseLayout
+  title={PRIVACY_PAGE.title}
+  description={PRIVACY_PAGE.description}
+  activePage="privacy"
+  partner={null}
+>
+  <PrivacyPage />
+</BaseLayout>

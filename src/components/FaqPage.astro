@@ -1,0 +1,158 @@
+---
+import { FAQ_PAGE } from '../content/pages.mjs';
+import PageHero from './PageHero.astro';
+---
+
+<PageHero
+  eyebrow={FAQ_PAGE.hero.eyebrow}
+  title={FAQ_PAGE.hero.title}
+  lead={FAQ_PAGE.hero.lead}
+/>
+
+<nav class="band band--compact band--sand" aria-label="FAQ categories">
+  <div class="container faq-nav">
+    {FAQ_PAGE.sections.map((section) => (
+      <a href={`#${section.id}`} class="faq-chip">
+        {section.label}
+      </a>
+    ))}
+  </div>
+</nav>
+
+<section class="band band--white faq-intro-band" aria-label="Course audience overview">
+  <div class="container narrow-container">
+    <div class="callout-box callout-box--cream">
+      {FAQ_PAGE.introNotice}
+    </div>
+  </div>
+</section>
+
+{FAQ_PAGE.sections.map((section, index) => (
+  <section
+    id={section.id}
+    class:list={['band', index % 2 === 0 ? 'band--white' : 'band--cream']}
+    aria-labelledby={`faq-sec-${section.id}`}
+  >
+    <div class="container narrow-container">
+      <h2 id={`faq-sec-${section.id}`} class="section-heading faq-section-title">
+        {section.title}
+      </h2>
+
+      <div class="faq-list">
+        {section.items.map((item) => (
+          <details class="faq-item">
+            <summary class="faq-item__summary">{item.q}</summary>
+            <div class="faq-item__answer">
+              <p>{item.a}</p>
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+))}
+
+<section class="band band--sand" aria-label="Important enrolment notice">
+  <div class="container narrow-container">
+    <div class="callout-box">
+      {FAQ_PAGE.enrollmentNotice}
+    </div>
+  </div>
+</section>
+
+<style>
+  .narrow-container {
+    max-width: 860px;
+  }
+
+  .faq-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .faq-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 8px 14px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--color-navy);
+    text-decoration: none;
+  }
+
+  .faq-chip:hover {
+    border-color: var(--color-gold);
+    background: var(--color-cream);
+  }
+
+  .faq-intro-band {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .callout-box--cream {
+    background: var(--color-cream);
+  }
+
+  .faq-section-title {
+    margin-bottom: 24px;
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .faq-item {
+    border: 1px solid var(--color-border);
+    background: var(--color-white);
+  }
+
+  .faq-item__summary {
+    padding: 18px 22px;
+    font-weight: 600;
+    font-size: 15.5px;
+    color: var(--color-navy);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .faq-item__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-item__summary::after {
+    content: '+';
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--color-gold-dark);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .faq-item[open] .faq-item__summary::after {
+    content: '−';
+  }
+
+  .faq-item__answer {
+    padding: 0 22px 18px;
+    border-top: 1px solid var(--color-border);
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--color-text-muted);
+  }
+
+  .faq-item__answer p {
+    margin: 14px 0 0;
+  }
+</style>

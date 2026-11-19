@@ -1,0 +1,155 @@
+---
+// Partner home: a short "meet your partner" band. Same template for every partner; only content differs.
+import { getPartnerInitials } from '../content/site.mjs';
+import { pageUrl } from '../lib/links.mjs';
+import Icon from './Icon.astro';
+
+interface Props {
+  partner: { slug: string; name: string; type?: string; role?: string; location?: string; bio?: string; image?: string; website?: string; contactName?: string };
+}
+
+const { partner } = Astro.props;
+const isOrg = partner.type === 'organisation';
+const firstPara = String(partner.bio ?? '').split(/\r?\n\s*\r?\n/)[0].trim();
+// ponytail: plain character cut at a word boundary; fine for short bios.
+const excerpt = firstPara.length > 220 ? `${firstPara.slice(0, 220).replace(/\s+\S*$/, '')}…` : firstPara;
+---
+
+<section class="partner-intro" aria-labelledby="partner-intro-heading">
+  <div class="container partner-intro__inner">
+    <span class:list={['partner-intro__avatar', isOrg && 'partner-intro__avatar--org']} aria-hidden="true">
+      {partner.image ? <img src={partner.image} alt="" width="112" height="112" loading="lazy" decoding="async" /> : getPartnerInitials(partner.name)}
+    </span>
+    <div class="partner-intro__copy">
+      <p class="section-eyebrow">{isOrg ? 'Official partner organisation' : 'Your CCACT partner'}</p>
+      <h2 id="partner-intro-heading" class="partner-intro__name">{partner.name}</h2>
+      <p class="partner-intro__meta">
+        {partner.role && <span><Icon name={isOrg ? 'building' : 'user'} />{partner.role}</span>}
+        {partner.location && <span><Icon name="pin" />{partner.location}</span>}
+        {isOrg && partner.contactName && <span><Icon name="user" />Contact: {partner.contactName}</span>}
+      </p>
+      {excerpt && <p class="partner-intro__bio">{excerpt}</p>}
+    </div>
+    <div class="partner-intro__actions">
+      <a href={pageUrl('about-partner', partner)} class="btn btn--gold">{isOrg ? 'About this organisation' : 'Read full profile'}</a>
+      {isOrg && partner.website?.startsWith('https://')
+        ? <a href={partner.website} target="_blank" rel="noopener noreferrer" class="btn btn--outline-navy">Visit website<span class="sr-only"> (opens in a new tab)</span></a>
+        : <a href={pageUrl('contact', partner)} class="btn btn--outline-navy">Contact via CCACT</a>}
+    </div>
+  </div>
+</section>
+
+<style>
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+
+  .partner-intro {
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .partner-intro__inner {
+    padding-block: 40px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px 36px;
+  }
+
+  .partner-intro__avatar {
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: var(--color-navy);
+    color: var(--color-gold-light);
+    font-family: var(--font-serif);
+    font-size: 40px;
+    font-weight: 700;
+    box-shadow: 0 0 0 4px var(--color-white), 0 0 0 5px var(--color-gold);
+  }
+
+  .partner-intro__avatar--org {
+    border-radius: 18px;
+  }
+
+  .partner-intro__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .partner-intro__name {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--color-navy);
+  }
+
+  .partner-intro__meta {
+    margin: 8px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-size: 15px;
+    color: var(--color-text-muted);
+  }
+
+  .partner-intro__meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .partner-intro__meta :global(svg) {
+    width: 16px;
+    height: 16px;
+    color: var(--color-gold-dark);
+  }
+
+  .partner-intro__bio {
+    margin: 12px 0 0;
+    max-width: 62ch;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-text);
+  }
+
+  .partner-intro__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  @media (max-width: 960px) {
+    .partner-intro__inner {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .partner-intro__actions {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .partner-intro__inner {
+      grid-template-columns: 1fr;
+      padding-block: 32px;
+    }
+
+    .partner-intro__avatar {
+      width: 88px;
+      height: 88px;
+      font-size: 32px;
+    }
+
+    .partner-intro__actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+</style>

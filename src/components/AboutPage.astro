@@ -1,0 +1,244 @@
+---
+import { ABOUT_PAGE } from '../content/pages.mjs';
+import { pageUrl } from '../lib/links.mjs';
+import PageHero from './PageHero.astro';
+
+interface Props {
+  partner?: { slug: string; name: string } | null;
+}
+
+const { partner = null } = Astro.props;
+const coursesHref = pageUrl('courses', partner);
+const contactHref = pageUrl('contact', partner);
+---
+
+<PageHero
+  eyebrow={ABOUT_PAGE.hero.eyebrow}
+  title={ABOUT_PAGE.hero.title}
+  lead={ABOUT_PAGE.hero.lead}
+/>
+
+<section class="band band--white" aria-labelledby="about-mission-heading">
+  <div class="container split-grid">
+    <div>
+      <h2 id="about-mission-heading" class="section-heading">
+        {ABOUT_PAGE.missionHeading}
+      </h2>
+      <blockquote class="mission-quote">{ABOUT_PAGE.missionQuote}</blockquote>
+      <div class="prose-stack">
+        {ABOUT_PAGE.missionParagraphs.map((paragraph) => (
+          <p>{paragraph}</p>
+        ))}
+      </div>
+    </div>
+
+    <div class="pillar-stack">
+      {ABOUT_PAGE.pillars.map((pillar) => (
+        <article class="editorial-card editorial-card--cream">
+          <h3 class="pillar-title">{pillar.title}</h3>
+          <p class="pillar-body">{pillar.body}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section class="band band--sand" aria-labelledby="college-message-heading">
+  <div class="container narrow-container">
+    <h2 id="college-message-heading" class="section-heading">
+      {ABOUT_PAGE.collegeMessage.heading}
+    </h2>
+    <div class="editorial-card message-card">
+      {ABOUT_PAGE.collegeMessage.paragraphs.map((paragraph) => (
+        <p>{paragraph}</p>
+      ))}
+      <p class="message-signoff">{ABOUT_PAGE.collegeMessage.signoff}</p>
+    </div>
+  </div>
+</section>
+
+<section class="band band--white" aria-labelledby="directors-heading">
+  <div class="container">
+    <div class="section-intro">
+      <h2 id="directors-heading" class="section-heading">
+        {ABOUT_PAGE.directorsSection.heading}
+      </h2>
+      <p class="section-lead">{ABOUT_PAGE.directorsSection.lead}</p>
+    </div>
+
+    <div class="editorial-grid-2 directors-grid">
+      {ABOUT_PAGE.directorsSection.members.map((director) => (
+        <article class="editorial-card editorial-card--cream director-card">
+          <div class="director-card__header">
+            <img
+              src={director.photo}
+              alt={`${director.name}, ${director.role}`}
+              width={director.width}
+              height={director.height}
+              class="director-card__photo"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="director-card__meta">
+              <h3 class="director-card__name">{director.name}</h3>
+              <p class="director-card__role">{director.role}</p>
+            </div>
+          </div>
+          <p class="director-card__bio">{director.bio}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section class="band band--navy" aria-labelledby="about-cta-heading">
+  <div class="container cta-row">
+    <div>
+      <h2 id="about-cta-heading" class="section-heading section-heading--light">
+        {ABOUT_PAGE.cta.heading}
+      </h2>
+      <p class="cta-lead">{ABOUT_PAGE.cta.lead}</p>
+    </div>
+    <div class="cta-actions">
+      <a href={coursesHref} class="btn btn--gold">{ABOUT_PAGE.cta.primaryLabel}</a>
+      <a href={contactHref} class="btn btn--outline-light">{ABOUT_PAGE.cta.secondaryLabel}</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .mission-quote {
+    margin: 20px 0 24px;
+    padding-left: 20px;
+    border-left: 3px solid var(--color-gold);
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--color-navy);
+  }
+
+  .prose-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: var(--color-text-muted);
+  }
+
+  .prose-stack p {
+    margin: 0;
+  }
+
+  .pillar-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pillar-title {
+    margin: 0 0 8px;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    color: var(--color-navy);
+  }
+
+  .pillar-body {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+  }
+
+  .narrow-container {
+    max-width: 860px;
+  }
+
+  .message-card {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-size: 15.5px;
+    line-height: 1.68;
+    color: var(--color-text);
+  }
+
+  .message-card p {
+    margin: 0;
+  }
+
+  .message-signoff {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 600;
+    color: var(--color-navy);
+    margin-top: 6px;
+  }
+
+  .section-intro {
+    margin-bottom: 32px;
+  }
+
+  .director-card {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .director-card__header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .director-card__photo {
+    width: 80px;
+    height: 90px;
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+
+  .director-card__name {
+    margin: 0 0 4px;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    color: var(--color-navy);
+  }
+
+  .director-card__role {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-gold-dark);
+  }
+
+  .director-card__bio {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.62;
+    color: var(--color-text-muted);
+  }
+
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .cta-lead {
+    margin: 0;
+    color: var(--color-on-dark);
+    font-size: 15.5px;
+  }
+
+  .cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+</style>

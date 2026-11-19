@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HomePage from '../components/HomePage.astro';
+import { BRAND } from '../content/site.mjs';
+---
+
+<BaseLayout
+  title={`${BRAND.shortName} — Study in Canada from Anywhere in the World`}
+  description="Over 50 online continuing education courses for internationally educated nurses and healthcare professionals."
+  activePage=""
+  partner={null}
+>
+  <HomePage partner={null} />
+</BaseLayout>

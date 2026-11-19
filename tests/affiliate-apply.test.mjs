@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { submitApplication } from '../src/scripts/affiliate-apply.mjs';
+
+test('submits only a valid application for the signed-in user', async () => {
+  let submitted;
+  const client = { from: table => ({ insert: async row => { assert.equal(table, 'affiliate_applications'); submitted = row; return { error: null }; } }) };
+  await submitApplication(client, { id: 'user-1' }, { name: '  Ada  ', location: ' Toronto ' });
+  assert.deepEqual(submitted, { user_id: 'user-1', name: 'Ada', location: 'Toronto', role: null, introduction: null });
+  await assert.rejects(submitApplication(client, null, { name: 'Ada' }), /sign in/);
+  await assert.rejects(submitApplication(client, { id: 'user-1' }, { name: ' ' }), /valid name/);
+  await assert.rejects(submitApplication(client, { id: 'user-1' }, { name: 'Ada', introduction: 'x'.repeat(2001) }), /length/);
+});
+
+test('reports duplicate and failed submissions without exposing server errors', async () => {
+  const client = code => ({ from: () => ({ insert: async () => ({ error: { code, message: 'private detail' } }) }) });
+  await assert.rejects(submitApplication(client('23505'), { id: '1' }, { name: 'Ada' }), /already submitted/);
+  await assert.rejects(submitApplication(client('other'), { id: '1' }, { name: 'Ada' }), /could not be submitted/);
+});
+
+test('organisation applications need a contact and a secure website; extras are sent only when filled', async () => {
+  let submitted;
+  const client = { from: () => ({ insert: async row => { submitted = row; return { error: null }; } }) };
+  await submitApplication(client, { id: 'u' }, { name: 'ACME Care', type: 'organisation', contact_name: ' Lee ', website: 'https://acme.example', languages: '' });
+  assert.deepEqual(submitted, { user_id: 'u', name: 'ACME Care', location: null, role: null, introduction: null, type: 'organisation', contact_name: 'Lee', website: 'https://acme.example' });
+  await assert.rejects(submitApplication(client, { id: 'u' }, { name: 'ACME', type: 'organisation' }), /contact person/);
+  await assert.rejects(submitApplication(client, { id: 'u' }, { name: 'ACME', type: 'organisation', contact_name: 'Lee', website: 'http://acme.example' }), /https/);
+  await assert.rejects(submitApplication(client, { id: 'u' }, { name: 'Ada', type: 'robot' }), /individual or organisation/);
+  await submitApplication(client, { id: 'u' }, { name: 'Ada', type: 'individual', languages: 'English, Tagalog' });
+  assert.equal(submitted.languages, 'English, Tagalog');
+  assert.equal(submitted.type, 'individual');
+});

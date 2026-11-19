@@ -1,0 +1,372 @@
+---
+import { AFFILIATES_PAGE } from '../content/pages.mjs';
+import { BRAND } from '../content/site.mjs';
+import PageHero from './PageHero.astro';
+import { ICONS as icons } from '../lib/icons.mjs';
+
+const applyHref = '/affiliate-apply/';
+
+// ponytail: steps are static copy derived from the program description; move to pages.mjs if CCACT edits them.
+const steps = [
+  { icon: 'file', title: 'Apply', body: 'Tell us about yourself or your organisation. It takes a few minutes.' },
+  { icon: 'shield', title: 'CCACT reviews', body: 'We check your details before anything is published.' },
+  { icon: 'link', title: 'Share CCACT', body: 'Get your partner site and Teachable referral link to share with learners.' },
+];
+
+const trackIcons: Record<string, string> = {
+  'apply-individual': 'user',
+  'apply-organisation': 'building',
+};
+---
+
+<PageHero
+  eyebrow={AFFILIATES_PAGE.hero.eyebrow}
+  title={AFFILIATES_PAGE.hero.title}
+  lead={AFFILIATES_PAGE.hero.lead}
+>
+  <div class="page-hero__actions">
+    <a href={applyHref} class="btn btn--gold">Apply now</a>
+    <a href="#how-it-works" class="btn btn--outline-light">How it works</a>
+  </div>
+</PageHero>
+
+<section id="how-it-works" class="band band--white" aria-labelledby="how-heading">
+  <div class="container">
+    <p class="section-eyebrow">How it works</p>
+    <h2 id="how-heading" class="section-heading">Three simple steps</h2>
+
+    <ol class="steps">
+      {steps.map((step, i) => (
+        <li class="step">
+          <div class="step__head" aria-hidden="true">
+            <span class="badge badge--circle">
+              <svg viewBox="0 0 24 24" set:html={icons[step.icon]} />
+            </span>
+            <span class="step__num">{String(i + 1).padStart(2, '0')}</span>
+          </div>
+          <h3 class="step__title">{step.title}</h3>
+          <p class="step__body">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<section class="band band--cream" aria-labelledby="who-heading">
+  <div class="container">
+    <p class="section-eyebrow">Who can apply</p>
+    <h2 id="who-heading" class="section-heading">Two ways to partner</h2>
+
+    <div class="tracks">
+      {AFFILIATES_PAGE.tracks.map((track) => (
+        <article id={track.id} class="track">
+          <span
+            class:list={['badge badge--lg', track.id === 'apply-individual' ? 'badge--circle' : 'badge--square']}
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24" set:html={icons[trackIcons[track.id]]} />
+          </span>
+          <h3 class="track__title">{track.heading}</h3>
+          <p class="track__audience">{track.audience}</p>
+          <p class="track__summary">{track.summary}</p>
+          <p class="track__label">What you get</p>
+          <ul class="track__list">
+            {track.gets.map((item) => (
+              <li>
+                <svg class="check" viewBox="0 0 24 24" aria-hidden="true" set:html={icons.check} />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+          <a
+            href={track.id === 'apply-organisation' ? '/affiliate-apply/organisation/' : '/affiliate-apply/individual/'}
+            class="btn btn--gold track__cta"
+          >
+            {track.id === 'apply-organisation' ? 'Apply as an organisation' : 'Apply as an individual'}
+          </a>
+        </article>
+      ))}
+    </div>
+
+    <div class="apply-row">
+      <p class="apply-row__text">Each type has its own short application.</p>
+      <a href={applyHref} class="btn btn--outline-navy">Not sure? Compare options</a>
+    </div>
+  </div>
+</section>
+
+<section class="band band--sand" aria-labelledby="affiliates-terms-heading">
+  <div class="container terms">
+    <h2 id="affiliates-terms-heading" class="terms__heading">
+      {AFFILIATES_PAGE.pendingDisclosureHeading}
+    </h2>
+    <p class="terms__body">{AFFILIATES_PAGE.pendingDisclosureBody}</p>
+    <p class="terms__contact">
+      Questions? <a href={`mailto:${BRAND.contactEmail}`}>{BRAND.contactEmail}</a> ·
+      <a href={BRAND.mainDirectoryHref}>View approved partners</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .steps {
+    margin: 32px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .step {
+    padding: 4px 32px 4px 0;
+    border-top: 3px solid var(--color-gold);
+    padding-top: 20px;
+    margin-right: 32px;
+  }
+
+  .step:last-child {
+    margin-right: 0;
+  }
+
+  .step__num {
+    display: block;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--color-gold-dark);
+    font-size-adjust: 0.44;
+  }
+
+  .step__title {
+    margin: 12px 0 6px;
+    font-family: var(--font-serif);
+    font-size: 26px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  .step__body {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    max-width: 32ch;
+  }
+
+  .tracks {
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .track {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    padding: 30px 30px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .track__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 30px;
+    line-height: 1.1;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  .track__audience {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-gold-dark);
+  }
+
+  .track__summary {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+  }
+
+  .track__label {
+    margin: 10px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-navy);
+  }
+
+  .track__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .track__list li {
+    display: flex;
+    gap: 12px;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--color-text);
+  }
+
+  .check {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: var(--color-gold-dark);
+    stroke-width: 2.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Profile-style badges: circle = a person, rounded square = an organisation. */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--color-sand);
+    border: 1px solid var(--color-divider);
+    color: var(--color-navy);
+    flex-shrink: 0;
+  }
+
+  .badge svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .badge--circle {
+    border-radius: 50%;
+  }
+
+  .badge--square {
+    border-radius: 12px;
+  }
+
+  .badge--lg {
+    width: 64px;
+    height: 64px;
+    background: var(--color-navy);
+    border-color: var(--color-navy);
+    color: var(--color-gold-light);
+  }
+
+  .badge--lg svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .step__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .track__cta {
+    margin-top: auto;
+    align-self: flex-start;
+  }
+
+  .track__list {
+    margin-bottom: 12px;
+  }
+
+  .apply-row {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
+    padding: 22px 26px;
+    background: var(--color-sand);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-gold);
+  }
+
+  .apply-row__text {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-navy);
+    font-size-adjust: 0.44;
+  }
+
+  .terms {
+    max-width: 860px;
+  }
+
+  .terms__heading {
+    margin: 0 0 8px;
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  .terms__body {
+    margin: 0 0 12px;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--color-text-muted);
+  }
+
+  .terms__contact {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  @media (max-width: 960px) {
+    .steps {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .step {
+      margin-right: 0;
+      padding-right: 0;
+    }
+
+    .tracks {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .track {
+      padding: 24px 20px 22px;
+    }
+
+    .apply-row .btn {
+      width: 100%;
+    }
+  }
+</style>

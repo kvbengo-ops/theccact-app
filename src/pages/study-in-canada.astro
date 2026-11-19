@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StudyInCanadaPage from '../components/StudyInCanadaPage.astro';
+import { STUDY_IN_CANADA_PAGE } from '../content/pages.mjs';
+---
+
+<BaseLayout
+  title={STUDY_IN_CANADA_PAGE.title}
+  description={STUDY_IN_CANADA_PAGE.description}
+  activePage="study-in-canada"
+  partner={null}
+>
+  <StudyInCanadaPage />
+</BaseLayout>

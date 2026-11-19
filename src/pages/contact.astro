@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactPage from '../components/ContactPage.astro';
+import { CONTACT_PAGE } from '../content/pages.mjs';
+---
+
+<BaseLayout
+  title={CONTACT_PAGE.title}
+  description={CONTACT_PAGE.description}
+  activePage="contact"
+  partner={null}
+>
+  <ContactPage partner={null} />
+</BaseLayout>

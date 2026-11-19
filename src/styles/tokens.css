@@ -1,0 +1,47 @@
+/* Verified CCACT design tokens — anchored to UI design/Main.dc.html, Ccact_logo.png, and WCAG AA ratios */
+:root {
+  /* Navy scale (replaces legacy purple tokens) */
+  --color-navy: #15233E;
+  --color-navy-elevated: #1E3357;
+  --color-navy-border: #2C3E60;
+  --color-navy-card-border: #33456B;
+  --color-navy-outline: #5A6B8C;
+
+  /* Gold scale */
+  --color-gold: #C9A14A;
+  --color-gold-light: #E3C98A;
+  --color-gold-light-hover: #ECD7A4;
+  --color-gold-dark: #8A6A28;
+  --color-gold-badge: #6B5423;
+
+  /* Paper & border neutrals */
+  --color-cream: #FBF9F4;
+  --color-sand: #F4EEE1;
+  --color-white: #FFFFFF;
+  --color-border: #E4DED1;
+  --color-divider: #D8CDB4;
+
+  /* Text tokens (AA verified against paired surfaces) */
+  --color-text: #414C60;
+  --color-text-muted: #5B6678;
+  --color-text-subtle: #6B7689;
+  --color-on-dark: #C8D0DE;
+  --color-on-dark-muted: #96A3BA;
+  --color-on-dark-subtle: #8494AE;
+
+  /* Status tokens (from live site) */
+  --color-success: #1A7F37;
+  --color-error: #C0392B;
+
+  /* Typography */
+  /* Matches the previous theccact.com site (Cormorant Garamond headings, Lato body) */
+  --font-sans: 'Lato', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+
+  /* Layout */
+  --container-max: 1200px;
+  --gutter-desktop: 40px;
+  --gutter-tablet: 24px;
+  --gutter-mobile: 18px;
+  --radius-sm: 2px;
+}

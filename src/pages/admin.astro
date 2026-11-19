@@ -1,0 +1,287 @@
+---
+import '../styles/tokens.css';
+import '../styles/global.css';
+import '../styles/console.css';
+import Icon from '../components/Icon.astro';
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Owner console — CCACT</title>
+  <link rel="icon" type="image/png" href="/ccact-logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Lato:wght@400;700&display=swap" />
+</head>
+<body>
+<div class="console" data-admin-dashboard data-state="loading" data-supabase-url={supabaseUrl} data-supabase-key={supabaseKey}>
+  <p id="admin-status" class="sr-only" role="status" aria-live="polite"></p>
+  <p class="boot">Loading console…</p>
+
+  <!-- Sign in -->
+  <div id="view-login" class="view login">
+    <aside class="login__aside">
+      <a class="login__crest" href="/" aria-label="CCACT website">
+        <img src="/ccact-logo-footer.webp" alt="CCACT" width="288" height="288" />
+      </a>
+      <div>
+        <p class="kicker">CCACT console</p>
+        <h1 class="login__title">Owner <em>console</em></h1>
+        <p class="login__lead">Review affiliate applications and keep the site’s key messages up to date.</p>
+      </div>
+      <p class="login__fine">For authorised CCACT staff.</p>
+    </aside>
+
+    <main class="login__main">
+      <form id="admin-login" class="login__form" novalidate>
+        <div>
+          <h2>Sign in</h2>
+          <p class="muted">Use your owner account.</p>
+        </div>
+        <div class="field">
+          <label for="login-email">Email address</label>
+          <input id="login-email" name="email" type="email" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="login-password">Password</label>
+          <div class="pw">
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+            <button type="button" class="pw__toggle" id="login-toggle" data-pw-toggle="login-password" aria-pressed="false" aria-label="Show password">
+              <Icon name="eye" />
+            </button>
+          </div>
+        </div>
+        <p id="login-error" class="form-error" role="alert" hidden></p>
+        <button class="btn btn--gold" type="submit">Sign in</button>
+        <a class="login__back" href="/">← Back to the website</a>
+      </form>
+    </main>
+  </div>
+
+  <!-- Console -->
+  <div id="view-app" class="view shell">
+    <aside id="sidebar" class="side" data-collapsed="false">
+      <div class="side__top">
+        <a class="side__brand" href="/admin/">
+          <img src="/ccact-logo-footer.webp" alt="" width="288" height="288" />
+          <span class="side__label">CCACT <em>console</em></span>
+        </a>
+        <button type="button" id="side-toggle" class="side__toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar">
+          <Icon name="panel" />
+        </button>
+      </div>
+
+      <nav class="side__nav" aria-label="Console sections">
+        <ul class="side__list">
+          <li>
+            <a href="#applications" data-tab="applications" class="nav__link" data-tip="Applications">
+              <Icon name="users" />
+              <span class="nav__label">Applications</span>
+              <span id="tab-badge" class="nav__badge" hidden></span>
+            </a>
+          </li>
+          <li>
+            <a href="#content" data-tab="content" class="nav__link" data-tip="Content">
+              <Icon name="pencil" />
+              <span class="nav__label">Content</span>
+            </a>
+          </li>
+          <li>
+            <a href="/" target="_blank" rel="noopener noreferrer" class="nav__link" data-tip="View website">
+              <Icon name="globe" />
+              <span class="nav__label">View website<span class="sr-only"> (opens in a new tab)</span></span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="side__bottom profile">
+        <button type="button" id="profile-btn" class="profile__btn" aria-haspopup="menu" aria-expanded="false" aria-controls="profile-menu" aria-label="Profile settings" data-tip="Profile settings">
+          <span class="avatar" data-avatar></span>
+          <span class="profile__text">
+            <span class="profile__name" id="profile-name"></span>
+            <span class="profile__role">Profile settings</span>
+          </span>
+          <Icon name="chevron" class="profile__chev" />
+        </button>
+        <div id="profile-menu" class="menu" role="menu" aria-label="Profile settings" hidden>
+          <div class="menu__head">
+            <span class="avatar avatar--lg" data-avatar></span>
+            <div>
+              <p class="menu__label">Signed in as</p>
+              <p class="menu__email" id="menu-email"></p>
+            </div>
+          </div>
+          <button type="button" role="menuitem" data-action="photo"><Icon name="camera" />Change photo</button>
+          <button type="button" role="menuitem" data-action="password"><Icon name="lock" />Change password</button>
+          <button type="button" role="menuitem" data-action="signout" class="menu__danger"><Icon name="logout" />Sign out</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="shell__main">
+    <div class="mobilebar">
+      <button type="button" id="drawer-open" class="side__toggle side__toggle--light" aria-controls="sidebar" aria-label="Open menu"><Icon name="menu" /></button>
+      <span class="mobilebar__brand">CCACT <em>console</em></span>
+    </div>
+    <main class="page">
+      <!-- Applications -->
+      <section id="panel-applications" class="panel" aria-labelledby="apps-title">
+        <div class="panel__head">
+          <div>
+            <h1 id="apps-title" class="panel__title">Affiliate applications</h1>
+            <p class="muted">Approve people to give them an affiliate portal account.</p>
+          </div>
+        </div>
+        <div class="stats" role="group" aria-label="Filter applications by status">
+          <button type="button" class="stat stat--pending" data-filter="pending" aria-pressed="true">
+            <span class="stat__icon"><Icon name="clock" /></span>
+            <span class="stat__num" data-count>0</span>
+            <span class="stat__label">Pending review</span>
+          </button>
+          <button type="button" class="stat stat--approved" data-filter="approved" aria-pressed="false">
+            <span class="stat__icon"><Icon name="check" /></span>
+            <span class="stat__num" data-count>0</span>
+            <span class="stat__label">Approved</span>
+          </button>
+          <button type="button" class="stat stat--rejected" data-filter="rejected" aria-pressed="false">
+            <span class="stat__icon"><Icon name="x" /></span>
+            <span class="stat__num" data-count>0</span>
+            <span class="stat__label">Rejected</span>
+          </button>
+          <button type="button" class="stat stat--all" data-filter="all" aria-pressed="false">
+            <span class="stat__icon"><Icon name="users" /></span>
+            <span class="stat__num" data-count>0</span>
+            <span class="stat__label">All applications</span>
+          </button>
+        </div>
+
+        <div class="toolbar">
+          <div class="search">
+            <Icon name="search" class="search__icon" />
+            <label class="sr-only" for="app-search">Search applications</label>
+            <input id="app-search" type="search" placeholder="Search name, email, role or location" autocomplete="off" />
+          </div>
+          <button type="button" id="apps-refresh" class="btn btn--outline-navy toolbar__btn"><Icon name="refresh" />Refresh</button>
+        </div>
+
+        <p id="apps-summary" class="apps-summary"></p>
+        <div id="apps" class="apps"></div>
+      </section>
+
+      <!-- Content -->
+      <section id="panel-content" class="panel" aria-labelledby="cms-title" hidden>
+        <div class="panel__head">
+          <div>
+            <h1 id="cms-title" class="panel__title">Site content</h1>
+            <p class="muted">Changes go live on visitors’ next page load. Leave a field empty to use the built-in text.</p>
+          </div>
+          <a class="btn btn--outline-navy" href="/" target="_blank" rel="noopener noreferrer">View site</a>
+        </div>
+        <div id="content-list" class="cms"></div>
+      </section>
+    </main>
+    </div>
+    <div id="side-scrim" class="scrim"></div>
+  </div>
+
+  <!-- Dialogs -->
+  <dialog id="dlg-password" class="dlg" aria-labelledby="dlg-password-title">
+    <form id="password-form" class="dlg__body" novalidate>
+      <h2 id="dlg-password-title">Change password</h2>
+      <div class="field">
+        <label for="pw-new">New password</label>
+        <input id="pw-new" name="password" type="password" autocomplete="new-password" minlength="12" required aria-describedby="pw-hint" />
+        <small id="pw-hint">At least 12 characters.</small>
+      </div>
+      <div class="field">
+        <label for="pw-confirm">Confirm new password</label>
+        <input id="pw-confirm" name="confirm" type="password" autocomplete="new-password" required />
+      </div>
+      <p id="password-error" class="form-error" role="alert" hidden></p>
+      <div class="dlg__actions">
+        <button type="button" class="btn btn--outline-navy" data-close>Cancel</button>
+        <button type="submit" class="btn btn--gold">Update password</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-photo" class="dlg" aria-labelledby="dlg-photo-title">
+    <form id="photo-form" class="dlg__body" novalidate>
+      <h2 id="dlg-photo-title">Profile photo</h2>
+      <div class="photo">
+        <span class="avatar avatar--xl" data-avatar id="photo-preview"></span>
+        <div class="field">
+          <label for="photo-file">Choose a photo</label>
+          <input id="photo-file" name="photo" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="photo-hint" />
+          <small id="photo-hint">JPG, PNG or WebP, up to 2 MB.</small>
+        </div>
+      </div>
+      <p id="photo-error" class="form-error" role="alert" hidden></p>
+      <div class="dlg__actions">
+        <button type="button" class="btn btn--outline-navy" id="photo-remove" hidden>Remove photo</button>
+        <button type="button" class="btn btn--outline-navy" data-close>Cancel</button>
+        <button type="submit" class="btn btn--gold">Save photo</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-grant" class="dlg dlg--wide" aria-labelledby="dlg-grant-title">
+    <form id="grant-form" class="dlg__body" novalidate>
+      <div>
+        <h2 id="dlg-grant-title">Grant partner page</h2>
+        <p class="muted" id="grant-for"></p>
+      </div>
+      <div class="field">
+        <label for="grant-slug">Page address</label>
+        <div class="prefix">
+          <span class="prefix__text" aria-hidden="true">/partners/</span>
+          <input id="grant-slug" name="slug" required maxlength="60" autocomplete="off" spellcheck="false" aria-describedby="grant-slug-hint" />
+        </div>
+        <small id="grant-slug-hint">Lowercase letters, numbers and hyphens. Every partner page uses the same template; only this content changes.</small>
+      </div>
+      <fieldset class="field">
+        <legend>Partner type</legend>
+        <div>
+          <label class="radio"><input type="radio" name="type" value="individual" /> Individual</label>
+          <label class="radio"><input type="radio" name="type" value="organisation" /> Organisation</label>
+        </div>
+      </fieldset>
+      <div class="grid2">
+        <div class="field">
+          <label for="grant-role">Role</label>
+          <input id="grant-role" name="role" maxlength="160" required />
+        </div>
+        <div class="field">
+          <label for="grant-location">Location</label>
+          <input id="grant-location" name="location" maxlength="160" required />
+        </div>
+      </div>
+      <div class="field">
+        <label for="grant-bio">Bio shown on the page</label>
+        <textarea id="grant-bio" name="bio" rows="5" maxlength="2000" required></textarea>
+      </div>
+      <div class="field">
+        <label for="grant-ref">Teachable referral code</label>
+        <input id="grant-ref" name="referralCode" required maxlength="120" autocomplete="off" spellcheck="false" aria-describedby="grant-ref-hint" />
+        <small id="grant-ref-hint">The referral code CCACT issued to this partner.</small>
+      </div>
+      <p class="note">The page starts as a <strong>preview</strong>. Choose “Go live” afterwards; it is published on the next site build.</p>
+      <p id="grant-error" class="form-error" role="alert" hidden></p>
+      <div class="dlg__actions">
+        <button type="button" class="btn btn--outline-navy" data-close>Cancel</button>
+        <button type="submit" class="btn btn--gold">Create page</button>
+      </div>
+    </form>
+  </dialog>
+
+  <p id="toast" class="toast" role="status" aria-live="polite" hidden></p>
+</div>
+</body>
+</html>
+<script>import '../scripts/admin.mjs';</script>

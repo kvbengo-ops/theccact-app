@@ -1,0 +1,172 @@
+---
+import AffiliatePortalLayout from '../../layouts/AffiliatePortalLayout.astro';
+import Icon from '../../components/Icon.astro';
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+<AffiliatePortalLayout title="Affiliate dashboard">
+  <div class="console" data-affiliate-portal="dashboard" data-supabase-url={supabaseUrl} data-supabase-key={supabaseKey}>
+    <div class="shell">
+      <aside id="sidebar" class="side" data-collapsed="false">
+        <div class="side__top">
+          <a class="side__brand" href="/affiliate/dashboard/">
+            <img src="/ccact-logo-footer.webp" alt="" width="288" height="288" />
+            <span class="side__label">CCACT <em>affiliates</em></span>
+          </a>
+          <button type="button" id="side-toggle" class="side__toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar">
+            <Icon name="panel" />
+          </button>
+        </div>
+
+        <nav class="side__nav" aria-label="Portal sections">
+          <ul class="side__list">
+            <li>
+              <a href="#overview" data-tab="overview" class="nav__link" data-tip="Overview">
+                <Icon name="file" /><span class="nav__label">Overview</span>
+              </a>
+            </li>
+            <li>
+              <a href="#page" data-tab="page" class="nav__link" data-tip="My partner page">
+                <Icon name="link" /><span class="nav__label">My partner page</span>
+              </a>
+            </li>
+            <li>
+              <a href="/courses/" target="_blank" rel="noopener noreferrer" class="nav__link" data-tip="CCACT courses">
+                <Icon name="cap" /><span class="nav__label">CCACT courses<span class="sr-only"> (opens in a new tab)</span></span>
+              </a>
+            </li>
+            <li>
+              <a href="/contact/" target="_blank" rel="noopener noreferrer" class="nav__link" data-tip="Contact CCACT">
+                <Icon name="mail" /><span class="nav__label">Contact CCACT<span class="sr-only"> (opens in a new tab)</span></span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="side__bottom profile">
+          <button type="button" id="profile-btn" class="profile__btn" aria-haspopup="menu" aria-expanded="false" aria-controls="profile-menu" aria-label="Profile settings" data-tip="Profile settings">
+            <span class="avatar" data-avatar></span>
+            <span class="profile__text">
+              <span class="profile__name" id="profile-name"></span>
+              <span class="profile__role">Profile settings</span>
+            </span>
+            <Icon name="chevron" class="profile__chev" />
+          </button>
+          <div id="profile-menu" class="menu" role="menu" aria-label="Profile settings" hidden>
+            <div class="menu__head">
+              <span class="avatar avatar--lg" data-avatar></span>
+              <div>
+                <p class="menu__label">Signed in as</p>
+                <p class="menu__email" id="menu-email"></p>
+              </div>
+            </div>
+            <button type="button" role="menuitem" data-action="password"><Icon name="lock" />Change password</button>
+            <button type="button" role="menuitem" id="portal-logout" class="menu__danger"><Icon name="logout" />Sign out</button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="shell__main">
+        <div class="mobilebar">
+          <button type="button" id="drawer-open" class="side__toggle side__toggle--light" aria-controls="sidebar" aria-label="Open menu"><Icon name="menu" /></button>
+          <span class="mobilebar__brand">CCACT <em>affiliates</em></span>
+        </div>
+
+        <main class="page">
+          <p id="portal-status" class="notice" role="status" aria-live="polite">Checking your account…</p>
+
+          {supabaseUrl && supabaseKey && (
+            <div id="portal-dashboard" hidden>
+              <section id="panel-overview" class="panel" aria-labelledby="portal-welcome">
+                <div class="panel__head">
+                  <div>
+                    <p class="kicker kicker--dark">Affiliate dashboard</p>
+                    <h1 id="portal-welcome" class="panel__title">Welcome</h1>
+                    <p class="muted">Your application has been approved.</p>
+                  </div>
+                </div>
+
+                <div class="stats stats--static">
+                  <div class="stat stat--approved">
+                    <span class="stat__icon"><Icon name="check" /></span>
+                    <span class="stat__num stat__num--text">Approved</span>
+                    <span class="stat__label">Application</span>
+                  </div>
+                  <div class="stat stat--pending">
+                    <span class="stat__icon"><Icon name="link" /></span>
+                    <span class="stat__num stat__num--text" id="page-stat">Not yet</span>
+                    <span class="stat__label">Partner page</span>
+                  </div>
+                  <div class="stat stat--all">
+                    <span class="stat__icon"><Icon name="users" /></span>
+                    <span class="stat__num stat__num--text">Coming soon</span>
+                    <span class="stat__label">Student tracking</span>
+                  </div>
+                </div>
+
+                <div class="cards">
+                  <article class="card">
+                    <span class="card__icon"><Icon name="link" /></span>
+                    <h2>Your partner page</h2>
+                    <p id="page-summary" class="muted">CCACT will set up your partner page and share the link here when it is ready.</p>
+                    <a href="#page" class="btn btn--outline-navy">View details</a>
+                  </article>
+                  <article class="card">
+                    <span class="card__icon"><Icon name="users" /></span>
+                    <h2>Student applications</h2>
+                    <p class="muted">Tracking students who enrol through your link is not available yet.</p>
+                  </article>
+                  <article class="card">
+                    <span class="card__icon"><Icon name="cap" /></span>
+                    <h2>Courses to share</h2>
+                    <p class="muted">Browse the CCACT catalogue to see what you can recommend to learners.</p>
+                    <a href="/courses/" target="_blank" rel="noopener noreferrer" class="btn btn--outline-navy">Browse courses</a>
+                  </article>
+                </div>
+              </section>
+
+              <section id="panel-page" class="panel" aria-labelledby="page-title" hidden>
+                <div class="panel__head">
+                  <div>
+                    <h1 id="page-title" class="panel__title">My partner page</h1>
+                    <p class="muted">Every CCACT partner page uses the same trusted template, with your reviewed details.</p>
+                  </div>
+                </div>
+                <div class="card card--wide" id="page-card">
+                  <span class="card__icon"><Icon name="globe" /></span>
+                  <h2 id="page-heading">Not set up yet</h2>
+                  <p id="page-detail" class="muted">CCACT will create your page after reviewing your details. You will see the address here.</p>
+                  <a id="page-link" class="btn btn--gold" href="#" target="_blank" rel="noopener noreferrer" hidden>Open my partner page</a>
+                </div>
+              </section>
+            </div>
+          )}
+        </main>
+      </div>
+      <div id="side-scrim" class="scrim"></div>
+    </div>
+
+    <dialog id="dlg-password" class="dlg" aria-labelledby="dlg-password-title">
+      <form id="password-form" class="dlg__body" novalidate>
+        <h2 id="dlg-password-title">Change password</h2>
+        <div class="field">
+          <label for="pw-new">New password</label>
+          <input id="pw-new" name="password" type="password" autocomplete="new-password" minlength="12" required aria-describedby="pw-hint" />
+          <small id="pw-hint">At least 12 characters.</small>
+        </div>
+        <div class="field">
+          <label for="pw-confirm">Confirm new password</label>
+          <input id="pw-confirm" name="confirm" type="password" autocomplete="new-password" required />
+        </div>
+        <p id="password-error" class="form-error" role="alert" hidden></p>
+        <div class="dlg__actions">
+          <button type="button" class="btn btn--outline-navy" data-close>Cancel</button>
+          <button type="submit" class="btn btn--gold">Update password</button>
+        </div>
+      </form>
+    </dialog>
+
+    <p id="toast" class="toast" role="status" aria-live="polite" hidden></p>
+  </div>
+</AffiliatePortalLayout>
+<script>import '../../scripts/affiliate-portal.mjs';</script>

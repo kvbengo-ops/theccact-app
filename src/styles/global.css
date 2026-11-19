@@ -1,0 +1,317 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-cream);
+  color: var(--color-text);
+  line-height: 1.65;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Cormorant has a small x-height; scale every serif element up to match Lato's visual size. */
+h1, h2, h3, h4,
+.bio-signoff, .brand-lockup__name, .card-heading, .card-subtitle, .ce-notice__heading,
+.director-card__name, .empty-state__title, .message-signoff, .meta-block-heading,
+.mission-quote, .partner-dir-card__name, .partner-monogram-box__circle, .partner-strip__avatar,
+.pending-heading, .pillar-title, .resource-card__title, .site-footer__wordmark,
+.step-item__num, .step-item__title, .track-card__title, .form-panel__title, .detail-heading {
+  font-size-adjust: 0.44;
+  font-variant-numeric: lining-nums;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--color-navy);
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+a:hover {
+  color: var(--color-gold-dark);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+#main-content:focus {
+  outline: none;
+}
+
+/* Skip navigation link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1000;
+  background: var(--color-navy);
+  color: var(--color-gold-light);
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 2px solid var(--color-gold);
+}
+
+.skip-link:focus {
+  left: 16px;
+  top: 12px;
+}
+
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding-inline: var(--gutter-desktop);
+}
+
+/* Shared editorial buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.btn--gold {
+  background: var(--color-gold-light);
+  color: var(--color-navy);
+  font-size: 15px;
+  padding: 16px 30px;
+}
+
+.btn--gold:hover {
+  background: var(--color-gold-light-hover);
+  color: var(--color-navy);
+}
+
+.btn--gold-compact {
+  background: var(--color-gold-light);
+  color: var(--color-navy);
+  font-size: 14px;
+  padding: 11px 20px;
+}
+
+.btn--gold-compact:hover {
+  background: var(--color-gold-light-hover);
+  color: var(--color-navy);
+}
+
+.btn--outline-light {
+  color: var(--color-white);
+  border-color: var(--color-navy-outline);
+  background: transparent;
+  font-size: 15px;
+  padding: 16px 30px;
+}
+
+.btn--outline-light:hover {
+  border-color: var(--color-gold-light);
+  color: var(--color-gold-light);
+}
+
+.btn--outline-navy {
+  color: var(--color-navy);
+  border-color: var(--color-navy);
+  background: transparent;
+  font-size: 14.5px;
+  padding: 13px 24px;
+}
+
+.btn--outline-navy:hover {
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+/* Shared page bands, cards, typography and notices */
+.band {
+  padding-block: 64px;
+}
+
+.band--compact {
+  padding-block: 36px;
+}
+
+.band--white {
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.band--cream {
+  background: var(--color-cream);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.band--sand {
+  background: var(--color-sand);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.band--navy {
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+.section-heading {
+  margin: 0 0 12px;
+  font-family: var(--font-serif);
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  font-weight: 600;
+  color: var(--color-navy);
+  line-height: 1.2;
+}
+
+.section-heading--light {
+  color: var(--color-white);
+}
+
+.section-lead {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--color-text-muted);
+  max-width: 680px;
+}
+
+.section-eyebrow {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-gold-dark);
+}
+
+.section-eyebrow--light {
+  color: var(--color-gold);
+}
+
+.editorial-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  padding: 28px 26px;
+  min-width: 0;
+}
+
+.editorial-card--cream {
+  background: var(--color-cream);
+}
+
+.callout-box {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-gold);
+  padding: 20px 24px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--color-text);
+}
+
+.callout-box strong {
+  color: var(--color-navy);
+}
+
+.editorial-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.editorial-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.editorial-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.split-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 44px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .editorial-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .container {
+    padding-inline: var(--gutter-tablet);
+  }
+
+  .editorial-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .split-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding-inline: var(--gutter-mobile);
+  }
+
+  .band {
+    padding-block: 44px;
+  }
+
+  .editorial-grid-2,
+  .editorial-grid-3,
+  .editorial-grid-4 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .editorial-card {
+    padding: 22px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

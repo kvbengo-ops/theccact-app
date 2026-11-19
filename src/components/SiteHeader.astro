@@ -1,0 +1,368 @@
+---
+import { pageUrl } from '../lib/links.mjs';
+import {
+  BRAND,
+  TEACHABLE_CATALOG_URL,
+  getPrimaryNavItems,
+} from '../content/site.mjs';
+import EnrolLink from './EnrolLink.astro';
+
+interface Props {
+  activePage?: string;
+  partner?: { slug: string; name: string; type?: string; referralCode?: string } | null;
+}
+
+const { activePage = '', partner = null } = Astro.props;
+const navItems = getPrimaryNavItems(partner);
+const homeHref = pageUrl('', partner);
+---
+
+<div class="announcement-bar" data-cms="announcement">
+  {BRAND.announcement}
+</div>
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a href={homeHref} class="brand-lockup">
+      <img
+        src={BRAND.logoSrc}
+        alt={BRAND.logoAlt}
+        width={BRAND.logoWidth}
+        height={BRAND.logoHeight}
+        class="brand-lockup__img"
+        decoding="async"
+      />
+      <span class="brand-lockup__text">
+        <span class="brand-lockup__name">{BRAND.shortName}</span>
+        <span class="brand-lockup__sub">{BRAND.subWordmark}</span>
+      </span>
+    </a>
+
+    <button
+      type="button"
+      class="nav-toggle"
+      id="navToggle"
+      aria-expanded="false"
+      aria-controls="primaryNav"
+      aria-label="Toggle navigation menu"
+    >
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </button>
+
+    <nav id="primaryNav" class="primary-nav" aria-label="Primary">
+      <ul class="primary-nav__list">
+        {navItems.map((item) => {
+          const isCurrent = item.key === activePage;
+          return (
+            <li class="primary-nav__item">
+              <a
+                href={item.href}
+                class:list={[
+                  'primary-nav__link',
+                  item.isPartnerLink && 'primary-nav__link--partner',
+                  isCurrent && 'is-active',
+                ]}
+                aria-current={isCurrent ? 'page' : undefined}
+                title={item.isPartnerLink ? item.label : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          );
+        })}
+        <li class="primary-nav__cta-item">
+          <EnrolLink
+            destination={TEACHABLE_CATALOG_URL}
+            partner={partner}
+            label="Enrol Now"
+            class="btn btn--gold-compact primary-nav__cta"
+          />
+        </li>
+      </ul>
+    </nav>
+    {!partner && <a class="affiliate-login" href="/affiliate/login/" aria-label="Affiliate sign in" title="Affiliate sign in">
+      <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="3.5" />
+        <path d="M5 20v-1.3a7 7 0 0 1 14 0V20" />
+      </svg>
+    </a>}
+  </div>
+</header>
+
+<script is:inline>
+  (() => {
+    const toggle = document.getElementById('navToggle');
+    const nav = document.getElementById('primaryNav');
+    if (!toggle || !nav) return;
+
+    document.documentElement.classList.add('has-js-nav');
+
+    const closeNav = (restoreFocus = false) => {
+      nav.classList.remove('is-open');
+      toggle.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) toggle.focus();
+    };
+
+    toggle.addEventListener('click', () => {
+      const next = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(next));
+      toggle.classList.toggle('is-open', next);
+      nav.classList.toggle('is-open', next);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && nav.classList.contains('is-open')) {
+        closeNav(true);
+      }
+    });
+
+    nav.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 1080) closeNav(false);
+      });
+    });
+
+    if (typeof window.matchMedia === 'function') {
+      const desktopQuery = window.matchMedia('(min-width: 1081px)');
+      desktopQuery.addEventListener?.('change', (event) => {
+        if (event.matches && nav.classList.contains('is-open')) {
+          closeNav(false);
+        }
+      });
+    }
+  })();
+</script>
+
+<style>
+  .announcement-bar {
+    background: var(--color-navy);
+    color: var(--color-gold-light);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-align: center;
+    padding: 11px 24px;
+    line-height: 1.4;
+  }
+
+  .site-header {
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+    position: relative;
+  }
+
+  .site-header__inner {
+    padding-block: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .brand-lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  .brand-lockup__img {
+    width: auto;
+    height: 46px;
+    aspect-ratio: 407 / 381;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .brand-lockup__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-lockup__name {
+    font-family: var(--font-serif);
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--color-navy);
+    line-height: 1.05;
+  }
+
+  .brand-lockup__sub {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--color-text-subtle);
+    text-transform: uppercase;
+    line-height: 1.25;
+  }
+
+  .primary-nav {
+    margin-left: auto;
+    order: 1;
+  }
+
+  .affiliate-login {
+    order: 2;
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-navy);
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+  }
+
+  .affiliate-login:hover {
+    color: var(--color-gold-dark);
+    border-color: var(--color-gold);
+  }
+
+  .primary-nav__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+  }
+
+  .primary-nav__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    font-size: 15px;
+    color: var(--color-text);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    padding-block: 4px;
+    white-space: nowrap;
+  }
+
+  .primary-nav__link:hover {
+    color: var(--color-gold-dark);
+  }
+
+  .primary-nav__link--partner {
+    color: var(--color-navy);
+    font-weight: 600;
+    max-width: 24ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    line-height: 34px;
+    vertical-align: middle;
+  }
+
+  .primary-nav__link.is-active {
+    color: var(--color-navy);
+    font-weight: 600;
+    border-bottom-color: var(--color-gold);
+  }
+
+  .nav-toggle {
+    display: none;
+    margin-left: auto;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .nav-toggle span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--color-navy);
+    transition: transform 0.16s ease, opacity 0.16s ease;
+  }
+
+  .nav-toggle.is-open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .nav-toggle.is-open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav-toggle.is-open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  @media (max-width: 1080px) {
+    .nav-toggle {
+      display: inline-flex;
+      order: 2;
+      margin-left: 0;
+    }
+
+    .affiliate-login {
+      order: 1;
+      margin-left: auto;
+    }
+
+    .primary-nav {
+      order: 3;
+      width: 100%;
+      margin-left: 0;
+      padding-top: 12px;
+      border-top: 1px solid var(--color-border);
+    }
+
+    :global(html.has-js-nav) .primary-nav {
+      display: none;
+    }
+
+    :global(html.has-js-nav) .primary-nav.is-open {
+      display: block;
+    }
+
+    .primary-nav__list {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 2px;
+    }
+
+    .primary-nav__link {
+      width: 100%;
+      min-height: 44px;
+      padding: 8px 4px;
+      white-space: normal;
+    }
+
+    .primary-nav__link--partner {
+      max-width: none;
+      display: inline-flex;
+      line-height: 1.4;
+      overflow: visible;
+    }
+
+    .primary-nav__cta-item {
+      margin-top: 10px;
+    }
+
+    .primary-nav__cta {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .brand-lockup__sub {
+      max-width: 19ch;
+      letter-spacing: 0.1em;
+    }
+  }
+</style>

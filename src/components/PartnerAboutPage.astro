@@ -1,0 +1,628 @@
+---
+// Partner profile. Every partner uses this same template; only the record's content differs.
+import {
+  BRAND,
+  CONTINUING_EDUCATION_NOTICE,
+  TEACHABLE_CATALOG_URL,
+  getPartnerInitials,
+} from '../content/site.mjs';
+import { pageUrl } from '../lib/links.mjs';
+import EnrolLink from './EnrolLink.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  partner: {
+    slug: string;
+    name: string;
+    type: 'individual' | 'organisation';
+    bio: string;
+    role: string;
+    location: string;
+    approvalDate: string;
+    image?: string;
+    languages?: string[];
+    services?: string[];
+    website?: string;
+    contactName?: string;
+    referralCode?: string;
+  };
+}
+
+const { partner } = Astro.props;
+const isOrg = partner.type === 'organisation';
+const initials = getPartnerInitials(partner.name);
+const firstName = isOrg ? partner.name : partner.name.trim().split(/\s+/)[0];
+const bioParagraphs = String(partner.bio ?? '')
+  .split(/\r?\n\s*\r?\n/)
+  .map((part) => part.trim())
+  .filter(Boolean);
+const languages = Array.isArray(partner.languages) ? partner.languages.filter(Boolean) : [];
+const services = Array.isArray(partner.services) ? partner.services.filter(Boolean).slice(0, 4) : [];
+const approved = (() => {
+  const date = new Date(`${partner.approvalDate}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? partner.approvalDate : date.toLocaleDateString('en-CA', { timeZone: 'UTC', dateStyle: 'long' });
+})();
+
+let safeWebsiteHref = null;
+if (isOrg && partner.website) {
+  try {
+    const parsed = new URL(partner.website);
+    if (parsed.protocol === 'https:') safeWebsiteHref = parsed.href;
+  } catch {
+    safeWebsiteHref = null;
+  }
+}
+
+const contactHref = pageUrl('contact', partner);
+const coursesHref = pageUrl('courses', partner);
+const steps = [
+  { icon: 'cap', title: 'Choose a course', body: `Browse CCACT’s online courses. ${firstName} can help you pick the right one.` },
+  { icon: 'shield', title: 'Enrol with CCACT', body: 'You enrol and pay directly with CCACT on Teachable. Partners never collect tuition.' },
+  { icon: 'check', title: 'Learn online', body: 'Get immediate access and study at your own pace, from anywhere.' },
+];
+---
+
+<section class:list={['profile-hero', isOrg && 'profile-hero--org']} aria-labelledby="partner-name">
+  <div class="container profile-hero__inner">
+    <div class:list={['profile-hero__media', isOrg && 'profile-hero__media--org']}>
+      {partner.image ? (
+        <img
+          src={partner.image}
+          alt={isOrg ? `${partner.name} logo` : `${partner.name}, ${partner.role}`}
+          width="220"
+          height="220"
+          loading="eager"
+          decoding="async"
+        />
+      ) : (
+        <span aria-hidden="true">{initials}</span>
+      )}
+    </div>
+
+    <div class="profile-hero__copy">
+      <p class="profile-hero__badge"><Icon name={isOrg ? 'building' : 'shield'} />{isOrg ? 'Official CCACT partner organisation' : 'Authorised CCACT partner'}</p>
+      <h1 id="partner-name" class="profile-hero__name">{partner.name}</h1>
+      <ul class="profile-hero__meta">
+        <li><Icon name={isOrg ? 'building' : 'user'} />{partner.role}</li>
+        <li><Icon name="pin" />{partner.location}</li>
+        {isOrg && partner.contactName && <li><Icon name="user" />Contact: {partner.contactName}</li>}
+        {languages.length > 0 && <li><Icon name="message" />{languages.join(', ')}</li>}
+      </ul>
+      <div class="profile-hero__actions">
+        <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label="Browse courses on Teachable" class="btn btn--gold" />
+        {isOrg && safeWebsiteHref ? (
+          <a href={safeWebsiteHref} target="_blank" rel="noopener noreferrer" class="btn btn--outline-navy">Visit our website<span class="sr-only"> (opens in a new tab)</span></a>
+        ) : (
+          <a href={contactHref} class:list={['btn', isOrg ? 'btn--outline-navy' : 'btn--outline-light']}>Contact via CCACT</a>
+        )}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--white" aria-labelledby="partner-profile-heading">
+  <div class="container profile-layout">
+    <div class="profile-main">
+      <p class="section-eyebrow">{isOrg ? 'About the organisation' : 'About your partner'}</p>
+      <h2 id="partner-profile-heading" class="section-heading">{isOrg ? `About ${partner.name}` : `Meet ${firstName}`}</h2>
+      <div class="profile-bio">
+        {bioParagraphs.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
+
+      {services.length > 0 && (
+        <div class="profile-block">
+          <h3 class="profile-block__title">{isOrg ? 'What we offer students' : `How ${firstName} helps`}</h3>
+          <ul class="service-grid">
+            {services.map((service) => (
+              <li><span class="service-grid__icon"><Icon name="check" /></span>{service}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {languages.length > 0 && (
+        <div class="profile-block">
+          <h3 class="profile-block__title">Languages spoken</h3>
+          <ul class="chip-list">
+            {languages.map((lang) => <li>{lang}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+
+    <aside class="profile-side">
+      <div class="trust-card">
+        <p class="trust-card__title"><Icon name="shield" />Verified by CCACT</p>
+        <dl class="trust-card__facts">
+          <div><dt><Icon name={isOrg ? 'building' : 'user'} />Partner type</dt><dd>{isOrg ? 'Organisation' : 'Individual'}</dd></div>
+          <div><dt><Icon name="pin" />Location</dt><dd>{partner.location}</dd></div>
+          <div><dt><Icon name="calendar" />Approved</dt><dd>{approved}</dd></div>
+          {isOrg && partner.contactName && <div><dt><Icon name="user" />Named contact</dt><dd>{partner.contactName}</dd></div>}
+        </dl>
+        {safeWebsiteHref && (
+          <a href={safeWebsiteHref} target="_blank" rel="noopener noreferrer" class="btn btn--outline-navy trust-card__btn">
+            <Icon name="globe" />Visit website<span class="sr-only"> (opens in a new tab)</span>
+          </a>
+        )}
+        <a href={BRAND.mainDirectoryHref} class="trust-card__verify">
+          Check the approved partner directory <Icon name="arrow" />
+        </a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="band band--cream" aria-labelledby="partner-steps-heading">
+  <div class="container">
+    <p class="section-eyebrow">How it works</p>
+    <h2 id="partner-steps-heading" class="section-heading">Start learning with {firstName}</h2>
+    <ol class="steps">
+      {steps.map((step, i) => (
+        <li class="step">
+          <span class="step__icon" aria-hidden="true"><Icon name={step.icon} /></span>
+          <span class="step__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          <h3 class="step__title">{step.title}</h3>
+          <p class="step__body">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="callout-box steps__notice">{CONTINUING_EDUCATION_NOTICE.directoryNotice}</div>
+
+    <div class="steps__cta">
+      <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label="Enrol now via Teachable" class="btn btn--gold" />
+      <a href={coursesHref} class="btn btn--outline-navy">Explore online courses</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  /* Hero */
+  .profile-hero {
+    background: var(--color-navy);
+    color: var(--color-white);
+    border-bottom: 1px solid var(--color-navy-border);
+  }
+
+  .profile-hero__inner {
+    padding-block: 56px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 32px 48px;
+  }
+
+  /* Organisation sites: light, logo-led hero */
+  .profile-hero--org {
+    background: var(--color-sand);
+    color: var(--color-navy);
+    border-bottom-color: var(--color-border);
+  }
+
+  .profile-hero--org .profile-hero__name {
+    color: var(--color-navy);
+  }
+
+  .profile-hero--org .profile-hero__meta {
+    color: var(--color-text);
+  }
+
+  .profile-hero--org .profile-hero__meta :global(svg) {
+    color: var(--color-gold-dark);
+  }
+
+  .profile-hero--org .profile-hero__badge {
+    background: var(--color-white);
+    border-color: var(--color-divider);
+    color: var(--color-gold-badge);
+  }
+
+  .profile-hero--org .profile-hero__media {
+    box-shadow: 0 0 0 1px var(--color-border), 0 18px 36px rgba(21, 35, 62, 0.14);
+  }
+
+  .profile-hero__media {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: var(--color-navy-elevated);
+    color: var(--color-gold-light);
+    font-family: var(--font-serif);
+    font-size: 72px;
+    font-weight: 700;
+    font-size-adjust: 0.44;
+    box-shadow: 0 0 0 6px var(--color-navy), 0 0 0 8px var(--color-gold), 0 20px 40px rgba(0, 0, 0, 0.35);
+  }
+
+  .profile-hero__media--org {
+    border-radius: 28px;
+    background: var(--color-white);
+    color: var(--color-navy);
+  }
+
+  .profile-hero__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-hero__media--org img {
+    object-fit: contain;
+    padding: 18px;
+  }
+
+  .profile-hero__badge {
+    margin: 0 0 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px 6px 10px;
+    border: 1px solid var(--color-navy-card-border);
+    border-radius: 999px;
+    background: var(--color-navy-elevated);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-gold-light);
+  }
+
+  .profile-hero__badge :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
+  .profile-hero__name {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1.02;
+    font-weight: 700;
+    color: var(--color-white);
+  }
+
+  .profile-hero__meta {
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    font-size: 16px;
+    color: var(--color-on-dark);
+  }
+
+  .profile-hero__meta li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .profile-hero__meta :global(svg) {
+    width: 18px;
+    height: 18px;
+    color: var(--color-gold);
+  }
+
+  .profile-hero__actions {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  /* Body */
+  .profile-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+    gap: 56px;
+    align-items: start;
+  }
+
+  .profile-bio {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 66ch;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+  }
+
+  .profile-bio p {
+    margin: 0;
+  }
+
+  .profile-block {
+    margin-top: 36px;
+  }
+
+  .profile-block__title {
+    margin: 0 0 14px;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-navy);
+    font-size-adjust: 0.44;
+  }
+
+  .service-grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .service-grid li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+    background: var(--color-cream);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--color-text);
+  }
+
+  .service-grid__icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--color-navy);
+    color: var(--color-gold-light);
+  }
+
+  .service-grid__icon :global(svg) {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.25;
+  }
+
+  .chip-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip-list li {
+    padding: 6px 14px;
+    border: 1px solid var(--color-divider);
+    border-radius: 999px;
+    background: var(--color-sand);
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  /* Trust card */
+  .profile-side {
+    position: sticky;
+    top: 24px;
+  }
+
+  .trust-card {
+    padding: 26px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-top: 3px solid var(--color-gold);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgba(21, 35, 62, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .trust-card__title {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-navy);
+    font-size-adjust: 0.44;
+  }
+
+  .trust-card__title :global(svg) {
+    width: 22px;
+    height: 22px;
+    color: var(--color-gold-dark);
+  }
+
+  .trust-card__facts {
+    margin: 0;
+    display: grid;
+  }
+
+  .trust-card__facts div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 15px;
+  }
+
+  .trust-card__facts dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text-muted);
+  }
+
+  .trust-card__facts dt :global(svg) {
+    width: 16px;
+    height: 16px;
+    color: var(--color-gold-dark);
+  }
+
+  .trust-card__facts dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--color-navy);
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .trust-card__btn {
+    gap: 8px;
+    width: 100%;
+  }
+
+  .trust-card__btn :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .trust-card__verify {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  .trust-card__verify :global(svg) {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+  }
+
+  .trust-card__verify:hover :global(svg) {
+    transform: translateX(3px);
+  }
+
+  /* Steps */
+  .steps {
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .step {
+    position: relative;
+    padding: 26px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+
+  .step__icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--color-navy);
+    color: var(--color-gold-light);
+  }
+
+  .step__icon :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .step__num {
+    position: absolute;
+    top: 22px;
+    right: 24px;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 32px;
+    line-height: 1;
+    color: var(--color-gold-dark);
+    font-size-adjust: 0.44;
+  }
+
+  .step__title {
+    margin: 16px 0 6px;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  .step__body {
+    margin: 0;
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+  }
+
+  .steps__notice {
+    margin-top: 28px;
+  }
+
+  .steps__cta {
+    margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  @media (max-width: 960px) {
+    .profile-layout {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+
+    .profile-side {
+      position: static;
+    }
+
+    .steps {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .profile-hero__inner {
+      grid-template-columns: 1fr;
+      padding-block: 40px;
+    }
+
+    .profile-hero__media {
+      width: 132px;
+      height: 132px;
+      font-size: 48px;
+    }
+
+    .service-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .profile-hero__actions .btn,
+    .steps__cta .btn {
+      flex: 1 1 100%;
+    }
+  }
+</style>

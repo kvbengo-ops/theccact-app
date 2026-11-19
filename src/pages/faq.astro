@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import FaqPage from '../components/FaqPage.astro';
+import { FAQ_PAGE } from '../content/pages.mjs';
+---
+
+<BaseLayout
+  title={FAQ_PAGE.title}
+  description={FAQ_PAGE.description}
+  activePage="faq"
+  partner={null}
+>
+  <FaqPage />
+</BaseLayout>

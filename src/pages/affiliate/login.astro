@@ -1,0 +1,55 @@
+---
+import AffiliatePortalLayout from '../../layouts/AffiliatePortalLayout.astro';
+import Icon from '../../components/Icon.astro';
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+<AffiliatePortalLayout title="Affiliate sign in">
+  <div class="console" data-affiliate-portal="login" data-supabase-url={supabaseUrl} data-supabase-key={supabaseKey}>
+    <div class="login">
+      <aside class="login__aside">
+        <a class="login__crest" href="/" aria-label="CCACT website">
+          <img src="/ccact-logo-footer.webp" alt="CCACT" width="288" height="288" />
+        </a>
+        <div>
+          <p class="kicker">CCACT affiliates</p>
+          <h1 class="login__title">Affiliate <em>portal</em></h1>
+          <p class="login__lead">Check your application, find your partner page and share CCACT courses with learners.</p>
+        </div>
+        <p class="login__fine">For approved and applying CCACT affiliates.</p>
+      </aside>
+
+      <main class="login__main">
+        <div class="login__form">
+          <div>
+            <h2>Welcome back</h2>
+            <p class="muted">Sign in with the account you used to apply.</p>
+          </div>
+          <p id="portal-status" class="notice" role="status" aria-live="polite">Checking your account…</p>
+          {supabaseUrl && supabaseKey && <>
+            <form id="portal-login" class="login__form" novalidate>
+              <div class="field">
+                <label for="portal-email">Email address</label>
+                <input id="portal-email" name="email" type="email" autocomplete="username" required />
+              </div>
+              <div class="field">
+                <label for="portal-password">Password</label>
+                <div class="pw">
+                  <input id="portal-password" name="password" type="password" autocomplete="current-password" required />
+                  <button type="button" class="pw__toggle" data-pw-toggle="portal-password" aria-pressed="false" aria-label="Show password">
+                    <Icon name="eye" />
+                  </button>
+                </div>
+              </div>
+              <button class="btn btn--gold" type="submit">Sign in</button>
+            </form>
+            <button id="portal-logout" class="btn btn--outline-navy" type="button" hidden>Sign out</button>
+          </>}
+          <p class="muted">New to the programme? <a href="/affiliate-apply/">Apply to become an affiliate</a>.</p>
+          <a class="login__back" href="/">← Back to the website</a>
+        </div>
+      </main>
+    </div>
+  </div>
+</AffiliatePortalLayout>
+<script>import '../../scripts/affiliate-portal.mjs';</script>

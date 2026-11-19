@@ -1,0 +1,241 @@
+---
+import { BRAND, getFooterColumns } from '../content/site.mjs';
+import { pageUrl } from '../lib/links.mjs';
+
+interface Props {
+  partner?: { slug: string; name: string } | null;
+}
+
+const { partner = null } = Astro.props;
+const { quickLinks, contextColumn } = getFooterColumns(partner);
+const homeHref = pageUrl('', partner);
+---
+
+<footer class="site-footer">
+  <div class="container site-footer__grid">
+    <div class="site-footer__brand">
+      <a href={homeHref} class="site-footer__logo-link" aria-label={`${BRAND.shortName} home`}>
+        <img
+          src="/ccact-logo-footer.webp"
+          alt={BRAND.logoAlt}
+          width="288"
+          height="288"
+          class="site-footer__logo"
+          loading="lazy"
+          decoding="async"
+        />
+      </a>
+      <p class="site-footer__wordmark">{BRAND.shortName}</p>
+      <p class="site-footer__tagline" data-cms="footer_tagline">{BRAND.taglineStatement}</p>
+    </div>
+
+    <div class="site-footer__col">
+      <h2 class="site-footer__heading">Quick navigation</h2>
+      <ul class="site-footer__list">
+        {quickLinks.map((link) => (
+          <li>
+            <a href={link.href} class="site-footer__link">{link.label}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="site-footer__col">
+      <h2 class="site-footer__heading">{contextColumn.heading}</h2>
+      <ul class="site-footer__list">
+        {contextColumn.links.map((link) => (
+          <li>
+            <a href={link.href} class="site-footer__link">{link.label}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="site-footer__col site-footer__col--contact">
+      <h2 class="site-footer__heading">Get in touch</h2>
+      <p class="site-footer__contact">
+        <a href={`mailto:${BRAND.contactEmail}`} class="site-footer__link">
+          {BRAND.contactEmail}
+        </a>
+      </p>
+      <p class="site-footer__contact">{BRAND.contactPhone}</p>
+    </div>
+  </div>
+
+  <div class="site-footer__bottom">
+    <div class="container site-footer__bottom-inner">
+      <p class="site-footer__copyright">{BRAND.copyright}</p>
+      <a href="#main-content" class="site-footer__top">Back to top <span aria-hidden="true">↑</span></a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--color-navy);
+    box-shadow: inset 0 3px 0 var(--color-gold);
+    color: var(--color-on-dark);
+  }
+
+  .site-footer__grid {
+    padding-block: 56px 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 36px 48px;
+  }
+
+  .site-footer__brand {
+    flex: 1 1 260px;
+    min-width: 0;
+  }
+
+  /* Crest art has a white background: a lit white tile with a gold hairline ring and layered shadow gives it depth on navy. */
+  .site-footer__logo-link {
+    display: inline-flex;
+    margin: 0 0 20px;
+    padding: 12px;
+    background: linear-gradient(180deg, var(--color-white) 0%, var(--color-cream) 100%);
+    border-radius: 10px;
+    box-shadow:
+      0 0 0 1px rgba(227, 201, 138, 0.45),
+      0 2px 4px rgba(0, 0, 0, 0.25),
+      0 16px 32px rgba(0, 0, 0, 0.35);
+    transition: box-shadow 0.2s ease;
+  }
+
+  .site-footer__logo-link:hover,
+  .site-footer__logo-link:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--color-gold),
+      0 2px 4px rgba(0, 0, 0, 0.25),
+      0 18px 36px rgba(0, 0, 0, 0.4);
+  }
+
+  .site-footer__logo {
+    display: block;
+    width: auto;
+    height: 128px;
+    aspect-ratio: 1 / 1;
+  }
+
+  .site-footer__wordmark {
+    margin: 0 0 14px;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--color-white);
+  }
+
+  .site-footer__tagline {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--color-on-dark-muted);
+    max-width: 34ch;
+  }
+
+  .site-footer__col {
+    flex: 1 1 175px;
+    min-width: 0;
+  }
+
+  .site-footer__col--contact {
+    flex: 1 1 220px;
+  }
+
+  .site-footer__heading {
+    margin: 0 0 14px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+  }
+
+  .site-footer__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .site-footer__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    font-size: 14px;
+    color: var(--color-on-dark);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .site-footer__link:hover {
+    color: var(--color-gold-light);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .site-footer__contact {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: var(--color-on-dark);
+    line-height: 1.5;
+  }
+
+  .site-footer__contact:last-child {
+    margin-bottom: 0;
+  }
+
+  .site-footer__bottom {
+    border-top: 1px solid var(--color-navy-border);
+  }
+
+  .site-footer__bottom-inner {
+    padding-block: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 24px;
+  }
+
+  .site-footer__copyright {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--color-on-dark-subtle);
+  }
+
+  .site-footer__top {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-on-dark);
+    text-decoration: none;
+  }
+
+  .site-footer__top:hover {
+    color: var(--color-gold-light);
+  }
+
+  @media (max-width: 600px) {
+    .site-footer__grid {
+      padding-block: 44px 32px;
+      gap: 28px;
+    }
+
+    .site-footer__link {
+      min-height: 44px;
+    }
+
+    .site-footer__logo {
+      height: 104px;
+    }
+  }
+</style>

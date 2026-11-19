@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CoursesPage from '../components/CoursesPage.astro';
+import { COURSES_PAGE } from '../content/pages.mjs';
+---
+
+<BaseLayout
+  title={COURSES_PAGE.title}
+  description={COURSES_PAGE.description}
+  activePage="courses"
+  partner={null}
+>
+  <CoursesPage partner={null} />
+</BaseLayout>

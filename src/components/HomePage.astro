@@ -1,0 +1,504 @@
+---
+import { pageUrl } from '../lib/links.mjs';
+import {
+  HOME_COURSES_INTRO,
+  HOME_HERO,
+  HOME_PROGRAMMES,
+  TEACHABLE_CATALOG_URL,
+} from '../content/site.mjs';
+import EnrolLink from './EnrolLink.astro';
+import Icon from './Icon.astro';
+import PartnerIntro from './PartnerIntro.astro';
+
+interface Props {
+  partner?: { slug: string; name: string; referralCode?: string } | null;
+}
+
+const { partner = null } = Astro.props;
+const programmeIcons: Record<string, string> = {
+  gerontology: 'users',
+  crner: 'clipboard',
+  chs: 'landmark',
+  hpc: 'heart',
+  dm: 'activity',
+  esl: 'message',
+};
+const registrationHref = pageUrl('registration', partner);
+---
+
+<section class="hero" aria-labelledby="home-hero-heading">
+  <div class="container hero__inner">
+    <div class="hero__copy">
+      <p class="hero__eyebrow">{HOME_HERO.eyebrow}</p>
+      <h1 id="home-hero-heading" class="hero__title">
+        {HOME_HERO.headlineLine1}
+        <br />
+        <em class="hero__title-em">{HOME_HERO.headlineLine2}</em>
+      </h1>
+      <p class="hero__lead" data-cms="hero_lead">{HOME_HERO.lead}</p>
+
+      <div class="hero__actions">
+        <EnrolLink
+          destination={TEACHABLE_CATALOG_URL}
+          partner={partner}
+          label={HOME_HERO.primaryCtaLabel}
+          class="btn btn--gold"
+        />
+        <a href={registrationHref} class="btn btn--outline-light">
+          {HOME_HERO.secondaryCtaLabel}
+        </a>
+      </div>
+
+      <p class="hero__note">{HOME_HERO.accountNote}</p>
+    </div>
+  </div>
+</section>
+
+<section class="why-strip" aria-labelledby="why-study-heading">
+  <div class="container why-strip__inner">
+    <h2 id="why-study-heading" class="why-strip__heading">{HOME_HERO.whyTitle}</h2>
+    <ul class="why-strip__list">
+      {HOME_HERO.whyPoints.map((point) => (
+        <li class="why-strip__item">
+          <span aria-hidden="true" class="why-strip__dash">—</span>
+          <span>{point}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+{partner && <PartnerIntro partner={partner} />}
+
+<section class="courses-section" aria-labelledby="online-courses-heading">
+  <div class="container courses-section__inner">
+    <div class="courses-section__header">
+      <div class="courses-section__intro">
+        <h2 id="online-courses-heading" class="courses-section__heading">
+          {HOME_COURSES_INTRO.heading}
+        </h2>
+        <p class="courses-section__lead" data-cms="courses_lead">{HOME_COURSES_INTRO.lead}</p>
+      </div>
+
+      <EnrolLink
+        destination={TEACHABLE_CATALOG_URL}
+        partner={partner}
+        label={HOME_COURSES_INTRO.allCoursesLabel}
+        class="btn btn--outline-navy"
+      />
+    </div>
+
+    <div class="programme-grid">
+      {HOME_PROGRAMMES.map((programme) => (
+        <article class="programme-card">
+          <div class="programme-card__top">
+            <span class="programme-card__badge" aria-hidden="true">
+              <Icon name={programmeIcons[programme.id] ?? 'file'} />
+            </span>
+            <p class="programme-card__code">{programme.code}</p>
+          </div>
+          <h3 class="programme-card__title">{programme.title}</h3>
+          <p class="programme-card__blurb">{programme.blurb}</p>
+          <ul class="programme-card__chips">
+            {programme.meta.split(' · ').map((chip) => (
+              <li class="programme-card__chip">{chip}</li>
+            ))}
+          </ul>
+          {programme.teachableUrl ? (
+            <EnrolLink
+              destination={programme.teachableUrl}
+              partner={partner}
+              label={programme.ctaLabel}
+              hint={programme.title}
+              class="programme-card__cta"
+            />
+          ) : (
+            <a
+              href={pageUrl(programme.internalPage ?? 'contact', partner)}
+              class="programme-card__cta"
+            >
+              {programme.ctaLabel}<span class="sr-only"> — {programme.title}</span>
+            </a>
+          )}
+        </article>
+      ))}
+    </div>
+
+    <div class="advisor-row">
+      <p class="advisor-row__text">
+        <strong>Not sure where to start?</strong>
+        Tell our student support team about your education and goals, and we will point you to the right course.
+      </p>
+      <a href={pageUrl('contact', partner)} class="btn btn--outline-navy">Talk to an advisor</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    /* ponytail: overlay uses navy #15233E as rgb; swap if --color-navy ever changes */
+    background:
+      linear-gradient(90deg, rgba(21, 35, 62, 0.96) 0%, rgba(21, 35, 62, 0.86) 42%, rgba(21, 35, 62, 0.2) 78%, rgba(21, 35, 62, 0.1) 100%),
+      url('/images/doctors-desk.jpg') 70% center / cover no-repeat,
+      var(--color-navy);
+    color: var(--color-white);
+  }
+
+  .hero__inner {
+    padding-block: 84px 78px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 56px;
+    align-items: flex-start;
+  }
+
+  .hero__copy {
+    flex: 999 1 560px;
+    min-width: 0;
+  }
+
+  .hero__eyebrow {
+    margin: 0 0 20px;
+    font-size: 12px;
+    letter-spacing: 0.19em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+    font-weight: 500;
+  }
+
+  .hero__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: clamp(2.125rem, 4.7vw, 3.5625rem);
+    line-height: 1.1;
+    font-weight: 600;
+    color: var(--color-white);
+  }
+
+  .hero__title-em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--color-gold-light);
+  }
+
+  .hero__lead {
+    margin: 26px 0 0;
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--color-on-dark);
+    max-width: 580px;
+  }
+
+  .hero__actions {
+    margin-top: 36px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .hero__note {
+    margin: 22px 0 0;
+    font-size: 13.5px;
+    color: var(--color-on-dark-muted);
+  }
+
+  .why-strip {
+    background: var(--color-navy-elevated);
+    border-bottom: 1px solid var(--color-navy-card-border);
+  }
+
+  .why-strip__inner {
+    padding-block: 28px;
+  }
+
+  .why-strip__heading {
+    margin: 0 0 16px;
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--color-white);
+    line-height: 1.3;
+  }
+
+  .why-strip__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px 28px;
+  }
+
+  .why-strip__item {
+    display: flex;
+    gap: 12px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--color-on-dark);
+  }
+
+  .why-strip__dash {
+    color: var(--color-gold);
+    flex-shrink: 0;
+  }
+
+  .courses-section {
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .courses-section__inner {
+    padding-block: 60px 64px;
+  }
+
+  .courses-section__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  .courses-section__intro {
+    flex: 999 1 460px;
+    min-width: 0;
+  }
+
+  .courses-section__heading {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 600;
+    color: var(--color-navy);
+    line-height: 1.2;
+  }
+
+  .courses-section__lead {
+    margin: 12px 0 0;
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    max-width: 620px;
+  }
+
+  .programme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .programme-card {
+    position: relative;
+    border: 1px solid var(--color-border);
+    border-top: 3px solid var(--color-gold);
+    background: var(--color-cream);
+    padding: 26px 26px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .programme-card:hover,
+  .programme-card:focus-within {
+    border-color: var(--color-gold);
+    box-shadow: 0 10px 28px rgba(21, 35, 62, 0.1);
+  }
+
+  .programme-card__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .programme-card__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-navy);
+    color: var(--color-gold-light);
+    flex-shrink: 0;
+  }
+
+  .programme-card__badge :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .programme-card__code {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-gold-dark);
+    font-weight: 700;
+  }
+
+  .programme-card__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 26px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  .programme-card__blurb {
+    margin: 0;
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    flex-grow: 1;
+  }
+
+  .programme-card__chips {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .programme-card__chip {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-navy);
+    background: var(--color-sand);
+    border: 1px solid var(--color-border);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  .programme-card :global(.programme-card__cta) {
+    margin: 4px -26px 0;
+    padding: 0 26px;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--color-border);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-navy);
+    text-decoration: none;
+  }
+
+  .programme-card :global(.programme-card__cta)::after {
+    content: '→';
+    content: '→' / '';
+    font-size: 18px;
+    color: var(--color-gold-dark);
+    transition: transform 0.2s ease;
+  }
+
+  .programme-card :global(.programme-card__cta):hover {
+    color: var(--color-gold-dark);
+  }
+
+  .programme-card :global(.programme-card__cta):hover::after {
+    transform: translateX(4px);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .advisor-row {
+    margin-top: 32px;
+    padding: 22px 26px;
+    background: var(--color-sand);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-gold);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
+  }
+
+  .advisor-row__text {
+    margin: 0;
+    font-size: 16px;
+    color: var(--color-text);
+    flex: 1 1 360px;
+  }
+
+  .advisor-row__text strong {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    color: var(--color-navy);
+    display: block;
+    font-size-adjust: 0.44;
+  }
+
+  @media (max-width: 960px) {
+    .hero__inner {
+      padding-block: 56px;
+      gap: 36px;
+    }
+
+    .programme-grid,
+    .why-strip__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* copy covers the photo on narrow screens: flatten the overlay for legibility */
+    .hero {
+      background:
+        linear-gradient(rgba(21, 35, 62, 0.82), rgba(21, 35, 62, 0.82)),
+        url('/images/doctors-desk.jpg') 70% center / cover no-repeat,
+        var(--color-navy);
+    }
+  }
+
+  @media (max-width: 620px) {
+    .hero__inner {
+      padding-block: 44px 48px;
+      gap: 28px;
+    }
+
+    .hero__actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .why-strip__list {
+      grid-template-columns: 1fr;
+    }
+
+    .courses-section__inner {
+      padding-block: 44px 48px;
+    }
+
+    .courses-section__header {
+      margin-bottom: 28px;
+    }
+
+    .programme-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .programme-card {
+      padding: 22px 20px 0;
+    }
+
+    .programme-card :global(.programme-card__cta) {
+      margin-inline: -20px;
+      padding-inline: 20px;
+    }
+  }
+</style>

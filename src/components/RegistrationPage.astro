@@ -1,0 +1,271 @@
+---
+import { REGISTRATION_PAGE } from '../content/pages.mjs';
+import { BRAND, TEACHABLE_CATALOG_URL } from '../content/site.mjs';
+import { pageUrl } from '../lib/links.mjs';
+import EnrolLink from './EnrolLink.astro';
+import PageHero from './PageHero.astro';
+
+interface Props {
+  partner?: { slug: string; name: string; referralCode?: string } | null;
+}
+
+const { partner = null } = Astro.props;
+const coursesHref = pageUrl('courses', partner);
+const contactHref = pageUrl('contact', partner);
+---
+
+<PageHero
+  eyebrow={REGISTRATION_PAGE.hero.eyebrow}
+  title={REGISTRATION_PAGE.hero.title}
+  lead={REGISTRATION_PAGE.hero.lead}
+>
+  <div class="page-hero__actions">
+    <EnrolLink
+      destination={TEACHABLE_CATALOG_URL}
+      partner={partner}
+      label={REGISTRATION_PAGE.hero.primaryLabel}
+      class="btn btn--gold"
+    />
+    <a href={coursesHref} class="btn btn--outline-light">
+      {REGISTRATION_PAGE.hero.secondaryLabel}
+    </a>
+  </div>
+</PageHero>
+
+<section class="band band--white" aria-labelledby="enrollment-steps-heading">
+  <div class="container split-grid">
+    <div>
+      <h2 id="enrollment-steps-heading" class="section-heading">
+        {REGISTRATION_PAGE.stepsHeading}
+      </h2>
+      <p class="section-lead steps-lead">{REGISTRATION_PAGE.stepsLead}</p>
+
+      <ol class="step-list">
+        {REGISTRATION_PAGE.steps.map((step) => (
+          <li class="step-item">
+            <span class="step-item__num" aria-hidden="true">{step.num}</span>
+            <div>
+              <h3 class="step-item__title">{step.title}</h3>
+              <p class="step-item__body">{step.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <div class="reg-media">
+      <img
+        src={REGISTRATION_PAGE.photo.src}
+        alt={REGISTRATION_PAGE.photo.alt}
+        width={REGISTRATION_PAGE.photo.width}
+        height={REGISTRATION_PAGE.photo.height}
+        class="reg-photo"
+        decoding="async"
+      />
+      <div class="editorial-card editorial-card--cream">
+        <h3 class="card-heading">{REGISTRATION_PAGE.openCard.title}</h3>
+        <p class="card-body">{REGISTRATION_PAGE.openCard.body}</p>
+        <p class="card-note">{REGISTRATION_PAGE.openCard.note}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--sand" aria-labelledby="who-enroll-heading">
+  <div class="container narrow-container">
+    <h2 id="who-enroll-heading" class="section-heading">
+      {REGISTRATION_PAGE.whoCanEnroll.heading}
+    </h2>
+    <p class="section-lead">{REGISTRATION_PAGE.whoCanEnroll.body}</p>
+  </div>
+</section>
+
+<section class="band band--white" aria-labelledby="requirements-heading">
+  <div class="container">
+    <div class="requirements-header">
+      <h2 id="requirements-heading" class="section-heading">
+        {REGISTRATION_PAGE.requirements.heading}
+      </h2>
+      <p class="section-lead">{REGISTRATION_PAGE.requirements.lead}</p>
+    </div>
+
+    <div class="editorial-grid-3">
+      {REGISTRATION_PAGE.requirements.cards.map((card) => (
+        <article class="editorial-card editorial-card--cream">
+          <h3 class="card-heading">{card.title}</h3>
+          <p class="card-body">{card.body}</p>
+        </article>
+      ))}
+    </div>
+
+    <div class="notes-stack">
+      {REGISTRATION_PAGE.requirements.notes.map((note) => (
+        <div class="callout-box callout-box--cream">
+          <strong>{note.label}</strong> {note.text}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section class="band band--cream" aria-labelledby="future-students-heading">
+  <div class="container narrow-container">
+    <div class="editorial-card future-note-card">
+      <h2 id="future-students-heading" class="section-heading">
+        {REGISTRATION_PAGE.futureNote.heading}
+      </h2>
+      <p class="card-body">{REGISTRATION_PAGE.futureNote.body}</p>
+      <div class="future-note-actions">
+        <a href={contactHref} class="btn btn--gold">
+          {REGISTRATION_PAGE.futureNote.ctaLabel}
+        </a>
+        <a href={`mailto:${BRAND.contactEmail}`} class="btn btn--outline-navy">
+          {BRAND.contactEmail}
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--navy" aria-labelledby="reg-advisor-heading">
+  <div class="container advisor-band">
+    <div>
+      <h2 id="reg-advisor-heading" class="section-heading section-heading--light">
+        {REGISTRATION_PAGE.advisorBand.heading}
+      </h2>
+      <p class="advisor-band__lead">{REGISTRATION_PAGE.advisorBand.body}</p>
+    </div>
+    <a href={contactHref} class="btn btn--gold">
+      {REGISTRATION_PAGE.advisorBand.ctaLabel}
+    </a>
+  </div>
+</section>
+
+<style>
+  .steps-lead {
+    margin-bottom: 28px;
+  }
+
+  .step-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .step-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 18px 20px;
+    border: 1px solid var(--color-border);
+    background: var(--color-cream);
+  }
+
+  .step-item__num {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    background: var(--color-navy);
+    color: var(--color-gold-light);
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+
+  .step-item__title {
+    margin: 0 0 4px;
+    font-family: var(--font-serif);
+    font-size: 19px;
+    color: var(--color-navy);
+  }
+
+  .step-item__body {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--color-text-muted);
+  }
+
+  .reg-media {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .reg-photo {
+    width: 100%;
+    border: 1px solid var(--color-border);
+  }
+
+  .card-heading {
+    margin: 0 0 8px;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    color: var(--color-navy);
+  }
+
+  .card-body {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.62;
+    color: var(--color-text-muted);
+  }
+
+  .card-note {
+    margin: 12px 0 0;
+    font-size: 13px;
+    color: var(--color-gold-badge);
+    font-weight: 500;
+  }
+
+  .narrow-container {
+    max-width: 840px;
+  }
+
+  .requirements-header {
+    margin-bottom: 28px;
+  }
+
+  .notes-stack {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .callout-box--cream {
+    background: var(--color-cream);
+  }
+
+  .future-note-card {
+    border-left: 3px solid var(--color-gold);
+  }
+
+  .future-note-actions {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .advisor-band {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .advisor-band__lead {
+    margin: 0;
+    color: var(--color-on-dark);
+    font-size: 15.5px;
+    max-width: 580px;
+  }
+</style>

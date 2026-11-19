@@ -1,0 +1,79 @@
+---
+import { CONTINUING_EDUCATION_NOTICE } from '../content/site.mjs';
+
+interface Props {
+  partner?: { slug: string; name: string } | null;
+}
+
+const { partner = null } = Astro.props;
+---
+
+<section class="ce-notice" aria-labelledby="ce-notice-heading">
+  <div class="container ce-notice__inner">
+    <div class="ce-notice__card">
+      <h2 id="ce-notice-heading" class="ce-notice__heading">
+        {CONTINUING_EDUCATION_NOTICE.heading}
+      </h2>
+      <p class="ce-notice__body">
+        {CONTINUING_EDUCATION_NOTICE.body}
+      </p>
+      {partner && (
+        <p class="ce-notice__partner">
+          {CONTINUING_EDUCATION_NOTICE.partnerNotice}
+        </p>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .ce-notice {
+    background: var(--color-cream);
+  }
+
+  .ce-notice__inner {
+    padding-block: 58px;
+  }
+
+  .ce-notice__card {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-gold);
+    padding: 30px 34px;
+  }
+
+  .ce-notice__heading {
+    margin: 0 0 12px;
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--color-navy);
+    line-height: 1.3;
+  }
+
+  .ce-notice__body,
+  .ce-notice__partner {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--color-text-muted);
+    max-width: 880px;
+  }
+
+  .ce-notice__partner {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text);
+  }
+
+  @media (max-width: 600px) {
+    .ce-notice__inner {
+      padding-block: 40px;
+    }
+
+    .ce-notice__card {
+      padding: 24px 20px;
+    }
+  }
+</style>

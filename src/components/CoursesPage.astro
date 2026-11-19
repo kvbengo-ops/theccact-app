@@ -1,0 +1,372 @@
+---
+import { COURSES_PAGE } from '../content/pages.mjs';
+import { TEACHABLE_CATALOG_URL } from '../content/site.mjs';
+import { pageUrl } from '../lib/links.mjs';
+import EnrolLink from './EnrolLink.astro';
+import PageHero from './PageHero.astro';
+
+interface Props {
+  partner?: { slug: string; name: string; referralCode?: string } | null;
+}
+
+const { partner = null } = Astro.props;
+const contactHref = pageUrl('contact', partner);
+---
+
+<PageHero
+  eyebrow={COURSES_PAGE.hero.eyebrow}
+  title={COURSES_PAGE.hero.title}
+  lead={COURSES_PAGE.hero.lead}
+>
+  <div class="page-hero__actions">
+    <EnrolLink
+      destination={TEACHABLE_CATALOG_URL}
+      partner={partner}
+      label={COURSES_PAGE.hero.ctaLabel}
+      class="btn btn--gold"
+    />
+  </div>
+</PageHero>
+
+<section class="band band--compact band--sand" aria-label="Course platform highlights">
+  <div class="container">
+    <ul class="highlights-bar">
+      {COURSES_PAGE.highlights.map((item) => (
+        <li>
+          <span aria-hidden="true" class="highlight-dash">—</span>
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+{COURSES_PAGE.categories.map((category, index) => (
+  <section
+    id={category.id}
+    class:list={['band', index % 2 === 0 ? 'band--white' : 'band--cream']}
+    aria-labelledby={`cat-heading-${category.id}`}
+  >
+    <div class="container">
+      <div class="category-header">
+        <p class="section-eyebrow">{category.seriesTitle}</p>
+        <h2 id={`cat-heading-${category.id}`} class="section-heading">
+          {category.title}
+        </h2>
+        <p class="section-lead">{category.lead}</p>
+      </div>
+
+      <div class="editorial-grid-2 category-grid">
+        <div class="editorial-card">
+          <h3 class="card-subtitle">{category.seriesTitle}</h3>
+          <p class="card-caption">{category.seriesSubtitle}</p>
+          <ul class="course-list">
+            {category.courses.map((course) => (
+              <li class:list={['course-row', course.isBundle && 'course-row--bundle']}>
+                <span class="course-row__code">{course.code}</span>
+                <span class="course-row__title">{course.title}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="editorial-card category-detail">
+          <h3 class="card-subtitle">{category.detailTitle}</h3>
+          {category.bullets && (
+            <ul class="detail-bullets">
+              {category.bullets.map((bullet) => (
+                <li>{bullet}</li>
+              ))}
+            </ul>
+          )}
+          {category.detailParagraph && <p class="detail-paragraph">{category.detailParagraph}</p>}
+          {category.callout && (
+            <div class="callout-box category-callout">
+              {category.callout}
+            </div>
+          )}
+
+          <div class="category-actions">
+            <EnrolLink
+              destination={category.primaryCta.teachableUrl}
+              partner={partner}
+              label={category.primaryCta.label}
+              class="btn btn--gold category-cta-btn"
+            />
+            {category.secondaryTeachableCta && (
+              <EnrolLink
+                destination={category.secondaryTeachableCta.teachableUrl}
+                partner={partner}
+                label={category.secondaryTeachableCta.label}
+                class="btn btn--outline-navy category-cta-btn"
+              />
+            )}
+            {category.secondaryInternalPage && (
+              <a
+                href={pageUrl(category.secondaryInternalPage.pageKey, partner)}
+                class="btn btn--outline-navy category-cta-btn"
+              >
+                {category.secondaryInternalPage.label}
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+))}
+
+<section id={COURSES_PAGE.eslSection.id} class="band band--cream" aria-labelledby="cat-heading-esl">
+  <div class="container">
+    <div class="category-header">
+      <p class="section-eyebrow">{COURSES_PAGE.eslSection.seriesTitle}</p>
+      <h2 id="cat-heading-esl" class="section-heading">
+        {COURSES_PAGE.eslSection.title}
+      </h2>
+      <p class="section-lead">{COURSES_PAGE.eslSection.lead}</p>
+    </div>
+
+    <div class="editorial-grid-2 category-grid">
+      <div class="editorial-card esl-media-card">
+        <img
+          src={COURSES_PAGE.eslSection.photo}
+          alt={COURSES_PAGE.eslSection.photoAlt}
+          width={COURSES_PAGE.eslSection.photoWidth}
+          height={COURSES_PAGE.eslSection.photoHeight}
+          class="esl-photo"
+          loading="lazy"
+          decoding="async"
+        />
+        <div class="esl-media-body">
+          <h3 class="card-subtitle">{COURSES_PAGE.eslSection.seriesTitle}</h3>
+          <p class="card-caption">{COURSES_PAGE.eslSection.seriesSubtitle}</p>
+          <ul class="course-list">
+            {COURSES_PAGE.eslSection.modules.map((mod) => (
+              <li class="course-row">
+                <span class="course-row__code">ESL</span>
+                <span class="course-row__title">{mod}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div class="editorial-card category-detail">
+        <h3 class="card-subtitle">{COURSES_PAGE.eslSection.detailTitle}</h3>
+        {COURSES_PAGE.eslSection.paragraphs.map((p) => (
+          <p class="detail-paragraph">{p}</p>
+        ))}
+        <div class="callout-box category-callout">
+          {COURSES_PAGE.eslSection.celpipNote}
+        </div>
+        <div class="expanding-box">
+          <p class="expanding-box__title">{COURSES_PAGE.eslSection.expandingTitle}</p>
+          <p class="expanding-box__body">{COURSES_PAGE.eslSection.expandingBody}</p>
+        </div>
+        <div class="category-actions">
+          <a href={contactHref} class="btn btn--gold category-cta-btn">
+            {COURSES_PAGE.eslSection.ctaLabel}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--navy" aria-labelledby="courses-ready-heading">
+  <div class="container ready-band">
+    <div>
+      <h2 id="courses-ready-heading" class="section-heading section-heading--light">
+        {COURSES_PAGE.bottomCta.heading}
+      </h2>
+      <p class="ready-band__lead">{COURSES_PAGE.bottomCta.lead}</p>
+    </div>
+    <div class="ready-band__actions">
+      <EnrolLink
+        destination={TEACHABLE_CATALOG_URL}
+        partner={partner}
+        label={COURSES_PAGE.bottomCta.primaryLabel}
+        class="btn btn--gold"
+      />
+      <a href={contactHref} class="btn btn--outline-light">
+        {COURSES_PAGE.bottomCta.secondaryLabel}
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .highlights-bar {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 14px 28px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-navy);
+  }
+
+  .highlights-bar li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .highlight-dash {
+    color: var(--color-gold-dark);
+    font-weight: 700;
+  }
+
+  .category-header {
+    margin-bottom: 28px;
+  }
+
+  .card-subtitle {
+    margin: 0 0 6px;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    color: var(--color-navy);
+  }
+
+  .card-caption {
+    margin: 0 0 18px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+  }
+
+  .course-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .course-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14.5px;
+    color: var(--color-text);
+  }
+
+  .course-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .course-row--bundle {
+    font-weight: 600;
+    color: var(--color-navy);
+  }
+
+  .course-row__code {
+    flex-shrink: 0;
+    min-width: 84px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--color-gold-dark);
+    text-transform: uppercase;
+  }
+
+  .category-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .detail-bullets {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--color-text-muted);
+  }
+
+  .detail-paragraph {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--color-text-muted);
+  }
+
+  .category-callout {
+    background: var(--color-cream);
+  }
+
+  .expanding-box {
+    background: var(--color-sand);
+    border: 1px solid var(--color-border);
+    padding: 18px 20px;
+  }
+
+  .expanding-box__title {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-navy);
+  }
+
+  .expanding-box__body {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+  }
+
+  .category-actions {
+    margin-top: auto;
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .category-cta-btn {
+    width: 100%;
+  }
+
+  .esl-media-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .esl-photo {
+    width: 100%;
+    height: 210px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .esl-media-body {
+    padding: 26px;
+  }
+
+  .ready-band {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .ready-band__lead {
+    margin: 0;
+    color: var(--color-on-dark);
+    font-size: 15.5px;
+    max-width: 600px;
+  }
+
+  .ready-band__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+</style>

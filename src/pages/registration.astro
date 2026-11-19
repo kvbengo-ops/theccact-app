@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RegistrationPage from '../components/RegistrationPage.astro';
+import { REGISTRATION_PAGE } from '../content/pages.mjs';
+---
+
+<BaseLayout
+  title={REGISTRATION_PAGE.title}
+  description={REGISTRATION_PAGE.description}
+  activePage="registration"
+  partner={null}
+>
+  <RegistrationPage partner={null} />
+</BaseLayout>

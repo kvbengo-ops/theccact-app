@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AffiliatesPage from '../components/AffiliatesPage.astro';
+import { AFFILIATES_PAGE } from '../content/pages.mjs';
+---
+
+<BaseLayout
+  title={AFFILIATES_PAGE.title}
+  description={AFFILIATES_PAGE.description}
+  activePage="affiliates"
+  partner={null}
+>
+  <AffiliatesPage />
+</BaseLayout>
