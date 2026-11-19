@@ -1,0 +1,416 @@
+---
+// Homepage sections below the courses grid. Content comes from the existing page data, so it stays in sync.
+import { pageUrl } from '../lib/links.mjs';
+import { TEACHABLE_CATALOG_URL } from '../content/site.mjs';
+import { COURSES_PAGE, FAQ_PAGE, REGISTRATION_PAGE, STUDY_IN_CANADA_PAGE } from '../content/pages.mjs';
+import EnrolLink from './EnrolLink.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  partner?: { slug: string; name: string; referralCode?: string } | null;
+}
+
+const { partner = null } = Astro.props;
+const steps = REGISTRATION_PAGE.steps;
+const faqs = FAQ_PAGE.sections.flatMap((section) => section.items).slice(0, 4);
+const sic = STUDY_IN_CANADA_PAGE;
+const cta = COURSES_PAGE.bottomCta;
+---
+
+<!-- How enrolment works -->
+<section class="enrol" aria-labelledby="enrol-heading">
+  <div class="container enrol__inner">
+    <div class="enrol__media">
+      <img
+        src={REGISTRATION_PAGE.photo.src}
+        alt={REGISTRATION_PAGE.photo.alt}
+        width={REGISTRATION_PAGE.photo.width}
+        height={REGISTRATION_PAGE.photo.height}
+        loading="lazy"
+        decoding="async"
+      />
+      <p class="enrol__open"><Icon name="clock" />{REGISTRATION_PAGE.openCard.title}</p>
+    </div>
+    <div>
+      <p class="section-eyebrow">Getting started</p>
+      <h2 id="enrol-heading" class="section-heading">{REGISTRATION_PAGE.stepsHeading}</h2>
+      <p class="section-lead">{REGISTRATION_PAGE.stepsLead}</p>
+      <ol class="enrol__steps">
+        {steps.map((step) => (
+          <li>
+            <span class="enrol__num" aria-hidden="true">{step.num}</span>
+            <div>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p class="enrol__note">{REGISTRATION_PAGE.openCard.note}</p>
+      <div class="enrol__actions">
+        <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label="Start on Teachable" class="btn btn--gold" />
+        <a href={pageUrl('registration', partner)} class="btn btn--outline-navy">Registration details</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Study in Canada -->
+<section class="sic" aria-labelledby="sic-heading">
+  <div class="container sic__inner">
+    <div class="sic__photo">
+      <img src={sic.portrait.src} alt={sic.portrait.alt} width={sic.portrait.width} height={sic.portrait.height} loading="lazy" decoding="async" />
+    </div>
+    <div>
+      <p class="section-eyebrow">{sic.hero.eyebrow}</p>
+      <h2 id="sic-heading" class="section-heading">{sic.hero.title}</h2>
+      <p class="sic__lead">{sic.hero.lead}</p>
+      <p class="sic__body">{sic.paragraphs[0]}</p>
+      <p class="sic__fine">{sic.separationNotice}</p>
+      <a href={pageUrl('study-in-canada', partner)} class="btn btn--gold">Meet Jean and learn more</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ teaser -->
+<section class="faq" aria-labelledby="faq-heading">
+  <div class="container faq__inner">
+    <div>
+      <p class="section-eyebrow">{FAQ_PAGE.hero.eyebrow}</p>
+      <h2 id="faq-heading" class="section-heading">Common questions</h2>
+      <p class="section-lead">Quick answers about how CCACT courses work.</p>
+      <a href={pageUrl('faq', partner)} class="faq__all">See all questions <Icon name="arrow" /></a>
+    </div>
+    <div class="faq__list">
+      {faqs.map((item) => (
+        <details class="faq__item">
+          <summary>{item.q}<Icon name="chevron" class="faq__chev" /></summary>
+          <p>{item.a}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<!-- Final call to action -->
+<section class="final" aria-labelledby="final-heading">
+  <div class="container final__inner">
+    <div>
+      <h2 id="final-heading" class="final__title">{cta.heading}</h2>
+      <p class="final__lead">{cta.lead}</p>
+    </div>
+    <div class="final__actions">
+      <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label={cta.primaryLabel} class="btn btn--gold" />
+      <a href={pageUrl('contact', partner)} class="btn btn--outline-light">{cta.secondaryLabel}</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* How enrolment works */
+  .enrol {
+    background: var(--color-cream);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .enrol__inner {
+    padding-block: 72px;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: 56px;
+    align-items: center;
+  }
+
+  .enrol__media {
+    position: relative;
+  }
+
+  .enrol__media img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 20px 44px rgba(21, 35, 62, 0.16);
+  }
+
+  .enrol__open {
+    position: absolute;
+    left: 20px;
+    bottom: -18px;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    background: var(--color-navy);
+    color: var(--color-gold-light);
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: 0 12px 24px rgba(21, 35, 62, 0.25);
+  }
+
+  .enrol__open :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .enrol__steps {
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 18px;
+  }
+
+  .enrol__steps li {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+  }
+
+  .enrol__num {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--color-white);
+    border: 1px solid var(--color-divider);
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-navy);
+    font-size-adjust: 0.44;
+  }
+
+  .enrol__steps h3 {
+    margin: 2px 0 2px;
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  .enrol__steps p {
+    margin: 0;
+    font-size: 15.5px;
+    color: var(--color-text-muted);
+  }
+
+  .enrol__note {
+    margin: 22px 0 0;
+    font-size: 14px;
+    color: var(--color-text-muted);
+  }
+
+  .enrol__actions {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Study in Canada */
+  .sic {
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .sic__inner {
+    padding-block: 72px;
+    display: grid;
+    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+    gap: 56px;
+    align-items: center;
+  }
+
+  .sic__photo img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    object-position: center 20%;
+    border-radius: 50%;
+    box-shadow: 0 0 0 8px var(--color-white), 0 0 0 9px var(--color-gold), 0 20px 40px rgba(21, 35, 62, 0.14);
+  }
+
+  .sic__lead {
+    margin: 0 0 14px;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-style: italic;
+    line-height: 1.35;
+    color: var(--color-navy);
+    max-width: 40ch;
+    font-size-adjust: 0.44;
+  }
+
+  .sic__body {
+    margin: 0 0 12px;
+    max-width: 62ch;
+    font-size: 16.5px;
+    line-height: 1.65;
+  }
+
+  .sic__fine {
+    margin: 0 0 24px;
+    max-width: 62ch;
+    font-size: 14.5px;
+    color: var(--color-text-muted);
+  }
+
+  /* FAQ teaser */
+  .faq {
+    background: var(--color-sand);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .faq__inner {
+    padding-block: 72px;
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    gap: 56px;
+    align-items: start;
+  }
+
+  .faq__all {
+    margin-top: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  .faq__all :global(svg) {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+  }
+
+  .faq__all:hover :global(svg) {
+    transform: translateX(4px);
+  }
+
+  .faq__list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .faq__item {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+
+  .faq__item[open] {
+    border-color: var(--color-gold);
+  }
+
+  .faq__item summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 60px;
+    padding: 14px 20px;
+    cursor: pointer;
+    font-size: 16.5px;
+    font-weight: 700;
+    color: var(--color-navy);
+  }
+
+  .faq__item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq__item :global(.faq__chev) {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: var(--color-gold-dark);
+    transition: transform 0.2s ease;
+  }
+
+  .faq__item[open] :global(.faq__chev) {
+    transform: rotate(180deg);
+  }
+
+  .faq__item p {
+    margin: 0;
+    padding: 0 20px 18px;
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: var(--color-text);
+  }
+
+  /* Final CTA */
+  .final {
+    background: var(--color-navy);
+    color: var(--color-white);
+  }
+
+  .final__inner {
+    padding-block: 64px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px 48px;
+  }
+
+  .final__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--color-white);
+  }
+
+  .final__lead {
+    margin: 12px 0 0;
+    max-width: 56ch;
+    font-size: 17px;
+    color: var(--color-on-dark);
+  }
+
+  .final__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  @media (max-width: 960px) {
+    .enrol__inner,
+    .faq__inner {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .sic__inner {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .sic__photo {
+      max-width: 220px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .enrol__inner,
+    .sic__inner,
+    .faq__inner {
+      padding-block: 52px;
+    }
+
+    .enrol__actions .btn,
+    .final__actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+</style>

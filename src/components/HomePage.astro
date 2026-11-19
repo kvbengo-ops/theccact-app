@@ -9,6 +9,7 @@ import {
 import EnrolLink from './EnrolLink.astro';
 import Icon from './Icon.astro';
 import PartnerIntro from './PartnerIntro.astro';
+import HomeSections from './HomeSections.astro';
 
 interface Props {
   partner?: { slug: string; name: string; referralCode?: string } | null;
@@ -24,6 +25,8 @@ const programmeIcons: Record<string, string> = {
   esl: 'message',
 };
 const registrationHref = pageUrl('registration', partner);
+// One icon per 'why study' point, in order.
+const whyIcons = ['clock', 'globe', 'landmark', 'cap'];
 ---
 
 <section class="hero" aria-labelledby="home-hero-heading">
@@ -58,9 +61,9 @@ const registrationHref = pageUrl('registration', partner);
   <div class="container why-strip__inner">
     <h2 id="why-study-heading" class="why-strip__heading">{HOME_HERO.whyTitle}</h2>
     <ul class="why-strip__list">
-      {HOME_HERO.whyPoints.map((point) => (
+      {HOME_HERO.whyPoints.map((point, i) => (
         <li class="why-strip__item">
-          <span aria-hidden="true" class="why-strip__dash">—</span>
+          <span aria-hidden="true" class="why-strip__icon"><Icon name={whyIcons[i] ?? 'check'} /></span>
           <span>{point}</span>
         </li>
       ))}
@@ -133,6 +136,8 @@ const registrationHref = pageUrl('registration', partner);
     </div>
   </div>
 </section>
+
+<HomeSections partner={partner} />
 
 <style>
   .hero {
@@ -231,15 +236,29 @@ const registrationHref = pageUrl('registration', partner);
 
   .why-strip__item {
     display: flex;
-    gap: 12px;
-    font-size: 14.5px;
-    line-height: 1.5;
-    color: var(--color-on-dark);
+    align-items: center;
+    gap: 14px;
+    font-size: 15.5px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--color-white);
   }
 
-  .why-strip__dash {
-    color: var(--color-gold);
+  .why-strip__icon {
     flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--color-navy);
+    border: 1px solid var(--color-navy-card-border);
+    color: var(--color-gold-light);
+  }
+
+  .why-strip__icon :global(svg) {
+    width: 22px;
+    height: 22px;
   }
 
   .courses-section {

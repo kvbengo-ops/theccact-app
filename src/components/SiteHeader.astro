@@ -151,10 +151,12 @@ const homeHref = pageUrl('', partner);
     background: var(--color-white);
     border-bottom: 1px solid var(--color-border);
     position: relative;
+    z-index: 50;
+    box-shadow: 0 6px 18px rgba(21, 35, 62, 0.06);
   }
 
   .site-header__inner {
-    padding-block: 16px;
+    padding-block: 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -173,7 +175,7 @@ const homeHref = pageUrl('', partner);
 
   .brand-lockup__img {
     width: auto;
-    height: 46px;
+    height: 40px;
     aspect-ratio: 407 / 381;
     object-fit: contain;
     flex-shrink: 0;
@@ -187,7 +189,7 @@ const homeHref = pageUrl('', partner);
 
   .brand-lockup__name {
     font-family: var(--font-serif);
-    font-size: 23px;
+    font-size: 22px;
     font-weight: 700;
     letter-spacing: 0.12em;
     color: var(--color-navy);
@@ -320,6 +322,8 @@ const homeHref = pageUrl('', partner);
       margin-left: 0;
       padding-top: 12px;
       border-top: 1px solid var(--color-border);
+      max-height: calc(100dvh - 88px);
+      overflow-y: auto;
     }
 
     :global(html.has-js-nav) .primary-nav {

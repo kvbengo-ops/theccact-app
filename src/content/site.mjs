@@ -35,7 +35,7 @@ export const HOME_HERO = {
     'Immediate access upon enrolment',
     '100% online, study anywhere, anytime',
     'Built around Canadian healthcare standards',
-    'Certificate of Completion on every course',
+    'Certificate of Completion for listed courses',
   ],
 };
 

@@ -19,13 +19,35 @@ const { eyebrow, title, lead } = Astro.props;
 
 <style>
   .page-hero {
-    background: var(--color-navy);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(120deg, var(--color-navy) 0%, var(--color-navy) 55%, var(--color-navy-elevated) 100%);
     color: var(--color-white);
-    border-bottom: 1px solid var(--color-navy-border);
+    border-bottom: 3px solid var(--color-gold);
+  }
+
+  /* Quiet concentric rings on the right: depth without imagery. */
+  .page-hero::after {
+    content: '';
+    position: absolute;
+    right: -120px;
+    top: 50%;
+    width: 420px;
+    height: 420px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    border: 1px solid var(--color-navy-card-border);
+    box-shadow: 0 0 0 40px transparent, 0 0 0 41px var(--color-navy-card-border), 0 0 0 80px transparent, 0 0 0 81px var(--color-navy-border);
+    pointer-events: none;
   }
 
   .page-hero__inner {
-    padding-block: 60px 56px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .page-hero__inner {
+    padding-block: 64px 60px;
   }
 
   .page-hero__eyebrow {
