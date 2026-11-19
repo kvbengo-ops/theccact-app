@@ -15,7 +15,7 @@ export function enrolmentUrl(destination, partner) {
   if (url.protocol !== 'https:' || url.hostname !== 'the-canadian-centre-for-advanced-career-traini.teachable.com') {
     throw new Error('Enrolment destination must be the CCACT Teachable school');
   }
-  // shortcut: partner attribution format is unverified, implement after CCACT supplies generated links.
-  if (partner) throw new Error('Partner referral links are not configured');
+  // ponytail: partner enrolments are NOT attributed yet; links go to the plain CCACT catalogue so partner
+  // pages can go live. Add the partner's Teachable referral code here once CCACT supplies the link format.
   return url.href;
 }

@@ -12,6 +12,7 @@ test('preserves route context and rejects invalid routes', () => {
 test('preserves catalog query and fails closed for unverified referrals', () => {
   const url = 'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&page=1';
   assert.equal(enrolmentUrl(url), url);
-  assert.throws(() => enrolmentUrl(url, { slug: 'sample' }), /not configured/);
+  // Unattributed until CCACT supplies the referral format: partner links still resolve to the CCACT school only.
+  assert.equal(enrolmentUrl(url, { slug: 'sample', referralCode: 'X' }), url);
   assert.throws(() => enrolmentUrl('https://example.com/'), /Teachable/);
 });
