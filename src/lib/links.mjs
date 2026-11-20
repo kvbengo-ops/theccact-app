@@ -16,8 +16,7 @@ export function enrolmentUrl(destination, partner) {
   if (url.protocol !== 'https:' || url.hostname !== 'thecces.teachable.com') {
     throw new Error('Enrolment destination must be the CCACT Teachable school');
   }
-  // ponytail: every enrol link carries CCACT's single Teachable affiliate code. Per-partner attribution
-  // would swap in partner.referralCode here once each partner has their own Teachable affcode.
-  url.searchParams.set('affcode', CCACT_AFFCODE);
+  // Main site credits CCACT; partner pages credit the partner's own Teachable affcode (referralCode).
+  url.searchParams.set('affcode', partner ? partner.referralCode : CCACT_AFFCODE);
   return url.href;
 }
