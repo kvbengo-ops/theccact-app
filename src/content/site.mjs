@@ -2,7 +2,7 @@ import { pageUrl } from '../lib/links.mjs';
 
 /** Canonical external destinations from live CCACT Teachable catalog & corporate details. */
 export const TEACHABLE_CATALOG_URL =
-  'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1';
+  'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc';
 
 export const BRAND = {
   shortName: 'CCACT',
@@ -59,7 +59,7 @@ export const HOME_PROGRAMMES = [
     meta: '9 courses · bundle available',
     ctaLabel: 'Browse & enrol',
     teachableUrl:
-      'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1&courseCategory=Gerontology+Nursing',
+      'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Gerontology+Nursing',
   },
   {
     id: 'crner',
@@ -70,7 +70,7 @@ export const HOME_PROGRAMMES = [
     meta: '7 courses · practice exams',
     ctaLabel: 'Browse & enrol',
     teachableUrl:
-      'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1&courseCategory=Canadian+Nursing+Exam+Review',
+      'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Nursing+Exam+Review',
   },
   {
     id: 'chs',
@@ -81,7 +81,7 @@ export const HOME_PROGRAMMES = [
     meta: '4 courses · bundle CAD $149',
     ctaLabel: 'Browse & enrol',
     teachableUrl:
-      'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1&courseCategory=Canadian+Health+Care+System',
+      'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Health+Care+System',
   },
   {
     id: 'hpc',
@@ -93,7 +93,7 @@ export const HOME_PROGRAMMES = [
     ctaLabel: 'Browse & enrol',
     // No Teachable category exists for HPC; the catalogue search returns exactly HPC-101, HPC-102 and the bundle.
     teachableUrl:
-      'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1&search=hospice',
+      'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&search=hospice',
   },
   {
     id: 'dm',
@@ -104,7 +104,7 @@ export const HOME_PROGRAMMES = [
     meta: '3 courses · theory only',
     ctaLabel: 'Browse & enrol',
     teachableUrl:
-      'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1&courseCategory=Diagnostic+Modalities+%28Theoretical%29',
+      'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Diagnostic+Modalities',
   },
   {
     id: 'esl',

@@ -1,3 +1,4 @@
+const CCACT_AFFCODE = '1360772_ayijgwbz';
 const pages = new Set(['', 'about', 'courses', 'registration', 'study-in-canada', 'faq', 'about-partner', 'contact', 'privacy']);
 
 // Partner routes are generated only for validated, live records.
@@ -12,10 +13,11 @@ export function pageUrl(page, partner) {
 export function enrolmentUrl(destination, partner) {
   let url;
   try { url = new URL(destination); } catch { throw new Error('Invalid enrolment destination'); }
-  if (url.protocol !== 'https:' || url.hostname !== 'the-canadian-centre-for-advanced-career-traini.teachable.com') {
+  if (url.protocol !== 'https:' || url.hostname !== 'thecces.teachable.com') {
     throw new Error('Enrolment destination must be the CCACT Teachable school');
   }
-  // ponytail: partner enrolments are NOT attributed yet; links go to the plain CCACT catalogue so partner
-  // pages can go live. Add the partner's Teachable referral code here once CCACT supplies the link format.
+  // ponytail: every enrol link carries CCACT's single Teachable affiliate code. Per-partner attribution
+  // would swap in partner.referralCode here once each partner has their own Teachable affcode.
+  url.searchParams.set('affcode', CCACT_AFFCODE);
   return url.href;
 }

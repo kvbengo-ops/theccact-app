@@ -136,7 +136,7 @@ export const COURSES_PAGE = {
       primaryCta: {
         label: 'Browse & Enrol on Teachable',
         teachableUrl:
-          'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1&courseCategory=Gerontology+Nursing',
+          'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Gerontology+Nursing',
       },
     },
     {
@@ -166,7 +166,7 @@ export const COURSES_PAGE = {
       primaryCta: {
         label: 'Browse & Enrol on Teachable',
         teachableUrl:
-          'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1&courseCategory=Canadian+Nursing+Exam+Review',
+          'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Nursing+Exam+Review',
       },
     },
     {
@@ -189,12 +189,12 @@ export const COURSES_PAGE = {
       primaryCta: {
         label: 'Enrol in CHS Bundle — $149',
         teachableUrl:
-          'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1&courseCategory=Canadian+Health+Care+System',
+          'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Health+Care+System',
       },
       secondaryTeachableCta: {
         label: 'Browse Individual Courses',
         teachableUrl:
-          'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1&courseCategory=Canadian+Health+Care+System',
+          'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Health+Care+System',
       },
     },
     {
@@ -240,7 +240,7 @@ export const COURSES_PAGE = {
       primaryCta: {
         label: 'Enrol in DM Bundle',
         teachableUrl:
-          'https://the-canadian-centre-for-advanced-career-traini.teachable.com/l/products?sortKey=name&sortDirection=asc&page=1&courseCategory=Diagnostic+Modalities+%28Theoretical%29',
+          'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Diagnostic+Modalities',
       },
       secondaryInternalPage: {
         label: 'Ask an Advisor',
