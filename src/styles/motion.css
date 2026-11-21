@@ -1,0 +1,194 @@
+/*
+ * Motion & finish layer, shared by both brands (colours come from tokens.css).
+ * Everything here is native CSS: cross-page View Transitions, scroll-driven reveals,
+ * and hover states. Nothing animates for people who ask for reduced motion, and
+ * browsers without scroll timelines simply show the content (no hidden-until-JS states).
+ */
+
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --dur-fast: 180ms;
+  --dur-base: 280ms;
+  --dur-slow: 560ms;
+  --shadow-lift: 0 18px 40px -18px color-mix(in srgb, var(--color-navy) 45%, transparent);
+  /* Film grain for dark surfaces: an inline SVG noise tile. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- Page-to-page transitions ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+
+  /* The header and announcement stay put while the page underneath changes. */
+  .announcement-bar { view-transition-name: announcement; }
+  .site-header { view-transition-name: site-header; }
+
+  ::view-transition-old(root) { animation: vt-out 200ms var(--ease-in) both; }
+  ::view-transition-new(root) { animation: vt-in 380ms var(--ease-out) both; }
+}
+
+@keyframes vt-out { to { opacity: 0; transform: translateY(-10px); filter: blur(2px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(18px); filter: blur(3px); } }
+
+/* ---------- Hero entrances (home + inner pages) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .hero__eyebrow, .hero__title, .hero__lead, .hero__actions, .hero__note,
+  .page-hero__eyebrow, .page-hero__title, .page-hero__lead, .page-hero__actions {
+    animation: rise var(--dur-slow) var(--ease-out) both;
+  }
+  .hero__title, .page-hero__title { animation-name: rise-clip; animation-delay: 90ms; }
+  .hero__lead, .page-hero__lead { animation-delay: 220ms; }
+  .hero__actions, .page-hero__actions { animation-delay: 330ms; }
+  .hero__note { animation-delay: 430ms; }
+  .hero__title-em { display: inline-block; animation: rise-clip 640ms var(--ease-out) 200ms both; }
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(22px); } }
+@keyframes rise-clip {
+  from { opacity: 0; transform: translateY(0.35em); clip-path: inset(0 0 100% 0); }
+  to { opacity: 1; transform: none; clip-path: inset(-0.2em -0.2em -0.3em -0.2em); }
+}
+
+/* Gold hairline drawn before every eyebrow. */
+.hero__eyebrow, .page-hero__eyebrow { display: flex; align-items: center; gap: 14px; }
+.hero__eyebrow::before, .page-hero__eyebrow::before {
+  content: '';
+  width: 36px;
+  height: 1px;
+  background: currentColor;
+  transform-origin: left;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero__eyebrow::before, .page-hero__eyebrow::before { animation: draw 900ms var(--ease-out) 120ms both; }
+}
+@keyframes draw { from { transform: scaleX(0); } }
+
+/* ---------- Scroll reveals ---------- */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    main section h2,
+    main .editorial-card,
+    main .programme-card,
+    main .advisor-row,
+    main .trust-card,
+    main .bio-photo-card,
+    main .privacy-section {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 28%;
+    }
+    /* Cards in a row arrive slightly staggered. The why-strip is left out: it is in the first view, so revealing it would only flash. */
+    main :is(.programme-card, .editorial-card):nth-child(3n + 2) { animation-range: entry 12% cover 32%; }
+    main :is(.programme-card, .editorial-card):nth-child(3n) { animation-range: entry 19% cover 36%; }
+  }
+}
+@keyframes reveal { from { opacity: 0; transform: translateY(36px) scale(0.985); } }
+
+/* Photos open like a curtain, steps count in one after another. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    main :is(.enrol__media, .sic__photo, .bio-photo-card, .esl-media-card) img {
+      animation: curtain linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 45%;
+    }
+    main .enrol__steps li {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 30%;
+    }
+    main .enrol__num { animation: pop linear both; animation-timeline: view(); animation-range: entry 20% cover 35%; }
+  }
+}
+@keyframes curtain { from { clip-path: inset(0 0 100% 0); filter: saturate(0.4) brightness(1.15); } }
+/* Never from scale(0): small, believable starts read as "arriving", not "spawning". */
+@keyframes pop { from { transform: scale(0.8) rotate(-12deg); opacity: 0; } }
+
+/* ---------- Reading progress: a gold hairline across the top tracks the scroll ---------- */
+.scroll-progress { display: none; }
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-progress {
+      display: block;
+      position: fixed;
+      inset: 0 0 auto;
+      height: 3px;
+      z-index: 60;
+      background: linear-gradient(90deg, var(--color-gold-dark), var(--color-gold), var(--color-gold-light));
+      transform-origin: left;
+      animation: progress linear both;
+      animation-timeline: scroll(root);
+      view-transition-name: scroll-progress;
+    }
+  }
+}
+@keyframes progress { from { transform: scaleX(0); } }
+
+/* ---------- Cards ---------- */
+.programme-card, .resource-card, .partner-dir-card, .director-card, .trust-card {
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), border-color var(--dur-base) ease;
+}
+@media (hover: hover) {
+  .programme-card:hover, .resource-card:hover, .partner-dir-card:hover, .director-card:hover, .trust-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lift);
+    border-color: var(--color-gold);
+  }
+  .programme-card:hover .programme-card__badge { transform: rotate(-8deg) scale(1.08); }
+}
+.programme-card__badge { transition: transform var(--dur-base) var(--ease-out); }
+
+/* ---------- Buttons: a gold light sweep and a soft press ---------- */
+.btn { position: relative; overflow: hidden; isolation: isolate; transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease, transform var(--dur-fast) ease, box-shadow var(--dur-base) var(--ease-out); }
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .btn:hover::after { transform: translateX(120%); transition: transform 700ms var(--ease-out); }
+  .btn--gold:hover, .btn--gold-compact:hover { box-shadow: 0 10px 28px -10px color-mix(in srgb, var(--color-gold) 80%, transparent); transform: translateY(-1px); }
+}
+.btn:active { transform: translateY(0) scale(0.98); }
+
+/* ---------- Links: underline grows instead of snapping ---------- */
+.primary-nav__link { background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat; transition: background-size var(--dur-base) var(--ease-out), color var(--dur-fast) ease; }
+.primary-nav__link:hover { background-size: 100% 1px; }
+
+/* ---------- Dark surfaces get a quiet film grain ---------- */
+.hero::after, .page-hero::before, .site-footer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--grain);
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.site-footer { position: relative; }
+
+/* ---------- Inner-page hero: slow drifting gold aurora ---------- */
+.page-hero__inner::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: -10%;
+  top: -60%;
+  width: 60%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-gold) 26%, transparent) 0%, transparent 62%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .page-hero__inner::before { animation: aurora 18s ease-in-out infinite alternate; }
+  .page-hero::after { animation: breathe 9s ease-in-out infinite alternate; }
+}
+@keyframes aurora { to { transform: translate(-18%, 22%) scale(1.25); } }
+@keyframes breathe { to { transform: translateY(-50%) scale(1.08); } }

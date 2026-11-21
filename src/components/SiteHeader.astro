@@ -147,13 +147,31 @@ const homeHref = pageUrl('', partner);
     line-height: 1.4;
   }
 
+  /* Sticky glass header; it tightens and gains depth as the page scrolls (scroll-driven, no JS). */
   .site-header {
-    background: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 86%, transparent);
+    backdrop-filter: saturate(1.4) blur(14px);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
     border-bottom: 1px solid var(--color-border);
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 50;
-    box-shadow: 0 6px 18px rgba(21, 35, 62, 0.06);
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--color-navy) 6%, transparent);
   }
+
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) and (min-width: 1081px) {
+      .site-header { animation: header-settle linear both; animation-timeline: scroll(root); animation-range: 0 160px; }
+      .brand-lockup__img { animation: logo-settle linear both; animation-timeline: scroll(root); animation-range: 0 160px; }
+    }
+  }
+
+  @keyframes header-settle {
+    to { background: color-mix(in srgb, var(--color-white) 76%, transparent); box-shadow: 0 12px 30px -12px color-mix(in srgb, var(--color-navy) 28%, transparent); }
+  }
+
+  /* transform only, so nothing below the sticky header moves */
+  @keyframes logo-settle { to { transform: scale(0.88); } }
 
   .site-header__inner {
     padding-block: 10px;
@@ -202,6 +220,8 @@ const homeHref = pageUrl('', partner);
     color: var(--color-text-subtle);
     text-transform: uppercase;
     line-height: 1.25;
+    /* Two short lines keep logo + full nav on one row from 1081px up. */
+    max-width: 24ch;
   }
 
   .primary-nav {

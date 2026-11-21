@@ -8,6 +8,7 @@ import { pageUrl } from '../lib/links.mjs';
  */
 export const CCES_REWRITES = [
   ['<html lang="en"', '<html lang="en" data-brand="cces"'],
+  ['/media/hero-ccact', '/media/hero-cces'],
   ['/ccact-logo-footer.webp', '/cces-logo.svg'],
   ['/ccact-logo.png', '/cces-logo.svg'],
   ['type="image/png" href="/cces-logo.svg"', 'type="image/svg+xml" href="/cces-logo.svg"'],

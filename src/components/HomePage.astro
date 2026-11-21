@@ -30,6 +30,14 @@ const whyIcons = ['clock', 'globe', 'landmark', 'cap'];
 ---
 
 <section class="hero" aria-labelledby="home-hero-heading">
+  {/* Brand film: CCES builds swap /media/hero-ccact for /media/hero-cces (CCES_REWRITES). */}
+  <div class="hero__media" aria-hidden="true">
+    <video class="hero__video" autoplay muted loop playsinline preload="metadata" poster="/media/hero-ccact.webp" src="/media/hero-ccact.mp4"></video>
+  </div>
+  <button type="button" class="hero__motion-toggle" aria-pressed="false" aria-label="Pause background video">
+    <svg class="hero__icon-pause" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
+    <svg class="hero__icon-play" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z" /></svg>
+  </button>
   <div class="container hero__inner">
     <div class="hero__copy">
       <p class="hero__eyebrow">{HOME_HERO.eyebrow}</p>
@@ -94,6 +102,9 @@ const whyIcons = ['clock', 'globe', 'landmark', 'cap'];
     <div class="programme-grid">
       {HOME_PROGRAMMES.map((programme) => (
         <article class="programme-card">
+          <div class="programme-card__media">
+            <img src={`/images/courses/${programme.id}.webp`} alt="" width="800" height="450" loading="lazy" decoding="async" />
+          </div>
           <div class="programme-card__top">
             <span class="programme-card__badge" aria-hidden="true">
               <Icon name={programmeIcons[programme.id] ?? 'file'} />
@@ -139,18 +150,109 @@ const whyIcons = ['clock', 'globe', 'landmark', 'cap'];
 
 <HomeSections partner={partner} />
 
+<script is:inline>
+  // Background film: never autoplays for reduced-motion users, and can always be paused (WCAG 2.2.2).
+  (() => {
+    const video = document.querySelector('.hero__video');
+    const toggle = document.querySelector('.hero__motion-toggle');
+    if (!video || !toggle) return;
+    const set = (paused) => {
+      paused ? video.pause() : video.play().catch(() => {});
+      toggle.setAttribute('aria-pressed', String(paused));
+      toggle.setAttribute('aria-label', paused ? 'Play background video' : 'Pause background video');
+    };
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) set(true);
+    toggle.addEventListener('click', () => set(!video.paused));
+  })();
+</script>
+
 <style>
   .hero {
-    /* ponytail: overlay uses navy #15233E as rgb; swap if --color-navy ever changes */
-    background:
-      linear-gradient(90deg, color-mix(in srgb, var(--color-navy) 96%, transparent) 0%, color-mix(in srgb, var(--color-navy) 86%, transparent) 42%, color-mix(in srgb, var(--color-navy) 20%, transparent) 78%, color-mix(in srgb, var(--color-navy) 10%, transparent) 100%),
-      url('/images/doctors-desk.jpg') 70% center / cover no-repeat,
-      var(--color-navy);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: min(88svh, 820px);
+    display: flex;
+    align-items: center;
+    background: var(--color-navy);
     color: var(--color-white);
   }
 
+  .hero__media {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+  }
+
+  /* Wide screens: the film sits right of the headline and fades in, so copy never covers a face. */
+  @media (min-width: 900px) {
+    .hero__media {
+      left: 26%;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 28%);
+      mask-image: linear-gradient(90deg, transparent 0%, #000 28%);
+    }
+  }
+
+  .hero__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 70% center;
+  }
+
+  /* Brand-tinted veil: solid where the copy sits, clear where the film plays. */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, var(--color-navy) 0%, color-mix(in srgb, var(--color-navy) 70%, transparent) 42%, color-mix(in srgb, var(--color-navy) 8%, transparent) 72%, transparent 100%),
+      linear-gradient(0deg, color-mix(in srgb, var(--color-navy) 70%, transparent) 0%, transparent 35%);
+  }
+
+  /* Phones: copy covers the whole film, so the veil is even and deep enough for AA text. */
+  @media (max-width: 899px) {
+    .hero::before { background: linear-gradient(180deg, color-mix(in srgb, var(--color-navy) 72%, transparent) 0%, color-mix(in srgb, var(--color-navy) 88%, transparent) 100%); }
+  }
+
+  /* Film drifts and copy lifts away as the visitor scrolls past (scroll-driven). */
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .hero__video { animation: hero-drift linear both; animation-timeline: scroll(root); animation-range: 0 100svh; }
+      .hero__inner { animation: hero-lift linear both; animation-timeline: scroll(root); animation-range: 0 90svh; }
+      /* The pause button leaves with the copy; visibility makes it unfocusable once gone. */
+      .hero__motion-toggle { animation: toggle-hide linear both; animation-timeline: scroll(root); animation-range: 0 45svh; }
+    }
+  }
+  @keyframes toggle-hide { to { opacity: 0; visibility: hidden; } }
+  @keyframes hero-drift { from { transform: scale(1.04); } to { transform: scale(1.16) translateY(6%); } }
+  @keyframes hero-lift { to { transform: translateY(-80px); opacity: 0.2; } }
+
+  .hero__motion-toggle {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--color-white) 35%, transparent);
+    background: color-mix(in srgb, var(--color-navy) 40%, transparent);
+    backdrop-filter: blur(8px);
+    color: var(--color-white);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  }
+  .hero__motion-toggle:hover { border-color: var(--color-gold-light); background: color-mix(in srgb, var(--color-navy) 70%, transparent); }
+  .hero__icon-play, .hero__motion-toggle[aria-pressed='true'] .hero__icon-pause { display: none; }
+  .hero__motion-toggle[aria-pressed='true'] .hero__icon-play { display: block; }
+
   .hero__inner {
-    padding-block: 84px 78px;
+    width: 100%;
+    padding-block: 96px 104px;
     display: flex;
     flex-wrap: wrap;
     gap: 56px;
@@ -174,8 +276,9 @@ const whyIcons = ['clock', 'globe', 'landmark', 'cap'];
   .hero__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: clamp(2.125rem, 4.7vw, 3.5625rem);
-    line-height: 1.1;
+    font-size: clamp(2.5rem, 5.4vw, 4.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.012em;
     font-weight: 600;
     color: var(--color-white);
   }
@@ -325,6 +428,33 @@ const whyIcons = ['clock', 'globe', 'landmark', 'cap'];
     border-color: var(--color-gold);
     box-shadow: 0 10px 28px rgba(21, 35, 62, 0.1);
   }
+
+  /* Photo bleeds to the card edges; it drifts inside its frame as the card scrolls past. */
+  .programme-card__media {
+    margin: -26px -26px 4px;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--color-navy);
+  }
+
+  .programme-card__media img {
+    width: 100%;
+    height: 118%;
+    object-fit: cover;
+    transform: translateY(-8%);
+    transition: scale 600ms var(--ease-out);
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .programme-card:hover .programme-card__media img { scale: 1.05; }
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .programme-card__media img { animation: card-parallax linear both; animation-timeline: view(); animation-range: cover; }
+    }
+  }
+  @keyframes card-parallax { from { transform: translateY(-15%); } to { transform: translateY(0%); } }
 
   .programme-card__top {
     display: flex;

@@ -1,6 +1,7 @@
 ---
 import '../styles/tokens.css';
 import '../styles/global.css';
+import '../styles/motion.css';
 import { BRAND } from '../content/site.mjs';
 import { SITE_BRAND } from '../lib/links.mjs';
 import SiteHeader from '../components/SiteHeader.astro';
@@ -51,6 +52,7 @@ const resolvedTitle = partner ? `${title} · ${partner.name}` : title;
   </head>
   <body data-supabase-url={supabaseUrl} data-supabase-key={supabaseKey}>
     <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="scroll-progress" aria-hidden="true"></div>
 
     <SiteHeader activePage={activePage} partner={partner} />
     {partner && <PartnerStrip partner={partner} />}
