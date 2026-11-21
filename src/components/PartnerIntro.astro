@@ -1,40 +1,63 @@
 ---
-// Partner home: a short "meet your partner" band. Same template for every partner; only content differs.
+// Partner home: a personal introduction to the partner, inside the same institutional template.
+// Only verified record fields are shown; nothing is written in the partner's voice.
 import { getPartnerInitials } from '../content/site.mjs';
 import { pageUrl } from '../lib/links.mjs';
 import Icon from './Icon.astro';
 
 interface Props {
-  partner: { slug: string; name: string; type?: string; role?: string; location?: string; bio?: string; image?: string; website?: string; contactName?: string };
+  partner: { slug: string; name: string; type?: string; role?: string; location?: string; bio?: string; image?: string; website?: string; contactName?: string; languages?: string[]; services?: string[] };
 }
 
 const { partner } = Astro.props;
 const isOrg = partner.type === 'organisation';
 const firstPara = String(partner.bio ?? '').split(/\r?\n\s*\r?\n/)[0].trim();
 // ponytail: plain character cut at a word boundary; fine for short bios.
-const excerpt = firstPara.length > 220 ? `${firstPara.slice(0, 220).replace(/\s+\S*$/, '')}…` : firstPara;
+const excerpt = firstPara.length > 260 ? `${firstPara.slice(0, 260).replace(/\s+\S*$/, '')}…` : firstPara;
+const firstName = isOrg ? partner.name : String(partner.name).trim().split(/\s+/)[0];
 ---
 
 <section class="partner-intro" aria-labelledby="partner-intro-heading">
   <div class="container partner-intro__inner">
-    <span class:list={['partner-intro__avatar', isOrg && 'partner-intro__avatar--org']} aria-hidden="true">
-      {partner.image ? <img src={partner.image} alt="" width="112" height="112" loading="lazy" decoding="async" /> : getPartnerInitials(partner.name)}
-    </span>
-    <div class="partner-intro__copy">
-      <p class="section-eyebrow">{isOrg ? 'Official partner organisation' : 'Your CCACT partner'}</p>
-      <h2 id="partner-intro-heading" class="partner-intro__name">{partner.name}</h2>
-      <p class="partner-intro__meta">
-        {partner.role && <span><Icon name={isOrg ? 'building' : 'user'} />{partner.role}</span>}
-        {partner.location && <span><Icon name="pin" />{partner.location}</span>}
-        {isOrg && partner.contactName && <span><Icon name="user" />Contact: {partner.contactName}</span>}
-      </p>
-      {excerpt && <p class="partner-intro__bio">{excerpt}</p>}
+    <div class:list={['partner-intro__portrait', isOrg && 'partner-intro__portrait--org', !partner.image && 'partner-intro__portrait--empty']}>
+      {partner.image
+        ? <img src={partner.image} alt={`Portrait of ${partner.name}`} width="640" height="800" loading="lazy" decoding="async" />
+        : <span aria-hidden="true">{getPartnerInitials(partner.name)}</span>}
     </div>
-    <div class="partner-intro__actions">
-      <a href={pageUrl('about-partner', partner)} class="btn btn--gold">{isOrg ? 'About this organisation' : 'Read full profile'}</a>
-      {isOrg && partner.website?.startsWith('https://')
-        ? <a href={partner.website} target="_blank" rel="noopener noreferrer" class="btn btn--outline-navy">Visit website<span class="sr-only"> (opens in a new tab)</span></a>
-        : <a href={pageUrl('contact', partner)} class="btn btn--outline-navy">Contact via CCACT</a>}
+
+    <div class="partner-intro__copy">
+      <span class="gold-line partner-intro__line" aria-hidden="true"></span>
+      <p class="section-eyebrow">{isOrg ? 'Official CCACT partner organisation' : 'Your CCACT partner'}</p>
+      <h2 id="partner-intro-heading" class="partner-intro__name">
+        <span class="partner-intro__welcome">Welcome. You’re exploring courses with</span>
+        {partner.name}
+      </h2>
+      <p class="partner-intro__relation">
+        {firstName} is an authorised CCACT affiliate partner. Enrolment and tuition payment happen directly with CCACT on Teachable; partners never collect tuition.
+      </p>
+
+      <dl class="partner-intro__facts">
+        {partner.role && <div><dt><Icon name={isOrg ? 'building' : 'user'} />Role</dt><dd>{partner.role}</dd></div>}
+        {partner.location && <div><dt><Icon name="pin" />Location</dt><dd>{partner.location}</dd></div>}
+        {partner.languages?.length ? <div><dt><Icon name="message" />Languages</dt><dd>{partner.languages.join(', ')}</dd></div> : null}
+        {isOrg && partner.contactName && <div><dt><Icon name="user" />Contact</dt><dd>{partner.contactName}</dd></div>}
+      </dl>
+
+      {excerpt && <p class="partner-intro__bio">{excerpt}</p>}
+
+      {partner.services?.length ? (
+        <div class="partner-intro__support">
+          <p class="partner-intro__support-title">How {firstName} can help</p>
+          <ul>{partner.services.map((s) => <li>{s}</li>)}</ul>
+        </div>
+      ) : null}
+
+      <div class="partner-intro__actions">
+        <a href={pageUrl('about-partner', partner)} class="btn btn--navy">{isOrg ? 'About this organisation' : `Read ${firstName}’s full profile`}</a>
+        {isOrg && partner.website?.startsWith('https://')
+          ? <a href={partner.website} target="_blank" rel="noopener noreferrer" class="text-link">Visit website<span class="sr-only"> (opens in a new tab)</span></a>
+          : <a href={pageUrl('contact', partner)} class="text-link">Contact via CCACT</a>}
+      </div>
     </div>
   </div>
 </section>
@@ -42,114 +65,70 @@ const excerpt = firstPara.length > 220 ? `${firstPara.slice(0, 220).replace(/\s+
 <style>
   .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
-  .partner-intro {
-    background: var(--color-white);
-    border-bottom: 1px solid var(--color-border);
-  }
+  .partner-intro { background: var(--color-cream); border-bottom: 1px solid var(--color-border); }
 
   .partner-intro__inner {
-    padding-block: 40px;
+    padding-block: 96px;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    gap: 40px 72px;
     align-items: center;
-    gap: 24px 36px;
   }
 
-  .partner-intro__avatar {
-    width: 112px;
-    height: 112px;
-    border-radius: 50%;
-    overflow: hidden;
-    display: grid;
-    place-items: center;
+  .partner-intro__portrait {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    border-radius: 6px;
+    overflow: clip;
     background: var(--color-navy);
-    color: var(--color-gold-light);
-    font-family: var(--font-serif);
-    font-size: 40px;
-    font-weight: 700;
-    box-shadow: 0 0 0 4px var(--color-white), 0 0 0 5px var(--color-gold);
+    box-shadow: 18px 18px 0 -1px var(--color-sand), 18px 18px 0 0 var(--color-gold);
   }
+  .partner-intro__portrait img { width: 100%; height: 100%; object-fit: cover; }
+  .partner-intro__portrait--empty { display: grid; place-items: center; }
+  .partner-intro__portrait--empty span { font-family: var(--font-serif); font-size: clamp(4rem, 9vw, 7rem); font-weight: 600; color: var(--color-gold-light); letter-spacing: 0.04em; }
+  .partner-intro__portrait--org.partner-intro__portrait--empty { aspect-ratio: 1; }
 
-  .partner-intro__avatar--org {
-    border-radius: 18px;
-  }
-
-  .partner-intro__avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+  .partner-intro__line { width: 64px; margin-bottom: 22px; }
 
   .partner-intro__name {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: clamp(1.75rem, 3vw, 2.25rem);
-    font-weight: 700;
-    line-height: 1.1;
+    font-size: clamp(2.4rem, 4.6vw, 4rem);
+    line-height: 1.02;
+    font-weight: 600;
     color: var(--color-navy);
+    overflow-wrap: anywhere;
+    text-wrap: balance;
   }
-
-  .partner-intro__meta {
-    margin: 8px 0 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 18px;
-    font-size: 15px;
+  .partner-intro__welcome {
+    display: block;
+    margin-bottom: 10px;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0;
     color: var(--color-text-muted);
   }
 
-  .partner-intro__meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
+  .partner-intro__relation { margin: 20px 0 0; max-width: 58ch; font-size: 15px; line-height: 1.6; color: var(--color-text-muted); }
 
-  .partner-intro__meta :global(svg) {
-    width: 16px;
-    height: 16px;
-    color: var(--color-gold-dark);
-  }
+  .partner-intro__facts { margin: 28px 0 0; display: flex; flex-wrap: wrap; gap: 16px 36px; }
+  .partner-intro__facts dt { display: flex; align-items: center; gap: 6px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-gold-dark); }
+  .partner-intro__facts dt :global(svg) { width: 14px; height: 14px; }
+  .partner-intro__facts dd { margin: 4px 0 0; font-size: 16px; color: var(--color-navy); }
 
-  .partner-intro__bio {
-    margin: 12px 0 0;
-    max-width: 62ch;
-    font-size: 16px;
-    line-height: 1.6;
-    color: var(--color-text);
-  }
+  .partner-intro__bio { margin: 26px 0 0; max-width: 60ch; font-size: 17px; line-height: 1.7; color: var(--color-text); }
 
-  .partner-intro__actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+  .partner-intro__support { margin-top: 24px; }
+  .partner-intro__support-title { margin: 0 0 10px; font-weight: 700; color: var(--color-navy); }
+  .partner-intro__support ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .partner-intro__support li { position: relative; padding-left: 26px; color: var(--color-text); }
+  .partner-intro__support li::before { content: ''; position: absolute; left: 0; top: 0.8em; width: 14px; height: 1px; background: var(--color-gold); }
 
-  @media (max-width: 960px) {
-    .partner-intro__inner {
-      grid-template-columns: auto minmax(0, 1fr);
-    }
+  .partner-intro__actions { margin-top: 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 26px; }
 
-    .partner-intro__actions {
-      grid-column: 1 / -1;
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
-  }
-
-  @media (max-width: 560px) {
-    .partner-intro__inner {
-      grid-template-columns: 1fr;
-      padding-block: 32px;
-    }
-
-    .partner-intro__avatar {
-      width: 88px;
-      height: 88px;
-      font-size: 32px;
-    }
-
-    .partner-intro__actions .btn {
-      flex: 1 1 100%;
-    }
+  @media (max-width: 899px) {
+    .partner-intro__inner { grid-template-columns: 1fr; padding-block: 64px; }
+    .partner-intro__portrait { max-width: 320px; }
   }
 </style>

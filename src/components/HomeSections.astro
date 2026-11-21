@@ -1,8 +1,8 @@
 ---
-// Homepage sections below the courses grid. Content comes from the existing page data, so it stays in sync.
+// Homepage sections after the course explorer. Content comes from the existing page data, so it stays in sync.
 import { pageUrl } from '../lib/links.mjs';
-import { TEACHABLE_CATALOG_URL, HOME_PROGRAMMES } from '../content/site.mjs';
-import { COURSES_PAGE, FAQ_PAGE, REGISTRATION_PAGE, STUDY_IN_CANADA_PAGE } from '../content/pages.mjs';
+import { TEACHABLE_CATALOG_URL } from '../content/site.mjs';
+import { ABOUT_PAGE, COURSES_PAGE, FAQ_PAGE, REGISTRATION_PAGE, STUDY_IN_CANADA_PAGE } from '../content/pages.mjs';
 import EnrolLink from './EnrolLink.astro';
 import Icon from './Icon.astro';
 
@@ -12,37 +12,39 @@ interface Props {
 
 const { partner = null } = Astro.props;
 const steps = REGISTRATION_PAGE.steps;
-const faqs = FAQ_PAGE.sections.flatMap((section) => section.items).slice(0, 4);
+const faqs = FAQ_PAGE.sections.flatMap((section) => section.items).slice(0, 5);
 const sic = STUDY_IN_CANADA_PAGE;
 const cta = COURSES_PAGE.bottomCta;
-// Home programme id -> its section anchor on the courses page.
-const courseAnchor: Record<string, string> = { gerontology: 'gerontology', crner: 'nursing-exam', chs: 'healthcare', hpc: 'palliative', dm: 'diagnostics', esl: 'esl' };
+const people = ABOUT_PAGE.directorsSection;
+const message = ABOUT_PAGE.collegeMessage;
 ---
 
-<!-- Pathways index: six numbered rows; the one crossing the middle of the screen lights up -->
-<section class="pathways" aria-labelledby="pathways-heading" style={`timeline-scope: ${HOME_PROGRAMMES.map((_, i) => `--path-${i + 1}`).join(', ')}`}>
-  <div class="container pathways__inner">
-    <div class="pathways__intro">
-      <p class="section-eyebrow pathways__eyebrow">Six pathways</p>
-      <h2 id="pathways-heading" class="pathways__heading">Find your place in Canadian care</h2>
-      <div class="pathways__preview" aria-hidden="true">
-        {HOME_PROGRAMMES.map((p, i) => (
-          <img src={`/images/courses/${p.id}.webp`} alt="" width="800" height="450" loading="lazy" decoding="async" style={`animation-timeline: --path-${i + 1}`} />
-        ))}
+<!-- Human credibility: the real directors and the college's own message (no invented testimonials) -->
+<section class="people" aria-labelledby="people-heading">
+  <div class="container people__inner">
+    <div class="people__intro">
+      <p class="section-eyebrow">The people behind the college</p>
+      <h2 id="people-heading" class="people__heading">{people.heading}</h2>
+      <blockquote class="people__quote">
+        <p>{message.paragraphs[0]}</p>
+        <footer>{message.signoff}</footer>
+      </blockquote>
+      <div class="people__links">
+        <a href={pageUrl('about', partner)} class="text-link">Read our story</a>
+        <a href={pageUrl('study-in-canada', partner)} class="text-link">{sic.hero.title}: meet Jean</a>
       </div>
     </div>
-    <ol class="pathways__list">
-      {HOME_PROGRAMMES.map((p, i) => (
-        <li style={`view-timeline-name: --path-${i + 1}`}>
-          <a class="path" href={`${pageUrl('courses', partner)}#${courseAnchor[p.id] ?? ''}`}>
-            <span class="path__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-            <span class="path__title">{p.title}</span>
-            <span class="path__code">{p.code}</span>
-            <svg class="path__arrow" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
-          </a>
+    <ul class="people__grid">
+      {people.members.map((m) => (
+        <li class="person">
+          <div class="person__photo">
+            <img src={m.photo} alt={`Portrait of ${m.name}`} width={m.width} height={m.height} loading="lazy" decoding="async" />
+          </div>
+          <p class="person__name">{m.name}</p>
+          <p class="person__role">{m.role}</p>
         </li>
       ))}
-    </ol>
+    </ul>
   </div>
 </section>
 
@@ -84,23 +86,6 @@ const courseAnchor: Record<string, string> = { gerontology: 'gerontology', crner
   </div>
 </section>
 
-<!-- Study in Canada -->
-<section class="sic" aria-labelledby="sic-heading">
-  <div class="container sic__inner">
-    <div class="sic__photo">
-      <img src={sic.portrait.src} alt={sic.portrait.alt} width={sic.portrait.width} height={sic.portrait.height} loading="lazy" decoding="async" />
-    </div>
-    <div>
-      <p class="section-eyebrow">{sic.hero.eyebrow}</p>
-      <h2 id="sic-heading" class="section-heading">{sic.hero.title}</h2>
-      <p class="sic__lead">{sic.hero.lead}</p>
-      <p class="sic__body">{sic.paragraphs[0]}</p>
-      <p class="sic__fine">{sic.separationNotice}</p>
-      <a href={pageUrl('study-in-canada', partner)} class="btn btn--gold">Meet Jean and learn more</a>
-    </div>
-  </div>
-</section>
-
 <!-- FAQ teaser -->
 <section class="faq" aria-labelledby="faq-heading">
   <div class="container faq__inner">
@@ -121,18 +106,20 @@ const courseAnchor: Record<string, string> = { gerontology: 'gerontology', crner
   </div>
 </section>
 
-<!-- Final call to action -->
+<!-- Closing invitation -->
 <section class="final" aria-labelledby="final-heading">
   <div class="final__media" aria-hidden="true">
-    <img src="/images/final-cta.webp" alt="" width="1600" height="900" loading="lazy" decoding="async" />
+    <picture>
+      <source media="(max-width: 760px)" srcset="/images/closing-800.webp" />
+      <img src="/images/closing-1920.webp" alt="" width="1920" height="1080" loading="lazy" decoding="async" />
+    </picture>
   </div>
   <div class="container final__inner">
-    <div>
-      <h2 id="final-heading" class="final__title">{cta.heading}</h2>
-      <p class="final__lead">{cta.lead}</p>
-    </div>
+    <span class="gold-line final__line" aria-hidden="true"></span>
+    <h2 id="final-heading" class="final__title">Begin your<br /><em>next chapter.</em></h2>
+    <p class="final__lead">{cta.lead}</p>
     <div class="final__actions">
-      <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label={cta.primaryLabel} class="btn btn--gold" />
+      <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label="Explore courses" class="btn btn--gold" />
       <a href={pageUrl('contact', partner)} class="btn btn--outline-light">{cta.secondaryLabel}</a>
     </div>
   </div>
@@ -244,54 +231,6 @@ const courseAnchor: Record<string, string> = { gerontology: 'gerontology', crner
     gap: 12px;
   }
 
-  /* Study in Canada */
-  .sic {
-    background: var(--color-white);
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .sic__inner {
-    padding-block: 72px;
-    display: grid;
-    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
-    gap: 56px;
-    align-items: center;
-  }
-
-  .sic__photo img {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
-    object-position: center 20%;
-    border-radius: 50%;
-    box-shadow: 0 0 0 8px var(--color-white), 0 0 0 9px var(--color-gold), 0 20px 40px rgba(21, 35, 62, 0.14);
-  }
-
-  .sic__lead {
-    margin: 0 0 14px;
-    font-family: var(--font-serif);
-    font-size: 24px;
-    font-style: italic;
-    line-height: 1.35;
-    color: var(--color-navy);
-    max-width: 40ch;
-    font-size-adjust: 0.44;
-  }
-
-  .sic__body {
-    margin: 0 0 12px;
-    max-width: 62ch;
-    font-size: 16.5px;
-    line-height: 1.65;
-  }
-
-  .sic__fine {
-    margin: 0 0 24px;
-    max-width: 62ch;
-    font-size: 14.5px;
-    color: var(--color-text-muted);
-  }
-
   /* FAQ teaser */
   .faq {
     background: var(--color-sand);
@@ -379,135 +318,71 @@ const courseAnchor: Record<string, string> = { gerontology: 'gerontology', crner
     color: var(--color-text);
   }
 
-  /* Final CTA */
+  /* People */
+  .people { background: var(--color-cream); border-top: 1px solid var(--color-border); }
+  .people__inner {
+    padding-block: 112px;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 56px 72px;
+    align-items: start;
+  }
+  .people__intro { position: sticky; top: calc(var(--header-h, 72px) + 32px); }
+  .people__heading { margin: 0; font-family: var(--font-serif); font-size: clamp(2.4rem, 4.6vw, 4rem); line-height: 1; font-weight: 600; color: var(--color-navy); }
+  .people__quote { margin: 36px 0 0; padding-left: 24px; border-left: 1px solid var(--color-gold); }
+  .people__quote p { margin: 0; font-family: var(--font-serif); font-style: italic; font-size: clamp(1.3rem, 1.9vw, 1.65rem); line-height: 1.4; color: var(--color-navy); }
+  .people__quote footer { margin-top: 14px; font-size: 14px; color: var(--color-text-muted); }
+  .people__links { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px 28px; }
+  .people__grid { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 28px; }
+  .people__grid .person:nth-child(even) { margin-top: 64px; }
+  .person__photo { overflow: clip; border-radius: 6px; aspect-ratio: 574 / 646; background: var(--color-sand); }
+  .person__photo img { width: 100%; height: 100%; object-fit: cover; transition: scale 700ms var(--ease-out); }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) { .person:hover .person__photo img { scale: 1.04; } }
+  .person__name { margin: 16px 0 2px; font-family: var(--font-serif); font-size: 22px; font-weight: 600; color: var(--color-navy); }
+  .person__role { margin: 0; font-size: 14px; line-height: 1.5; color: var(--color-text-muted); }
+  @media (max-width: 899px) {
+    .people__inner { grid-template-columns: 1fr; padding-block: 80px; }
+    .people__intro { position: static; }
+    .people__grid .person:nth-child(even) { margin-top: 32px; }
+  }
+
+  /* Closing invitation: oversized type over a quiet navy-and-gold field that drifts very slowly. */
   .final {
     position: relative;
     isolation: isolate;
-    overflow: clip; /* not hidden: hidden traps view() timelines */
+    overflow: clip;
     background: var(--color-navy);
     color: var(--color-white);
   }
-
-  /* Photo behind the closing call to action; it settles from a slight zoom as the band scrolls in. */
-  .final__media {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
+  .final__media { position: absolute; inset: 0; z-index: -1; }
+  .final__media img { width: 100%; height: 100%; object-fit: cover; object-position: 70% center; }
+  @media (prefers-reduced-motion: no-preference) {
+    .final__media img { animation: ambient 26s ease-in-out infinite alternate; }
   }
-
-  .final__media img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 65% center;
-  }
-
-  .final__media::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, var(--color-navy) 0%, color-mix(in srgb, var(--color-navy) 82%, transparent) 50%, color-mix(in srgb, var(--color-navy) 45%, transparent) 100%);
-  }
-
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .final__media img { animation: final-settle linear both; animation-timeline: view(); animation-range: entry 0% cover 60%; }
-    }
-  }
-  @keyframes final-settle { from { transform: scale(1.18); } to { transform: scale(1); } }
-
-  /* Pathways index */
-  .pathways {
-    position: relative;
-    background: var(--color-navy);
-    color: var(--color-white);
-  }
-
-  .pathways__inner {
-    padding-block: 96px;
-    display: grid;
-    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
-    gap: 40px 64px;
-    align-items: start;
-  }
-
-  .pathways__intro { position: sticky; top: 120px; }
-  .pathways__eyebrow { color: var(--color-gold); }
-
-  .pathways__heading {
+  @keyframes ambient { to { transform: scale(1.07) translateX(-1.5%); } }
+  .final__inner { padding-block: 150px 140px; }
+  .final__line { width: 72px; margin-bottom: 36px; }
+  .final__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: clamp(2rem, 3.6vw, 3rem);
+    font-size: clamp(3.2rem, 9vw, 8.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
     font-weight: 600;
-    line-height: 1.08;
     color: var(--color-white);
   }
+  .final__title em { font-weight: 500; color: var(--color-gold-light); }
+  .final__lead { margin: 32px 0 0; max-width: 52ch; font-size: 17.5px; color: var(--color-on-dark); }
+  .final__actions { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 14px; }
+  @media (max-width: 760px) { .final__inner { padding-block: 104px 96px; } }
 
-  .pathways__list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--color-navy-card-border); }
-  .pathways__list li { border-bottom: 1px solid var(--color-navy-card-border); }
-
-  .path {
-    position: relative;
-    display: grid;
-    grid-template-columns: 3ch 1fr auto 22px;
-    align-items: center;
-    gap: 20px;
-    padding: 26px 4px;
-    color: var(--color-on-dark-subtle);
-    text-decoration: none;
-    transition: color var(--dur-fast) ease;
-  }
-
-  .path__num { font-size: 13px; letter-spacing: 0.14em; color: var(--color-gold); font-variant-numeric: tabular-nums; }
-  .path__title { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.8vw, 2.25rem); font-weight: 600; line-height: 1.1; }
-  .path__code { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
-  .path__arrow { transition: transform var(--dur-base) var(--ease-out); }
-
-  /* One large photo in the sticky column; it swaps to whichever row is lit (named view timelines). */
-  .pathways__preview {
-    position: relative;
-    margin-top: 32px;
-    aspect-ratio: 16 / 10;
-    border-radius: 4px;
-    overflow: clip; /* not hidden: hidden traps view() timelines */
-    background: var(--color-navy-elevated);
-    box-shadow: 0 24px 50px -24px rgb(0 0 0 / 0.7);
-  }
-  .pathways__preview img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-  }
-  .pathways__preview img:first-child { opacity: 1; }
-
-  .path:hover, .path:focus-visible { color: var(--color-white); }
-  .path:hover .path__arrow, .path:focus-visible .path__arrow { transform: translateX(6px); color: var(--color-gold-light); }
-
-  /* Scroll spotlight: each row brightens as it crosses the middle of the screen (AA-legible when dim). */
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) and (min-width: 768px) {
-      .path { animation: path-light linear both; animation-timeline: view(); animation-range: cover 40% cover 60%; }
-      .pathways__preview img { animation: path-photo linear both; animation-range: cover 40% cover 60%; }
-      /* Hover and keyboard focus always win over the scroll spotlight. */
-      .path:hover, .path:focus-visible { animation: none; }
+  /* FAQ: answers ease open where the browser supports animating to auto height. */
+  @supports (interpolate-size: allow-keywords) {
+    @media (prefers-reduced-motion: no-preference) {
+      .faq__item { interpolate-size: allow-keywords; }
+      .faq__item::details-content { block-size: 0; overflow: clip; transition: block-size 320ms var(--ease-out), content-visibility 320ms allow-discrete; }
+      .faq__item[open]::details-content { block-size: auto; }
     }
-  }
-  @keyframes path-light { 0%, 100% { color: var(--color-on-dark-subtle); } 35%, 65% { color: var(--color-white); } }
-  @keyframes path-photo { 0%, 100% { opacity: 0; scale: 1.08; } 30%, 70% { opacity: 1; scale: 1; } }
-
-  @media (max-width: 960px) {
-    .pathways__inner { grid-template-columns: 1fr; padding-block: 72px; }
-    .pathways__intro { position: static; }
-    .pathways__preview { display: none; }
-  }
-
-  @media (max-width: 560px) {
-    .path { grid-template-columns: 3ch 1fr 22px; gap: 14px; padding-block: 20px; }
-    .path__code { display: none; }
-    .path { color: var(--color-white); }
   }
 
   /* A gold line draws down through the steps as they scroll into view. */
@@ -531,57 +406,16 @@ const courseAnchor: Record<string, string> = { gerontology: 'gerontology', crner
   }
   @keyframes line-draw { from { transform: scaleY(0); } }
 
-  .final__inner {
-    padding-block: 104px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 28px 48px;
-  }
-
-  .final__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: clamp(2rem, 4vw, 3rem);
-    font-weight: 600;
-    line-height: 1.1;
-    color: var(--color-white);
-  }
-
-  .final__lead {
-    margin: 12px 0 0;
-    max-width: 56ch;
-    font-size: 17px;
-    color: var(--color-on-dark);
-  }
-
-  .final__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-
   @media (max-width: 960px) {
     .enrol__inner,
     .faq__inner {
       grid-template-columns: 1fr;
       gap: 40px;
     }
-
-    .sic__inner {
-      grid-template-columns: 1fr;
-      gap: 32px;
-    }
-
-    .sic__photo {
-      max-width: 220px;
-    }
   }
 
   @media (max-width: 620px) {
     .enrol__inner,
-    .sic__inner,
     .faq__inner {
       padding-block: 52px;
     }

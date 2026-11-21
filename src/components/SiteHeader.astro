@@ -10,9 +10,11 @@ import EnrolLink from './EnrolLink.astro';
 interface Props {
   activePage?: string;
   partner?: { slug: string; name: string; type?: string; referralCode?: string } | null;
+  /** Home page: the header floats transparent over the hero film until the visitor scrolls. */
+  overlay?: boolean;
 }
 
-const { activePage = '', partner = null } = Astro.props;
+const { activePage = '', partner = null, overlay = false } = Astro.props;
 const navItems = getPrimaryNavItems(partner);
 const homeHref = pageUrl('', partner);
 ---
@@ -21,7 +23,7 @@ const homeHref = pageUrl('', partner);
   {BRAND.announcement}
 </div>
 
-<header class="site-header">
+<header class="site-header" data-overlay={overlay ? '' : undefined}>
   <div class="container site-header__inner">
     <a href={homeHref} class="brand-lockup">
       <img
@@ -99,6 +101,15 @@ const homeHref = pageUrl('', partner);
 
     document.documentElement.classList.add('has-js-nav');
 
+    // Solid navy once the page moves; --header-h lets the home hero tuck under the floating header.
+    const header = toggle.closest('.site-header');
+    const setScrolled = () => header.toggleAttribute('data-scrolled', window.scrollY > 24);
+    setScrolled();
+    window.addEventListener('scroll', setScrolled, { passive: true });
+    const setHeight = () => document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`);
+    setHeight();
+    new ResizeObserver(setHeight).observe(header);
+
     const closeNav = (restoreFocus = false) => {
       nav.classList.remove('is-open');
       toggle.classList.remove('is-open');
@@ -147,31 +158,23 @@ const homeHref = pageUrl('', partner);
     line-height: 1.4;
   }
 
-  /* Sticky glass header; it tightens and gains depth as the page scrolls (scroll-driven, no JS). */
+  /* Compact navy header. On the home page it starts transparent over the film (data-overlay)
+     and turns solid navy once the visitor scrolls or opens the menu. */
   .site-header {
-    background: color-mix(in srgb, var(--color-white) 86%, transparent);
-    backdrop-filter: saturate(1.4) blur(14px);
-    -webkit-backdrop-filter: saturate(1.4) blur(14px);
-    border-bottom: 1px solid var(--color-border);
     position: sticky;
     top: 0;
     z-index: 50;
-    box-shadow: 0 6px 18px color-mix(in srgb, var(--color-navy) 6%, transparent);
+    background: var(--color-navy);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-gold) 22%, transparent);
+    transition: background-color 360ms var(--ease-out), border-color 360ms ease, box-shadow 360ms ease;
   }
 
-  @supports (animation-timeline: scroll()) {
-    @media (prefers-reduced-motion: no-preference) and (min-width: 1081px) {
-      .site-header { animation: header-settle linear both; animation-timeline: scroll(root); animation-range: 0 160px; }
-      .brand-lockup__img { animation: logo-settle linear both; animation-timeline: scroll(root); animation-range: 0 160px; }
-    }
-  }
+  .site-header[data-scrolled] { box-shadow: 0 14px 32px -18px rgb(0 0 0 / 0.55); }
 
-  @keyframes header-settle {
-    to { background: color-mix(in srgb, var(--color-white) 76%, transparent); box-shadow: 0 12px 30px -12px color-mix(in srgb, var(--color-navy) 28%, transparent); }
+  .site-header[data-overlay]:not([data-scrolled]):not(:has(.is-open)) {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-navy) 55%, transparent), transparent);
+    border-bottom-color: transparent;
   }
-
-  /* transform only, so nothing below the sticky header moves */
-  @keyframes logo-settle { to { transform: scale(0.88); } }
 
   .site-header__inner {
     padding-block: 10px;
@@ -210,14 +213,14 @@ const homeHref = pageUrl('', partner);
     font-size: 22px;
     font-weight: 700;
     letter-spacing: 0.12em;
-    color: var(--color-navy);
+    color: var(--color-white);
     line-height: 1.05;
   }
 
   .brand-lockup__sub {
     font-size: 11px;
     letter-spacing: 0.12em;
-    color: var(--color-text-subtle);
+    color: var(--color-on-dark-muted);
     text-transform: uppercase;
     line-height: 1.25;
     /* Two short lines keep logo + full nav on one row from 1081px up. */
@@ -236,14 +239,15 @@ const homeHref = pageUrl('', partner);
     height: 44px;
     align-items: center;
     justify-content: center;
-    color: var(--color-navy);
-    border: 1px solid var(--color-border);
+    color: var(--color-white);
+    border: 1px solid color-mix(in srgb, var(--color-white) 28%, transparent);
     border-radius: 50%;
+    transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
   }
 
   .affiliate-login:hover {
-    color: var(--color-gold-dark);
-    border-color: var(--color-gold);
+    color: var(--color-gold-light);
+    border-color: var(--color-gold-light);
   }
 
   .primary-nav__list {
@@ -260,8 +264,9 @@ const homeHref = pageUrl('', partner);
     display: inline-flex;
     align-items: center;
     min-height: 36px;
-    font-size: 15px;
-    color: var(--color-text);
+    font-size: 14.5px;
+    letter-spacing: 0.01em;
+    color: var(--color-on-dark);
     text-decoration: none;
     border-bottom: 2px solid transparent;
     padding-block: 4px;
@@ -269,11 +274,11 @@ const homeHref = pageUrl('', partner);
   }
 
   .primary-nav__link:hover {
-    color: var(--color-gold-dark);
+    color: var(--color-gold-light);
   }
 
   .primary-nav__link--partner {
-    color: var(--color-navy);
+    color: var(--color-gold-light);
     font-weight: 600;
     max-width: 24ch;
     overflow: hidden;
@@ -284,7 +289,7 @@ const homeHref = pageUrl('', partner);
   }
 
   .primary-nav__link.is-active {
-    color: var(--color-navy);
+    color: var(--color-white);
     font-weight: 600;
     border-bottom-color: var(--color-gold);
   }
@@ -296,7 +301,7 @@ const homeHref = pageUrl('', partner);
     height: 44px;
     padding: 10px;
     background: transparent;
-    border: 1px solid var(--color-border);
+    border: 1px solid color-mix(in srgb, var(--color-white) 28%, transparent);
     border-radius: var(--radius-sm);
     cursor: pointer;
     flex-direction: column;
@@ -308,7 +313,7 @@ const homeHref = pageUrl('', partner);
     display: block;
     width: 100%;
     height: 2px;
-    background: var(--color-navy);
+    background: var(--color-white);
     transition: transform 0.16s ease, opacity 0.16s ease;
   }
 
@@ -341,7 +346,7 @@ const homeHref = pageUrl('', partner);
       width: 100%;
       margin-left: 0;
       padding-top: 12px;
-      border-top: 1px solid var(--color-border);
+      border-top: 1px solid var(--color-navy-card-border);
       max-height: calc(100dvh - 88px);
       overflow-y: auto;
     }

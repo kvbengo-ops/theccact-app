@@ -50,11 +50,11 @@ export const BRAND = {
 
 export const HOME_HERO = {
   eyebrow: 'Continuing education · Est. 2012',
-  headlineLine1: 'Study in Canada',
-  headlineLine2: 'from anywhere in the world',
+  headlineLine1: 'Your experience matters.',
+  headlineLine2: 'Build your next chapter.',
   lead: 'The Canadian Centre For Advanced Career Training offers more than 50 online continuing education courses designed to support internationally trained professionals, with a special focus on the South Asian community.',
-  primaryCtaLabel: 'Browse online courses',
-  secondaryCtaLabel: 'Register now',
+  primaryCtaLabel: 'Explore courses',
+  secondaryCtaLabel: 'Find your starting point',
   accountNote: 'Creating an account does not enrol you in a course or result in any charge.',
   whyTitle: 'Why study with CCACT',
   whyPoints: [
@@ -64,6 +64,47 @@ export const HOME_HERO = {
     'Certificate of Completion for listed courses',
   ],
 };
+
+/** Signature scroll story. Copy restates verified facts from the About, FAQ and Registration pages only. */
+export const HOME_STORY = {
+  statementLine1: 'You bring the experience.',
+  statementLine2: 'We help you keep learning.',
+  chapters: [
+    {
+      id: 'experience',
+      label: 'Your experience',
+      title: 'Built for professionals trained around the world',
+      body: 'Our certificate and review courses are designed for internationally educated nurses, practical nurses, Personal Support Workers and caregivers who want to keep growing.',
+      image: '/images/chapters/experience',
+      alt: 'Illustrative photo: a nurse in navy scrubs standing by a bright hospital window.',
+    },
+    {
+      id: 'learning',
+      label: 'Your learning',
+      title: 'Online, self-paced, on your schedule',
+      body: 'Study from anywhere with immediate access on enrolment. Courses are built around Canadian healthcare standards and best practices.',
+      image: '/images/chapters/learning',
+      alt: 'Illustrative photo: handwritten study notes beside a laptop on a sunlit table.',
+    },
+    {
+      id: 'next',
+      label: 'Your next chapter',
+      title: 'Confidence for Canadian care settings',
+      body: 'A Certificate of Completion is issued for listed courses. These are continuing-education courses: they support your development but do not grant a licence, diploma or immigration status.',
+      image: '/images/chapters/next',
+      alt: 'Illustrative photo: a nurse walking into a bright, airy care facility corridor.',
+    },
+  ],
+};
+
+/** Course explorer interest filters, mapped to HOME_PROGRAMMES ids. "All programmes" always shows every category. */
+export const HOME_INTERESTS = [
+  { id: 'all', label: 'All programmes', programmes: ['gerontology', 'crner', 'chs', 'hpc', 'dm', 'esl'] },
+  { id: 'canadian', label: 'Canadian healthcare', programmes: ['chs', 'dm'] },
+  { id: 'review', label: 'Nursing review', programmes: ['crner'] },
+  { id: 'older', label: 'Older adult care', programmes: ['gerontology', 'hpc'] },
+  { id: 'communication', label: 'Communication', programmes: ['esl'] },
+];
 
 export const HOME_COURSES_INTRO = {
   heading: 'Online courses',

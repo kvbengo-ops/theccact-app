@@ -54,7 +54,7 @@ const resolvedTitle = partner ? `${title} · ${partner.name}` : title;
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class="scroll-progress" aria-hidden="true"></div>
 
-    <SiteHeader activePage={activePage} partner={partner} />
+    <SiteHeader activePage={activePage} partner={partner} overlay={activePage === '' && !partner} />
     {partner && <PartnerStrip partner={partner} />}
 
     <main id="main-content" tabindex="-1">

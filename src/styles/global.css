@@ -315,3 +315,34 @@ a:hover {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Redesign system additions ---------- */
+/* The hidden attribute always wins, even over component display rules. */
+[hidden] { display: none !important; }
+
+.btn--navy {
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-size: 15px;
+  padding: 15px 28px;
+}
+
+.btn--navy:hover {
+  background: var(--color-navy-elevated);
+  color: var(--color-gold-light);
+}
+
+/* Understated inline action with a gold underline that grows on hover. */
+.text-link {
+  color: var(--color-navy);
+  font-weight: 600;
+  text-decoration: none;
+  background: linear-gradient(var(--color-gold), var(--color-gold)) left bottom / 100% 1px no-repeat;
+  padding-bottom: 2px;
+  transition: background-size var(--dur-base, 280ms) ease, color 160ms ease;
+}
+
+.text-link:hover { color: var(--color-gold-dark); background-size: 100% 2px; }
+
+/* The recurring motif: a thin gold line. */
+.gold-line { display: block; height: 1px; background: var(--color-gold); transform-origin: left; }

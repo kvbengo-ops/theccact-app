@@ -1,13 +1,7 @@
 ---
 import { pageUrl } from '../lib/links.mjs';
-import {
-  HOME_COURSES_INTRO,
-  HOME_HERO,
-  HOME_PROGRAMMES,
-  TEACHABLE_CATALOG_URL,
-} from '../content/site.mjs';
+import { HOME_HERO, HOME_PROGRAMMES, HOME_STORY, HOME_INTERESTS, TEACHABLE_CATALOG_URL } from '../content/site.mjs';
 import EnrolLink from './EnrolLink.astro';
-import Icon from './Icon.astro';
 import PartnerIntro from './PartnerIntro.astro';
 import HomeSections from './HomeSections.astro';
 
@@ -16,638 +10,602 @@ interface Props {
 }
 
 const { partner = null } = Astro.props;
-const programmeIcons: Record<string, string> = {
-  gerontology: 'users',
-  crner: 'clipboard',
-  chs: 'landmark',
-  hpc: 'heart',
-  dm: 'activity',
-  esl: 'message',
-};
-const registrationHref = pageUrl('registration', partner);
-// One icon per 'why study' point, in order.
-const whyIcons = ['clock', 'globe', 'landmark', 'cap'];
+const story = HOME_STORY;
+// Home programme id -> its section anchor on the courses page.
+const courseAnchor: Record<string, string> = { gerontology: 'gerontology', crner: 'nursing-exam', chs: 'healthcare', hpc: 'palliative', dm: 'diagnostics', esl: 'esl' };
+const interestsFor = (id: string) => HOME_INTERESTS.filter((i) => i.programmes.includes(id)).map((i) => i.id).join(' ');
 ---
 
-<section class="hero" aria-labelledby="home-hero-heading">
-  {/* Brand film: CCES builds swap /media/hero-ccact for /media/hero-cces (CCES_REWRITES). */}
-  <div class="hero__media" aria-hidden="true">
-    <video class="hero__video" autoplay muted loop playsinline preload="metadata" poster="/media/hero-ccact.webp" src="/media/hero-ccact.mp4"></video>
-  </div>
-  <button type="button" class="hero__motion-toggle" aria-pressed="false" aria-label="Pause background video">
-    <svg class="hero__icon-pause" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
-    <svg class="hero__icon-play" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z" /></svg>
-  </button>
-  <div class="container hero__inner">
-    <div class="hero__copy">
-      <p class="hero__eyebrow">{HOME_HERO.eyebrow}</p>
-      <h1 id="home-hero-heading" class="hero__title">
-        {HOME_HERO.headlineLine1}
-        <br />
-        <em class="hero__title-em">{HOME_HERO.headlineLine2}</em>
-      </h1>
-      <p class="hero__lead" data-cms="hero_lead">{HOME_HERO.lead}</p>
-
-      <div class="hero__actions">
-        <EnrolLink
-          destination={TEACHABLE_CATALOG_URL}
-          partner={partner}
-          label={HOME_HERO.primaryCtaLabel}
-          class="btn btn--gold"
-        />
-        <a href={registrationHref} class="btn btn--outline-light">
-          {HOME_HERO.secondaryCtaLabel}
-        </a>
-      </div>
-
-      <p class="hero__note">{HOME_HERO.accountNote}</p>
-    </div>
-  </div>
-</section>
-
-<section class="why-strip" aria-labelledby="why-study-heading">
-  <div class="container why-strip__inner">
-    <h2 id="why-study-heading" class="why-strip__heading">{HOME_HERO.whyTitle}</h2>
-    <ul class="why-strip__list">
-      {HOME_HERO.whyPoints.map((point, i) => (
-        <li class="why-strip__item">
-          <span aria-hidden="true" class="why-strip__icon"><Icon name={whyIcons[i] ?? 'check'} /></span>
-          <span>{point}</span>
-        </li>
-      ))}
-    </ul>
-  </div>
-</section>
-
+{/* Partner sites lead with the partner's own introduction. */}
 {partner && <PartnerIntro partner={partner} />}
 
-<section class="courses-section" aria-labelledby="online-courses-heading">
-  <div class="container courses-section__inner">
-    <div class="courses-section__header">
-      <div class="courses-section__intro">
-        <h2 id="online-courses-heading" class="courses-section__heading">
-          {HOME_COURSES_INTRO.heading}
-        </h2>
-        <p class="courses-section__lead" data-cms="courses_lead">{HOME_COURSES_INTRO.lead}</p>
-      </div>
-
-      <EnrolLink
-        destination={TEACHABLE_CATALOG_URL}
-        partner={partner}
-        label={HOME_COURSES_INTRO.allCoursesLabel}
-        class="btn btn--outline-navy"
-      />
+<!--
+  Opening: hero film + the "You bring the experience" statement.
+  Without JS (and on phones / reduced motion) they read top to bottom. On wide screens with motion,
+  the stage pins and the film contracts into a framed picture while the page turns ivory.
+-->
+<section class="opening" aria-labelledby="home-hero-heading" data-opening>
+  <div class="opening__stage">
+   <div class="hero">
+    <div class="hero__media" data-hero-media>
+      {/* Brand film: CCES builds swap /media/hero-ccact for /media/hero-cces (CCES_REWRITES). */}
+      <video class="hero__video" autoplay muted loop playsinline preload="metadata" poster="/media/hero-ccact.webp" src="/media/hero-ccact.mp4" aria-hidden="true"></video>
+      <span class="hero__veil" aria-hidden="true"></span>
     </div>
 
-    <div class="programme-grid">
-      {HOME_PROGRAMMES.map((programme) => (
-        <article class="programme-card">
-          <div class="programme-card__media">
-            <img src={`/images/courses/${programme.id}.webp`} alt="" width="800" height="450" loading="lazy" decoding="async" />
-          </div>
-          <div class="programme-card__top">
-            <span class="programme-card__badge" aria-hidden="true">
-              <Icon name={programmeIcons[programme.id] ?? 'file'} />
-            </span>
-            <p class="programme-card__code">{programme.code}</p>
-          </div>
-          <h3 class="programme-card__title">{programme.title}</h3>
-          <p class="programme-card__blurb">{programme.blurb}</p>
-          <ul class="programme-card__chips">
-            {programme.meta.split(' · ').map((chip) => (
-              <li class="programme-card__chip">{chip}</li>
-            ))}
-          </ul>
-          {programme.teachableUrl ? (
-            <EnrolLink
-              destination={programme.teachableUrl}
-              partner={partner}
-              label={programme.ctaLabel}
-              hint={programme.title}
-              class="programme-card__cta"
+    <button type="button" class="hero__motion-toggle" aria-pressed="false" aria-label="Pause background video">
+      <svg class="hero__icon-pause" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
+      <svg class="hero__icon-play" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z" /></svg>
+    </button>
+
+    <div class="container hero__inner" data-hero-copy>
+      <p class="hero__eyebrow">{HOME_HERO.eyebrow}</p>
+      <h1 id="home-hero-heading" class="hero__title">
+        <span class="hero__line"><span>{HOME_HERO.headlineLine1}</span></span>
+        <span class="hero__line hero__line--accent"><span>{HOME_HERO.headlineLine2}</span></span>
+      </h1>
+      <p class="hero__lead" data-cms="hero_lead">{HOME_HERO.lead}</p>
+      <div class="hero__actions">
+        <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label={HOME_HERO.primaryCtaLabel} class="btn btn--gold" />
+        <a href="#explorer" class="btn btn--outline-light">{HOME_HERO.secondaryCtaLabel}</a>
+      </div>
+      <p class="hero__note">{HOME_HERO.accountNote}</p>
+    </div>
+   </div>
+
+    <div class="statement" data-statement>
+      <div class="container statement__inner">
+        <span class="gold-line statement__line" aria-hidden="true" data-statement-line></span>
+        <p class="statement__text">
+          <span class="statement__row" data-statement-row>{story.statementLine1}</span>
+          <span class="statement__row statement__row--accent" data-statement-row>{story.statementLine2}</span>
+        </p>
+        <img class="statement__still" src="/media/hero-ccact.webp" alt="" width="1920" height="1080" loading="lazy" decoding="async" />
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Three chapters, linked by the gold line -->
+<section class="chapters" aria-labelledby="chapters-heading" data-chapters>
+  <div class="container chapters__inner">
+    <h2 id="chapters-heading" class="sr-only">How continuing education fits your career</h2>
+    <ol class="chapters__list">
+      {story.chapters.map((c, i) => (
+        <li class="chapter" data-chapter>
+          <div class="chapter__media">
+            <img
+              src={`${c.image}-864.webp`}
+              srcset={`${c.image}-640.webp 640w, ${c.image}-864.webp 864w`}
+              sizes="(min-width: 900px) 42vw, 92vw"
+              alt={c.alt}
+              width="864"
+              height="1080"
+              loading="lazy"
+              decoding="async"
             />
-          ) : (
-            <a
-              href={pageUrl(programme.internalPage ?? 'contact', partner)}
-              class="programme-card__cta"
-            >
-              {programme.ctaLabel}<span class="sr-only"> — {programme.title}</span>
-            </a>
-          )}
-        </article>
+          </div>
+          <div class="chapter__copy">
+            <p class="chapter__label"><span class="chapter__num">{String(i + 1).padStart(2, '0')}</span>{c.label}</p>
+            <h3 class="chapter__title">{c.title}</h3>
+            <p class="chapter__body">{c.body}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <span class="gold-line chapters__rail" aria-hidden="true"><span data-chapter-progress></span></span>
+    <p class="chapters__note">Photos in this section are illustrative.</p>
+  </div>
+</section>
+
+<!-- Guided course discovery -->
+<section class="explorer" id="explorer" aria-labelledby="explorer-heading" data-explorer>
+  <div class="container">
+    <header class="explorer__head">
+      <p class="section-eyebrow">Find your starting point</p>
+      <h2 id="explorer-heading" class="explorer__heading">Explore the programmes</h2>
+      <p class="explorer__lead">Choose an interest, then pick a programme to see what it covers. Every course is online and self-paced, with enrolment through our secure Teachable school.</p>
+    </header>
+
+    <div class="explorer__filters" role="group" aria-label="Filter programmes by interest" data-filters hidden>
+      {HOME_INTERESTS.map((f, i) => (
+        <button type="button" class="chip" aria-pressed={i === 0 ? 'true' : 'false'} data-filter={f.id}>{f.label}</button>
       ))}
     </div>
 
-    <div class="advisor-row">
-      <p class="advisor-row__text">
-        <strong>Not sure where to start?</strong>
-        Tell our student support team about your education and goals, and we will point you to the right course.
-      </p>
-      <a href={pageUrl('contact', partner)} class="btn btn--outline-navy">Talk to an advisor</a>
+    <div class="explorer__body">
+      <div class="explorer__tabs" role="tablist" aria-orientation="vertical" aria-label="Programmes" data-tablist hidden>
+        {HOME_PROGRAMMES.map((p, i) => (
+          <button
+            type="button"
+            role="tab"
+            id={`tab-${p.id}`}
+            class="explorer__tab"
+            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-controls={`panel-${p.id}`}
+            tabindex={i === 0 ? 0 : -1}
+            data-tab={p.id}
+            data-interests={interestsFor(p.id)}
+          >
+            <span class="explorer__tab-code">{p.code}</span>
+            <span class="explorer__tab-title">{p.title}</span>
+          </button>
+        ))}
+      </div>
+
+      <div class="explorer__panels">
+        {HOME_PROGRAMMES.map((p) => (
+          <article class="programme" id={`panel-${p.id}`} role="tabpanel" aria-labelledby={`tab-${p.id}`} data-panel={p.id} data-interests={interestsFor(p.id)}>
+            <div class="programme__media">
+              <img src={`/images/courses/${p.id}.webp`} alt="" width="800" height="450" loading="lazy" decoding="async" />
+            </div>
+            <div class="programme__copy">
+              <p class="programme__code">{p.code}</p>
+              <h3 class="programme__title">{p.title}</h3>
+              <p class="programme__blurb">{p.blurb}</p>
+              <ul class="programme__meta">
+                {p.meta.split(' · ').map((chip) => <li>{chip}</li>)}
+              </ul>
+              <div class="programme__actions">
+                {p.teachableUrl ? (
+                  <EnrolLink destination={p.teachableUrl} partner={partner} label={p.ctaLabel} hint={p.title} class="btn btn--navy" />
+                ) : (
+                  <a href={pageUrl(p.internalPage ?? 'contact', partner)} class="btn btn--navy">{p.ctaLabel}<span class="sr-only"> — {p.title}</span></a>
+                )}
+                <a href={`${pageUrl('courses', partner)}#${courseAnchor[p.id] ?? ''}`} class="text-link">Course details<span class="sr-only"> for {p.title}</span></a>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
+
+    <p class="explorer__foot">
+      <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label="Browse the full catalogue on Teachable" class="text-link" />
+      <span aria-hidden="true">·</span>
+      <a href={pageUrl('contact', partner)} class="text-link">Not sure? Talk to an advisor</a>
+    </p>
   </div>
 </section>
 
 <HomeSections partner={partner} />
 
-<script is:inline>
-  // Background film: never autoplays for reduced-motion users, and can always be paused (WCAG 2.2.2).
-  (() => {
-    const video = document.querySelector('.hero__video');
-    const toggle = document.querySelector('.hero__motion-toggle');
-    if (!video || !toggle) return;
-    const set = (paused) => {
-      paused ? video.pause() : video.play().catch(() => {});
-      toggle.setAttribute('aria-pressed', String(paused));
-      toggle.setAttribute('aria-label', paused ? 'Play background video' : 'Pause background video');
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+  /* ---------- Hero film: pause control, and only plays while visible ---------- */
+  const video = document.querySelector<HTMLVideoElement>('.hero__video');
+  const toggle = document.querySelector<HTMLButtonElement>('.hero__motion-toggle');
+  if (video && toggle) {
+    let userPaused = reduce.matches; // never autoplays for reduced-motion users
+    const sync = (visible: boolean) => {
+      if (userPaused || !visible) video.pause();
+      else video.play().catch(() => {});
+      toggle.setAttribute('aria-pressed', String(userPaused));
+      toggle.setAttribute('aria-label', userPaused ? 'Play background video' : 'Pause background video');
     };
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) set(true);
-    toggle.addEventListener('click', () => set(!video.paused));
-  })();
+    let visible = true;
+    new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; sync(visible); }, { threshold: 0.15 }).observe(video);
+    toggle.addEventListener('click', () => { userPaused = !userPaused; sync(visible); });
+    sync(visible);
+  }
+
+  /* ---------- Signature sequences (wide screens with motion only) ---------- */
+  const mm = gsap.matchMedia();
+  mm.add('(min-width: 900px) and (prefers-reduced-motion: no-preference)', () => {
+    const opening = document.querySelector<HTMLElement>('[data-opening]');
+    const chapters = document.querySelector<HTMLElement>('[data-chapters]');
+    opening?.classList.add('is-enhanced');
+    chapters?.classList.add('is-enhanced');
+
+    if (opening) {
+      const stage = opening.querySelector('.opening__stage');
+      gsap.timeline({
+        defaults: { ease: 'power2.inOut' },
+        scrollTrigger: { trigger: opening, start: 'top top', end: '+=110%', scrub: 0.6, pin: stage, anticipatePin: 1 },
+      })
+        .to(['[data-hero-copy]', '.hero__motion-toggle'], { yPercent: -18, autoAlpha: 0, duration: 0.35, ease: 'power1.in' }, 0)
+        .to('.hero__veil', { autoAlpha: 0, duration: 0.4 }, 0.05)
+        .to(stage, { backgroundColor: 'var(--color-cream)', duration: 0.2, ease: 'none' }, 0.28)
+        .fromTo('[data-hero-media]', { clipPath: 'inset(0% 0% 0% 0% round 0px)' }, { clipPath: 'inset(16% 6% 16% 50% round 6px)', duration: 0.6 }, 0)
+        .fromTo('.hero__video', { scale: 1.12 }, { scale: 1, duration: 0.6 }, 0)
+        .fromTo('[data-statement-line]', { scaleX: 0 }, { scaleX: 1, duration: 0.25, ease: 'power2.out' }, 0.5)
+        .fromTo('[data-statement-row]', { yPercent: 60, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.3, stagger: 0.12, ease: 'power3.out' }, 0.55);
+    }
+
+    if (chapters) {
+      const items = gsap.utils.toArray<HTMLElement>('[data-chapter]', chapters);
+      const tl = gsap.timeline({
+        defaults: { ease: 'power2.inOut' },
+        scrollTrigger: { trigger: chapters, start: 'top top', end: `+=${items.length * 70}%`, scrub: 0.6, pin: true, anticipatePin: 1 },
+      });
+      tl.fromTo('[data-chapter-progress]', { scaleY: 0 }, { scaleY: 1, ease: 'none', duration: items.length - 1 }, 0);
+      items.forEach((item, i) => {
+        if (i === 0) return;
+        const prev = items[i - 1];
+        const at = i - 1;
+        tl.to(prev.querySelector('.chapter__copy'), { yPercent: -20, autoAlpha: 0, duration: 0.4 }, at + 0.2)
+          .fromTo(item.querySelector('.chapter__media'), { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.7 }, at + 0.15)
+          .fromTo(item.querySelector('.chapter__media img'), { scale: 1.15 }, { scale: 1, duration: 0.8 }, at + 0.15)
+          .fromTo(item.querySelector('.chapter__copy'), { yPercent: 20, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.4 }, at + 0.5);
+      });
+    }
+
+    return () => {
+      opening?.classList.remove('is-enhanced');
+      chapters?.classList.remove('is-enhanced');
+    };
+  });
+
+  /* ---------- Course explorer: interest filters + vertical tabs ---------- */
+  const explorer = document.querySelector<HTMLElement>('[data-explorer]');
+  if (explorer) {
+    const filters = explorer.querySelector<HTMLElement>('[data-filters]')!;
+    const tablist = explorer.querySelector<HTMLElement>('[data-tablist]')!;
+    const tabs = [...tablist.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panels = [...explorer.querySelectorAll<HTMLElement>('[data-panel]')];
+    explorer.classList.add('is-enhanced');
+    filters.hidden = false;
+    tablist.hidden = false;
+
+    const visibleTabs = () => tabs.filter((t) => !t.hidden);
+    const select = (tab: HTMLButtonElement, focus = false) => {
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach((p) => {
+        const on = p.dataset.panel === tab.dataset.tab;
+        p.hidden = !on;
+        if (on) { p.classList.remove('is-entering'); void p.offsetWidth; p.classList.add('is-entering'); }
+      });
+      if (focus) tab.focus();
+    };
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => select(tab));
+      tab.addEventListener('keydown', (e) => {
+        const list = visibleTabs();
+        const i = list.indexOf(tab);
+        const forward = list[i + 1] ?? list[0];
+        const back = list[i - 1] ?? list[list.length - 1];
+        // Up/Down on wide screens (vertical list), Left/Right on phones (horizontal strip).
+        const next = ({ ArrowDown: forward, ArrowRight: forward, ArrowUp: back, ArrowLeft: back, Home: list[0], End: list[list.length - 1] } as Record<string, HTMLButtonElement>)[e.key];
+        if (next) { e.preventDefault(); select(next, true); }
+      });
+    });
+
+    filters.addEventListener('click', (e) => {
+      const button = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-filter]');
+      if (!button) return;
+      filters.querySelectorAll('[data-filter]').forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+      tabs.forEach((t) => { t.hidden = !(t.dataset.interests ?? '').split(' ').includes(button.dataset.filter!); });
+      const current = tabs.find((t) => t.getAttribute('aria-selected') === 'true');
+      select(current && !current.hidden ? current : visibleTabs()[0]);
+    });
+
+    select(tabs[0]);
+  }
 </script>
 
 <style>
-  .hero {
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+
+  /* ---------- Opening ---------- */
+  .opening { position: relative; }
+  .opening__stage {
     position: relative;
     isolation: isolate;
-    overflow: hidden;
-    min-height: min(88svh, 820px);
-    display: flex;
-    align-items: center;
     background: var(--color-navy);
-    color: var(--color-white);
   }
 
   .hero__media {
-    position: absolute;
-    inset: 0;
-    z-index: -2;
+    position: relative;
+    height: min(100svh, 980px);
+    overflow: clip;
+    background: var(--color-navy) url('/media/hero-ccact.webp') 70% center / cover no-repeat;
   }
+
+  .hero { position: relative; }
+  /* Main site: the hero tucks under the floating transparent header. */
+  :global(.site-header[data-overlay] ~ main) .hero { margin-top: calc(var(--header-h, 72px) * -1); }
+
+  .hero__video { width: 100%; height: 100%; object-fit: cover; object-position: 68% center; }
 
   /* Wide screens: the film sits right of the headline and fades in, so copy never covers a face. */
   @media (min-width: 900px) {
-    .hero__media {
-      left: 26%;
-      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 28%);
-      mask-image: linear-gradient(90deg, transparent 0%, #000 28%);
+    .hero__video {
+      width: 76%;
+      margin-left: 24%;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
+      mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
     }
   }
 
-  .hero__video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 70% center;
-  }
-
-  /* Brand-tinted veil: solid where the copy sits, clear where the film plays. */
-  .hero::before {
-    content: '';
+  /* Navy veil: solid behind the headline, clear where the film plays. */
+  .hero__veil {
     position: absolute;
     inset: 0;
-    z-index: -1;
     background:
-      linear-gradient(90deg, var(--color-navy) 0%, color-mix(in srgb, var(--color-navy) 70%, transparent) 42%, color-mix(in srgb, var(--color-navy) 8%, transparent) 72%, transparent 100%),
-      linear-gradient(0deg, color-mix(in srgb, var(--color-navy) 70%, transparent) 0%, transparent 35%);
+      linear-gradient(90deg, var(--color-navy) 0%, color-mix(in srgb, var(--color-navy) 78%, transparent) 38%, color-mix(in srgb, var(--color-navy) 10%, transparent) 70%, transparent 100%),
+      linear-gradient(0deg, color-mix(in srgb, var(--color-navy) 65%, transparent) 0%, transparent 30%);
   }
-
-  /* Phones: copy covers the whole film, so the veil is even and deep enough for AA text. */
-  @media (max-width: 899px) {
-    .hero::before { background: linear-gradient(180deg, color-mix(in srgb, var(--color-navy) 72%, transparent) 0%, color-mix(in srgb, var(--color-navy) 88%, transparent) 100%); }
-  }
-
-  /* Film drifts and copy lifts away as the visitor scrolls past (scroll-driven). */
-  @supports (animation-timeline: scroll()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .hero__video { animation: hero-drift linear both; animation-timeline: scroll(root); animation-range: 0 100svh; }
-      .hero__inner { animation: hero-lift linear both; animation-timeline: scroll(root); animation-range: 0 90svh; }
-      /* The pause button leaves with the copy; visibility makes it unfocusable once gone. */
-      .hero__motion-toggle { animation: toggle-hide linear both; animation-timeline: scroll(root); animation-range: 0 45svh; }
-    }
-  }
-  @keyframes toggle-hide { to { opacity: 0; visibility: hidden; } }
-  @keyframes hero-drift { from { transform: scale(1.04); } to { transform: scale(1.16) translateY(6%); } }
-  @keyframes hero-lift { to { transform: translateY(-80px); opacity: 0.2; } }
-
-  .hero__motion-toggle {
-    position: absolute;
-    right: 24px;
-    bottom: 24px;
-    z-index: 2;
-    width: 44px;
-    height: 44px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--color-white) 35%, transparent);
-    background: color-mix(in srgb, var(--color-navy) 40%, transparent);
-    backdrop-filter: blur(8px);
-    color: var(--color-white);
-    cursor: pointer;
-    transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
-  }
-  .hero__motion-toggle:hover { border-color: var(--color-gold-light); background: color-mix(in srgb, var(--color-navy) 70%, transparent); }
-  .hero__icon-play, .hero__motion-toggle[aria-pressed='true'] .hero__icon-pause { display: none; }
-  .hero__motion-toggle[aria-pressed='true'] .hero__icon-play { display: block; }
 
   .hero__inner {
-    width: 100%;
-    padding-block: 96px 104px;
+    position: absolute;
+    inset: 0;
     display: flex;
-    flex-wrap: wrap;
-    gap: 56px;
-    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: calc(var(--header-h, 72px) + 24px) 72px;
+    color: var(--color-white);
+    pointer-events: none;
   }
-
-  .hero__copy {
-    flex: 999 1 560px;
-    min-width: 0;
-  }
+  .hero__inner > * { pointer-events: auto; }
 
   .hero__eyebrow {
-    margin: 0 0 20px;
+    margin: 0 0 28px;
     font-size: 12px;
-    letter-spacing: 0.19em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--color-gold);
-    font-weight: 500;
   }
 
   .hero__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: clamp(2.5rem, 5.4vw, 4.5rem);
-    line-height: 1.02;
-    letter-spacing: -0.012em;
+    font-size: clamp(2.9rem, 5.2vw, 5.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.015em;
     font-weight: 600;
     color: var(--color-white);
   }
 
-  .hero__title-em {
-    font-style: italic;
-    font-weight: 500;
-    color: var(--color-gold-light);
-  }
+  .hero__line { display: block; overflow: clip; padding-bottom: 0.06em; }
+  .hero__line > span { display: block; }
+  .hero__line--accent { font-style: italic; font-weight: 500; color: var(--color-gold-light); }
 
   .hero__lead {
-    margin: 26px 0 0;
+    margin: 30px 0 0;
+    max-width: 54ch;
     font-size: 18px;
     line-height: 1.62;
     color: var(--color-on-dark);
-    max-width: 580px;
   }
 
-  .hero__actions {
-    margin-top: 36px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
+  .hero__actions { margin-top: 34px; display: flex; flex-wrap: wrap; gap: 14px; }
+  .hero__note { margin: 20px 0 0; font-size: 13.5px; color: var(--color-on-dark-muted); }
 
-  .hero__note {
-    margin: 22px 0 0;
-    font-size: 13.5px;
-    color: var(--color-on-dark-muted);
-  }
-
-  .why-strip {
-    background: var(--color-navy-elevated);
-    border-bottom: 1px solid var(--color-navy-card-border);
-  }
-
-  .why-strip__inner {
-    padding-block: 28px;
-  }
-
-  .why-strip__heading {
-    margin: 0 0 16px;
-    font-family: var(--font-serif);
-    font-size: 19px;
-    font-weight: 600;
-    color: var(--color-white);
-    line-height: 1.3;
-  }
-
-  .why-strip__list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px 28px;
-  }
-
-  .why-strip__item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    font-size: 15.5px;
-    font-weight: 700;
-    line-height: 1.4;
-    color: var(--color-white);
-  }
-
-  .why-strip__icon {
-    flex-shrink: 0;
+  .hero__motion-toggle {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    z-index: 3;
     width: 44px;
     height: 44px;
     display: grid;
     place-items: center;
     border-radius: 50%;
-    background: var(--color-navy);
-    border: 1px solid var(--color-navy-card-border);
-    color: var(--color-gold-light);
+    border: 1px solid color-mix(in srgb, var(--color-white) 40%, transparent);
+    background: color-mix(in srgb, var(--color-navy) 45%, transparent);
+    backdrop-filter: blur(8px);
+    color: var(--color-white);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
   }
+  .hero__motion-toggle:hover { border-color: var(--color-gold-light); background: color-mix(in srgb, var(--color-navy) 75%, transparent); }
+  .hero__icon-play, .hero__motion-toggle[aria-pressed='true'] .hero__icon-pause { display: none; }
+  .hero__motion-toggle[aria-pressed='true'] .hero__icon-play { display: block; }
 
-  .why-strip__icon :global(svg) {
-    width: 22px;
-    height: 22px;
+  /* Statement: in normal flow by default (phones, no JS, reduced motion) */
+  .statement { background: var(--color-cream); color: var(--color-navy); }
+  .statement__inner {
+    position: relative;
+    padding-block: 96px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
   }
-
-  .courses-section {
-    background: var(--color-white);
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .courses-section__inner {
-    padding-block: 60px 64px;
-  }
-
-  .courses-section__header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 40px;
-  }
-
-  .courses-section__intro {
-    flex: 999 1 460px;
-    min-width: 0;
-  }
-
-  .courses-section__heading {
+  .statement__line { width: 72px; }
+  .statement__text {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-size: clamp(2.4rem, 5.2vw, 4.75rem);
+    line-height: 1.02;
+    letter-spacing: -0.01em;
     font-weight: 600;
-    color: var(--color-navy);
-    line-height: 1.2;
   }
+  .statement__row { display: block; }
+  .statement__row--accent { font-style: italic; font-weight: 500; color: var(--color-gold-dark); }
+  .statement__still { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: 68% center; border-radius: 6px; }
 
-  .courses-section__lead {
-    margin: 12px 0 0;
-    font-size: 15.5px;
-    line-height: 1.6;
-    color: var(--color-text-muted);
-    max-width: 620px;
-  }
-
-  .programme-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 24px;
-  }
-
-  .programme-card {
-    position: relative;
-    border: 1px solid var(--color-border);
-    border-top: 3px solid var(--color-gold);
-    background: var(--color-cream);
-    padding: 26px 26px 0;
+  /* Enhanced (wide + motion + JS): the statement sits inside the pinned stage, left of the framed film. */
+  .opening.is-enhanced .statement {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: transparent;
+    pointer-events: none;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+  }
+  .opening.is-enhanced .statement__inner { width: 100%; padding-block: 0; }
+  .opening.is-enhanced .statement__text { max-width: 9.5ch; }
+  .opening.is-enhanced .statement__still { display: none; }
+  .opening.is-enhanced .hero__inner { z-index: 2; }
+
+  @media (min-width: 900px) {
+    .statement__inner { grid-template-columns: 5fr 4fr; align-items: center; }
+    .statement__line { grid-column: 1 / -1; }
+  }
+
+  /* Phones: the copy sits in normal flow (it can be taller than the screen) and the film fills behind it. */
+  @media (max-width: 899px) {
+    .hero__media { position: absolute; inset: 0; height: auto; }
+    .hero__inner { position: relative; inset: auto; min-height: 88svh; padding-bottom: 96px; }
+    .hero__veil { background: linear-gradient(180deg, color-mix(in srgb, var(--color-navy) 70%, transparent), color-mix(in srgb, var(--color-navy) 90%, transparent)); }
+    .hero__lead { font-size: 16.5px; }
+    .statement__inner { padding-block: 72px; }
+  }
+
+  /* ---------- Chapters ---------- */
+  .chapters { background: var(--color-cream); }
+  .chapters__inner { position: relative; padding-block: 24px 104px; }
+  .chapters__list { margin: 0; padding: 0 0 0 36px; list-style: none; display: grid; gap: 72px; position: relative; }
+  /* The gold rail on the left links the chapters (phones / no JS). */
+  .chapters__list::before { content: ''; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 1px; background: var(--color-gold); }
+  .chapter { display: grid; gap: 28px; }
+  .chapter__media { overflow: clip; border-radius: 6px; aspect-ratio: 4 / 5; max-height: 72svh; background: var(--color-sand); }
+  .chapter__media img { width: 100%; height: 100%; object-fit: cover; }
+  .chapter__label {
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
     gap: 14px;
-    min-width: 0;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
-  }
-
-  .programme-card:hover,
-  .programme-card:focus-within {
-    border-color: var(--color-gold);
-    box-shadow: 0 10px 28px rgba(21, 35, 62, 0.1);
-  }
-
-  /* Photo bleeds to the card edges; it drifts inside its frame as the card scrolls past. */
-  .programme-card__media {
-    margin: -26px -26px 4px;
-    aspect-ratio: 16 / 9;
-    overflow: clip; /* not hidden: hidden traps view() timelines */
-    background: var(--color-navy);
-  }
-
-  .programme-card__media img {
-    width: 100%;
-    height: 118%;
-    object-fit: cover;
-    transform: translateY(-8%);
-    transition: scale 600ms var(--ease-out);
-  }
-
-  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    .programme-card:hover .programme-card__media img { scale: 1.05; }
-  }
-
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .programme-card__media img { animation: card-parallax linear both; animation-timeline: view(); animation-range: cover; }
-    }
-  }
-  @keyframes card-parallax { from { transform: translateY(-15%); } to { transform: translateY(0%); } }
-
-  .programme-card__top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .programme-card__badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--color-navy);
-    color: var(--color-gold-light);
-    flex-shrink: 0;
-  }
-
-  .programme-card__badge :global(svg) {
-    width: 24px;
-    height: 24px;
-  }
-
-  .programme-card__code {
-    margin: 0;
     font-size: 12px;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--color-gold-dark);
-    font-weight: 700;
   }
-
-  .programme-card__title {
+  .chapter__num { font-variant-numeric: tabular-nums; color: var(--color-navy); }
+  .chapter__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 26px;
-    line-height: 1.15;
-    font-weight: 700;
+    font-size: clamp(2rem, 3.8vw, 3.4rem);
+    line-height: 1.04;
+    font-weight: 600;
     color: var(--color-navy);
+    text-wrap: balance;
+  }
+  .chapter__body { margin: 18px 0 0; max-width: 46ch; font-size: 17px; line-height: 1.7; color: var(--color-text); }
+  .chapters__rail { display: none; }
+  .chapters__note { margin: 32px 0 0 36px; font-size: 12.5px; color: var(--color-text-subtle); }
+
+  @media (min-width: 900px) {
+    .chapter { grid-template-columns: 5fr 4fr; align-items: center; gap: 64px; }
+    .chapter__media { order: 2; }
   }
 
-  .programme-card__blurb {
-    margin: 0;
-    font-size: 15.5px;
-    line-height: 1.6;
-    color: var(--color-text-muted);
-    flex-grow: 1;
-  }
-
-  .programme-card__chips {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .programme-card__chip {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--color-navy);
-    background: var(--color-sand);
-    border: 1px solid var(--color-border);
-    padding: 4px 10px;
-    border-radius: 999px;
-  }
-
-  .programme-card :global(.programme-card__cta) {
-    margin: 4px -26px 0;
-    padding: 0 26px;
-    min-height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-top: 1px solid var(--color-border);
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--color-navy);
-    text-decoration: none;
-  }
-
-  .programme-card :global(.programme-card__cta)::after {
-    content: '→';
-    content: '→' / '';
-    font-size: 18px;
-    color: var(--color-gold-dark);
-    transition: transform 0.2s ease;
-  }
-
-  .programme-card :global(.programme-card__cta):hover {
-    color: var(--color-gold-dark);
-  }
-
-  .programme-card :global(.programme-card__cta):hover::after {
-    transform: translateX(4px);
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-  }
-
-  .advisor-row {
-    margin-top: 32px;
-    padding: 22px 26px;
-    background: var(--color-sand);
-    border: 1px solid var(--color-border);
-    border-left: 3px solid var(--color-gold);
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px 24px;
-  }
-
-  .advisor-row__text {
-    margin: 0;
-    font-size: 16px;
-    color: var(--color-text);
-    flex: 1 1 360px;
-  }
-
-  .advisor-row__text strong {
-    font-family: var(--font-serif);
-    font-size: 22px;
-    color: var(--color-navy);
+  /* Enhanced: one pinned stage; chapters stack and swap with image masks. */
+  .chapters.is-enhanced .chapters__inner { height: 100svh; padding-block: 0; display: flex; flex-direction: column; justify-content: center; }
+  .chapters.is-enhanced .chapters__list { padding-left: 64px; display: block; height: min(72svh, 640px); }
+  .chapters.is-enhanced .chapters__list::before { display: none; }
+  .chapters.is-enhanced .chapter { position: absolute; inset: 0 0 0 64px; }
+  .chapters.is-enhanced .chapter + .chapter .chapter__media { clip-path: inset(100% 0 0 0); }
+  .chapters.is-enhanced .chapter + .chapter .chapter__copy { opacity: 0; visibility: hidden; }
+  .chapters.is-enhanced .chapter__media { height: min(72svh, 640px); max-height: none; aspect-ratio: auto; }
+  .chapters.is-enhanced .chapters__rail {
     display: block;
-    font-size-adjust: 0.44;
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    height: min(72svh, 640px);
+    translate: 0 -50%;
+    width: 1px;
+    background: color-mix(in srgb, var(--color-gold) 30%, transparent);
+  }
+  .chapters.is-enhanced .chapters__rail > span { position: absolute; inset: 0; background: var(--color-gold); transform-origin: top; }
+  .chapters.is-enhanced .chapters__note { position: absolute; bottom: 24px; margin: 0; }
+
+  /* ---------- Explorer ---------- */
+  .explorer { background: var(--color-white); border-top: 1px solid var(--color-border); }
+  .explorer > .container { padding-block: 104px; }
+  .explorer__head { max-width: 60ch; }
+  .explorer__heading {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: clamp(2.4rem, 5vw, 4.25rem);
+    line-height: 1;
+    font-weight: 600;
+    color: var(--color-navy);
+  }
+  .explorer__lead { margin: 18px 0 0; font-size: 17px; color: var(--color-text-muted); }
+
+  .explorer__filters { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    min-height: 44px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-white);
+    color: var(--color-navy);
+    font: 600 14px/1 var(--font-sans);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease, transform var(--dur-fast) ease;
+  }
+  .chip:hover { border-color: var(--color-gold); }
+  .chip:active { transform: scale(0.97); }
+  .chip[aria-pressed='true'] { background: var(--color-navy); border-color: var(--color-navy); color: var(--color-white); }
+
+  .explorer__body { margin-top: 32px; }
+  .explorer__panels { display: grid; gap: 48px; }
+
+  .programme { display: grid; gap: 28px; }
+  .programme__media { overflow: clip; border-radius: 6px; aspect-ratio: 16 / 10; background: var(--color-sand); }
+  .programme__media img { width: 100%; height: 100%; object-fit: cover; }
+  .programme__code { margin: 0 0 10px; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-gold-dark); }
+  .programme__title { margin: 0; font-family: var(--font-serif); font-size: clamp(1.9rem, 3vw, 2.75rem); line-height: 1.05; font-weight: 600; color: var(--color-navy); }
+  .programme__blurb { margin: 16px 0 0; max-width: 48ch; font-size: 17px; line-height: 1.68; color: var(--color-text); }
+  .programme__meta { margin: 20px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; color: var(--color-text-muted); }
+  .programme__meta li { display: inline-flex; align-items: center; gap: 8px; }
+  .programme__meta li::before { content: ''; width: 14px; height: 1px; background: var(--color-gold); }
+  .programme__actions { margin-top: 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; }
+
+  .explorer__foot { margin: 48px 0 0; display: flex; flex-wrap: wrap; gap: 10px 16px; color: var(--color-text-subtle); }
+
+  /* Enhanced: vertical tabs on the left, one programme at a time on the right. */
+  .explorer.is-enhanced .explorer__body { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 32px 56px; align-items: start; }
+  .explorer__tabs { display: flex; flex-direction: column; border-top: 1px solid var(--color-border); }
+  .explorer__tab {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 16px 18px 20px;
+    border: 0;
+    border-bottom: 1px solid var(--color-border);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease;
+  }
+  .explorer__tab::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 2px; background: var(--color-gold); transform: scaleY(0); transition: transform var(--dur-base) var(--ease-out); }
+  .explorer__tab:hover { color: var(--color-navy); background: var(--color-cream); }
+  .explorer__tab[aria-selected='true'] { color: var(--color-navy); }
+  .explorer__tab[aria-selected='true']::before { transform: scaleY(1); }
+  .explorer__tab-code { font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-gold-dark); }
+  .explorer__tab-title { font-family: var(--font-serif); font-size: 22px; font-weight: 600; line-height: 1.15; }
+
+  .explorer.is-enhanced .explorer__panels { display: block; }
+  .explorer.is-enhanced .programme { grid-template-columns: minmax(0, 1fr); }
+  @media (prefers-reduced-motion: no-preference) {
+    .programme.is-entering .programme__media { animation: mask-in 620ms var(--ease-out) both; }
+    .programme.is-entering .programme__copy > * { animation: copy-in 480ms var(--ease-out) both; }
+    .programme.is-entering .programme__copy > :nth-child(2) { animation-delay: 50ms; }
+    .programme.is-entering .programme__copy > :nth-child(3) { animation-delay: 90ms; }
+    .programme.is-entering .programme__copy > :nth-child(n + 4) { animation-delay: 130ms; }
+  }
+  @keyframes mask-in { from { clip-path: inset(0 0 0 100%); } }
+  @keyframes copy-in { from { opacity: 0; transform: translateY(12px); } }
+
+  @media (min-width: 900px) {
+    .programme { grid-template-columns: 6fr 5fr; align-items: center; gap: 48px; }
   }
 
-  @media (max-width: 960px) {
-    .hero__inner {
-      padding-block: 56px;
-      gap: 36px;
-    }
-
-    .programme-grid,
-    .why-strip__list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    /* copy covers the photo on narrow screens: flatten the overlay for legibility */
-    .hero {
-      background:
-        linear-gradient(color-mix(in srgb, var(--color-navy) 82%, transparent), color-mix(in srgb, var(--color-navy) 82%, transparent)),
-        url('/images/doctors-desk.jpg') 70% center / cover no-repeat,
-        var(--color-navy);
-    }
-  }
-
-  @media (max-width: 620px) {
-    .hero__inner {
-      padding-block: 44px 48px;
-      gap: 28px;
-    }
-
-    .hero__actions {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .why-strip__list {
-      grid-template-columns: 1fr;
-    }
-
-    .courses-section__inner {
-      padding-block: 44px 48px;
-    }
-
-    .courses-section__header {
-      margin-bottom: 28px;
-    }
-
-    .programme-grid {
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-
-    .programme-card {
-      padding: 22px 20px 0;
-    }
-
-    .programme-card :global(.programme-card__cta) {
-      margin-inline: -20px;
-      padding-inline: 20px;
-    }
+  @media (max-width: 899px) {
+    .explorer > .container { padding-block: 72px; }
+    .explorer.is-enhanced .explorer__body { grid-template-columns: 1fr; }
+    .explorer__tabs { flex-direction: row; overflow-x: auto; border-top: 0; gap: 8px; padding-bottom: 4px; scroll-snap-type: x mandatory; }
+    .explorer__tab { flex: 0 0 auto; border: 1px solid var(--color-border); border-radius: 6px; scroll-snap-align: start; max-width: 70vw; }
+    .explorer__tab::before { left: 12px; right: 12px; top: auto; bottom: 0; width: auto; height: 2px; transform: scaleX(0); }
+    .explorer__tab[aria-selected='true']::before { transform: scaleX(1); }
+    .explorer__tab-title { font-size: 18px; }
   }
 </style>
