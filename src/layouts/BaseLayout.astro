@@ -2,6 +2,7 @@
 import '../styles/tokens.css';
 import '../styles/global.css';
 import { BRAND } from '../content/site.mjs';
+import { SITE_BRAND } from '../lib/links.mjs';
 import SiteHeader from '../components/SiteHeader.astro';
 import PartnerStrip from '../components/PartnerStrip.astro';
 import ContinuingEducationNotice from '../components/ContinuingEducationNotice.astro';
@@ -61,6 +62,7 @@ const resolvedTitle = partner ? `${title} · ${partner.name}` : title;
     </main>
 
     <SiteFooter partner={partner} />
-    {supabaseUrl && supabaseKey && <script>import '../scripts/site-content.mjs';</script>}
+    {/* ponytail: owner-edited text (admin > Content) is CCACT-only; per-brand keys if CCES needs its own. */}
+    {SITE_BRAND === 'ccact' && supabaseUrl && supabaseKey && <script>import '../scripts/site-content.mjs';</script>}
   </body>
 </html>

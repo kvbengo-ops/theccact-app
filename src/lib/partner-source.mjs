@@ -1,7 +1,9 @@
 import { validatePartners } from './partners.mjs';
+import { SITE_BRAND } from './links.mjs';
 
 // This module is for build-time/server use only. Never import it into browser scripts.
-export async function loadLivePartners({ url, key, required = false, fetcher = fetch, statuses = ['live'] } = {}) {
+// Each site builds only its own brand's partners (partners.brand).
+export async function loadLivePartners({ url, key, required = false, fetcher = fetch, statuses = ['live'], brand = SITE_BRAND } = {}) {
   if (!url && !key && !required) return [];
   if (!url || !key) throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required together');
   let endpoint;
@@ -11,6 +13,7 @@ export async function loadLivePartners({ url, key, required = false, fetcher = f
   }
   endpoint.pathname = '/rest/v1/partners';
   endpoint.searchParams.set('status', statuses.length === 1 ? `eq.${statuses[0]}` : `in.(${statuses.join(',')})`);
+  endpoint.searchParams.set('brand', `eq.${brand}`);
   endpoint.searchParams.set('order', 'slug.asc');
   const records = [];
   const pageSize = 500;

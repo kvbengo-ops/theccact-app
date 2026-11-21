@@ -1,5 +1,30 @@
 import { pageUrl } from '../lib/links.mjs';
 
+/**
+ * The CCES site (SITE_BRAND=cces) is the same site with CCES's name, logo, colours and facts.
+ * These swaps run over the built HTML/JS (astro.config.mjs), in order, so every page and component
+ * is covered without a CCES copy of each string. Keys must match the built text (apostrophes are
+ * HTML-escaped there, so keep them out of keys). Facts that need whole new copy live in pages.mjs.
+ */
+export const CCES_REWRITES = [
+  ['<html lang="en"', '<html lang="en" data-brand="cces"'],
+  ['/ccact-logo-footer.webp', '/cces-logo.svg'],
+  ['/ccact-logo.png', '/cces-logo.svg'],
+  ['type="image/png" href="/cces-logo.svg"', 'type="image/svg+xml" href="/cces-logo.svg"'],
+  ['theccact@gmail.com', 'info@thecces.com'],
+  [' (or info@theccact.online as listed on the legacy FAQ)', ''],
+  ['founders are educators with more than 25 years of experience owning and operating a private healthcare college', 'Director is an educator with more than 25 years of experience owning and operating private healthcare colleges'],
+  ['Established in 2012', 'Established in 2022'],
+  ['Established 2012', 'Established 2022'],
+  ['Est. 2012', 'Est. 2022'],
+  ['more than 50 online', 'more than 25 online'],
+  ['Over 50 online', 'Over 25 online'],
+  ['50+ online', '25+ online'],
+  ['Canadian Centre For Advanced Career Training', 'Canadian Centre of Emerging Studies'],
+  ['Canadian Centre for Advanced Career Training', 'Canadian Centre of Emerging Studies'],
+  ['CCACT', 'CCES'],
+];
+
 /** Canonical external destinations from live CCACT Teachable catalog & corporate details. */
 export const TEACHABLE_CATALOG_URL =
   'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc';

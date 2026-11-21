@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 230" role="img" aria-label="CCES Logo">
+  <!-- Outer shield (white border) -->
+  <path d="M100 6 L188 44 L188 136 Q188 192 100 224 Q12 192 12 136 L12 44 Z"
+        fill="white"/>
+  <!-- Interior (transparent / navy fill stripped out) -->
+  <path d="M100 16 L178 52 L178 135 Q178 184 100 213 Q22 184 22 135 L22 52 Z"
+        fill="rgba(62,29,122,0.9)"/>
+  <!-- Inner border -->
+  <path d="M100 22 L172 56 L172 134 Q172 179 100 207 Q28 179 28 134 L28 56 Z"
+        fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+
+  <!-- Lighthouse silhouette (white) -->
+  <polygon points="100,28 86,50 114,50" fill="white"/>
+  <rect x="88" y="50" width="24" height="44" fill="white"/>
+  <rect x="91" y="58" width="5" height="7" fill="rgba(62,29,122,0.9)"/>
+  <rect x="104" y="58" width="5" height="7" fill="rgba(62,29,122,0.9)"/>
+  <rect x="91" y="72" width="5" height="7" fill="rgba(62,29,122,0.9)"/>
+  <rect x="104" y="72" width="5" height="7" fill="rgba(62,29,122,0.9)"/>
+  <rect x="84" y="92" width="32" height="6" fill="white"/>
+  <rect x="80" y="96" width="40" height="5" fill="white"/>
+
+  <!-- Laurel LEFT (orange) -->
+  <g fill="#F7941D">
+    <ellipse cx="66" cy="52" rx="7" ry="11" transform="rotate(-40 66 52)"/>
+    <ellipse cx="53" cy="63" rx="7" ry="11" transform="rotate(-55 53 63)"/>
+    <ellipse cx="44" cy="77" rx="7" ry="11" transform="rotate(-68 44 77)"/>
+    <ellipse cx="40" cy="93" rx="7" ry="11" transform="rotate(-80 40 93)"/>
+    <line x1="70" y1="56" x2="42" y2="98" stroke="#F7941D" stroke-width="2.5"/>
+  </g>
+
+  <!-- Laurel RIGHT (orange) -->
+  <g fill="#F7941D">
+    <ellipse cx="134" cy="52" rx="7" ry="11" transform="rotate(40 134 52)"/>
+    <ellipse cx="147" cy="63" rx="7" ry="11" transform="rotate(55 147 63)"/>
+    <ellipse cx="156" cy="77" rx="7" ry="11" transform="rotate(68 156 77)"/>
+    <ellipse cx="160" cy="93" rx="7" ry="11" transform="rotate(80 160 93)"/>
+    <line x1="130" y1="56" x2="158" y2="98" stroke="#F7941D" stroke-width="2.5"/>
+  </g>
+
+  <!-- Banner (white) -->
+  <rect x="12" y="103" width="176" height="36" fill="white"/>
+  <rect x="22" y="106" width="156" height="30" fill="rgba(62,29,122,0.9)"/>
+
+  <!-- CCES text in banner -->
+  <text x="100" y="127" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-weight="bold" font-size="22" letter-spacing="3" fill="white">CCES</text>
+
+  <!-- Subtitle -->
+  <text x="100" y="155" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="9" fill="rgba(255,255,255,0.85)">Canadian Centre of</text>
+  <text x="100" y="167" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="9" fill="rgba(255,255,255,0.85)">Emerging Studies</text>
+</svg>

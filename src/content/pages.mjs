@@ -1,4 +1,5 @@
 import { BRAND, TEACHABLE_CATALOG_URL } from './site.mjs';
+import { SITE_BRAND } from '../lib/links.mjs';
 
 export const ABOUT_PAGE = {
   title: 'About CCACT',
@@ -87,6 +88,21 @@ export const ABOUT_PAGE = {
     secondaryLabel: 'Contact Us',
   },
 };
+
+// CCES leadership copy, from the live CCES About page (CCES was established in 2022, so the CCACT founding story does not apply).
+if (SITE_BRAND === 'cces') {
+  const [jean, jeanelle, yvonne, edward] = ABOUT_PAGE.directorsSection.members;
+  ABOUT_PAGE.directorsSection = {
+    heading: 'Leadership Team',
+    lead: 'At the Canadian Centre of Emerging Studies (CCES), our leadership team brings together experience in healthcare education, student support, community engagement, and cross-sector collaboration. Together, we are committed to providing accessible, high-quality online continuing education opportunities for healthcare professionals.',
+    members: [
+      { ...jean, name: 'Jean McInnes-Robles', role: 'International Executive Director', bio: "Jean provides strategic leadership for CCES and brings more than 35 years of experience in healthcare education and private college operations in Canada and internationally. She oversees the organization's vision, educational direction, external relationships, and commitment to quality professional development." },
+      { ...jeanelle, role: 'National Executive Director – Director of National Partnerships', bio: "Jeanelle leads CCES's work with healthcare organizations, educational institutions, employers, and community organizations to expand learning opportunities and strengthen professional connections across Canada and internationally." },
+      { ...yvonne, role: 'Director of Student Success & Client Experience', bio: 'Yvonne and her team support learners throughout their CCES journey by providing enrolment assistance, student guidance, and ongoing client support. She is committed to ensuring students receive a positive, welcoming, and successful online learning experience.' },
+      { ...edward, name: 'Edward (Eddie) Robles', role: 'Community Outreach Director', bio: 'Eddie supports CCES community engagement initiatives by building relationships with community organizations, healthcare networks, and professional groups. He helps increase awareness of CCES programs and connects learners with opportunities for professional growth.' },
+    ],
+  };
+}
 
 export const COURSES_PAGE = {
   title: 'Online Courses — CCACT',

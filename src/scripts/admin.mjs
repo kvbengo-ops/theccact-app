@@ -15,6 +15,11 @@ import {
 
 const BUCKET = 'admin-avatars';
 const PARTNER_BUCKET = 'partner-photos';
+// Which website a partner page is built on (partners.brand).
+const BRAND_SITES = {
+  ccact: { label: 'theccact.com', origin: 'https://theccact.com' },
+  cces: { label: 'thecces.com', origin: 'https://thecces.com' },
+};
 const EMPTY_TEXT = {
   pending: 'No applications are waiting for review.',
   approved: 'No approved affiliates yet.',
@@ -237,11 +242,15 @@ export function setupAdmin(root, client) {
     }
     const url = `/partners/${row.partner_slug}/`;
     const next = PAGE_NEXT[row.partner_status];
+    const brandSelect = h('select', { class: 'btn btn--outline-navy', 'aria-label': `Website for ${row.name}`, onchange: (event) => setPageBrand(row, event.currentTarget) },
+      ...Object.entries(BRAND_SITES).map(([value, site]) => h('option', { value, text: site.label })));
+    brandSelect.value = row.partner_brand ?? 'ccact';
     return h('div', { class: 'app__page' },
       row.partner_status === 'live'
-        ? h('a', { class: 'page-url', href: url, target: '_blank', rel: 'noopener noreferrer' }, svg('globe'), url)
+        ? h('a', { class: 'page-url', href: `${BRAND_SITES[brandSelect.value].origin}${url}`, target: '_blank', rel: 'noopener noreferrer' }, svg('globe'), url)
         : h('span', { class: 'page-url' }, svg('globe'), url),
       h('span', { class: `chip chip--page-${row.partner_status}`, text: PAGE_STATUS[row.partner_status] ?? row.partner_status }),
+      brandSelect,
       next && twoStep(next.label, next.confirm, 'btn btn--outline-navy', (button) => setPageStatus(row, next, button)),
       h('button', { type: 'button', class: 'btn btn--outline-navy', onclick: (event) => pickPartnerPhoto(row, event.currentTarget) },
         svg('camera'), row.partner_image ? 'Change photo' : 'Add photo'),
@@ -268,6 +277,16 @@ export function setupAdmin(root, client) {
       toast(row.partner_status === 'live' ? 'Photo saved. It appears on the page in about 2 minutes.' : 'Photo saved.');
     });
     input.click();
+  }
+
+  async function setPageBrand(row, select) {
+    select.disabled = true;
+    const { error } = await client.rpc('admin_set_partner_brand', { page_slug: row.partner_slug, new_brand: select.value });
+    select.disabled = false;
+    if (error) { select.value = row.partner_brand ?? 'ccact'; return toast('Could not move this page. Refresh and try again.', 'error'); }
+    row.partner_brand = select.value;
+    renderApps();
+    toast(`Page moved to ${BRAND_SITES[select.value].label}.${row.partner_status === 'live' ? ' Both sites update in about 2 minutes.' : ''}`);
   }
 
   async function setPageStatus(row, next, button) {

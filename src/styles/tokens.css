@@ -45,3 +45,19 @@
   --gutter-mobile: 18px;
   --radius-sm: 2px;
 }
+
+/* CCES site (SITE_BRAND=cces): purple & gold from thecces live stylesheet, same AA pairings as above */
+[data-brand="cces"] {
+  --color-navy: #3E1D7A;
+  --color-navy-elevated: #4E2788;
+  --color-navy-border: #56308F;
+  --color-navy-card-border: #62409B;
+  --color-navy-outline: #8467B0;
+  --color-gold: #C8A96E;
+  --color-gold-light: #DBC48E;
+  --color-gold-light-hover: #E6D3A6;
+  --color-cream: #F8F4EE;
+  --color-on-dark: #E2D9F0;
+  --color-on-dark-muted: #C3B5DD;
+  --color-on-dark-subtle: #B3A3D3;
+}
