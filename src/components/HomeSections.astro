@@ -383,7 +383,7 @@ const courseAnchor: Record<string, string> = { gerontology: 'gerontology', crner
   .final {
     position: relative;
     isolation: isolate;
-    overflow: hidden;
+    overflow: clip; /* not hidden: hidden traps view() timelines */
     background: var(--color-navy);
     color: var(--color-white);
   }
@@ -469,7 +469,7 @@ const courseAnchor: Record<string, string> = { gerontology: 'gerontology', crner
     margin-top: 32px;
     aspect-ratio: 16 / 10;
     border-radius: 4px;
-    overflow: hidden;
+    overflow: clip; /* not hidden: hidden traps view() timelines */
     background: var(--color-navy-elevated);
     box-shadow: 0 24px 50px -24px rgb(0 0 0 / 0.7);
   }

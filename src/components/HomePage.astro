@@ -433,7 +433,7 @@ const whyIcons = ['clock', 'globe', 'landmark', 'cap'];
   .programme-card__media {
     margin: -26px -26px 4px;
     aspect-ratio: 16 / 9;
-    overflow: hidden;
+    overflow: clip; /* not hidden: hidden traps view() timelines */
     background: var(--color-navy);
   }
 
