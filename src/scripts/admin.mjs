@@ -14,6 +14,7 @@ import {
 } from '../lib/admin-helpers.mjs';
 
 const BUCKET = 'admin-avatars';
+const PARTNER_BUCKET = 'partner-photos';
 const EMPTY_TEXT = {
   pending: 'No applications are waiting for review.',
   approved: 'No approved affiliates yet.',
@@ -176,7 +177,10 @@ export function setupAdmin(root, client) {
       h('span', { class: `chip chip--${row.status}` }, svg(status.icon), status.label),
       row.status === 'pending' && h('div', { class: 'app__actions' }, approveButton(row), rejectButton(row)),
     );
-    return h('article', { class: 'app-row' }, h('span', { class: 'avatar', 'aria-hidden': 'true', text: initials(row.name) }), main, side);
+    const avatar = row.partner_image
+      ? h('span', { class: 'avatar', 'aria-hidden': 'true' }, h('img', { src: row.partner_image, alt: '' }))
+      : h('span', { class: 'avatar', 'aria-hidden': 'true', text: initials(row.name) });
+    return h('article', { class: 'app-row' }, avatar, main, side);
   }
 
   async function decide(row, decision, buttons) {
@@ -239,7 +243,31 @@ export function setupAdmin(root, client) {
         : h('span', { class: 'page-url' }, svg('globe'), url),
       h('span', { class: `chip chip--page-${row.partner_status}`, text: PAGE_STATUS[row.partner_status] ?? row.partner_status }),
       next && twoStep(next.label, next.confirm, 'btn btn--outline-navy', (button) => setPageStatus(row, next, button)),
+      h('button', { type: 'button', class: 'btn btn--outline-navy', onclick: (event) => pickPartnerPhoto(row, event.currentTarget) },
+        svg('camera'), row.partner_image ? 'Change photo' : 'Add photo'),
     );
+  }
+
+  // Uploads the partner's photo to the public bucket and points the page at it.
+  function pickPartnerPhoto(row, button) {
+    const input = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp' });
+    input.addEventListener('change', async () => {
+      const file = input.files[0];
+      const problem = validateAvatar(file);
+      if (problem) return toast(problem, 'error');
+      button.disabled = true;
+      const path = row.partner_slug;
+      const upload = await client.storage.from(PARTNER_BUCKET).upload(path, file, { upsert: true, contentType: file.type });
+      // ponytail: same path per partner, so ?v= busts caches when the photo is replaced.
+      const url = `${client.storage.from(PARTNER_BUCKET).getPublicUrl(path).data.publicUrl}?v=${Date.now()}`;
+      const { error } = upload.error ? upload : await client.rpc('admin_set_partner_image', { page_slug: row.partner_slug, image_url: url });
+      button.disabled = false;
+      if (error) return toast('Could not save the photo. Please try again.', 'error');
+      row.partner_image = url;
+      renderApps();
+      toast(row.partner_status === 'live' ? 'Photo saved. It appears on the page in about 2 minutes.' : 'Photo saved.');
+    });
+    input.click();
   }
 
   async function setPageStatus(row, next, button) {
