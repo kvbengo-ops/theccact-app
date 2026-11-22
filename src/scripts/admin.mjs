@@ -18,8 +18,9 @@ const PARTNER_BUCKET = 'partner-photos';
 // Which website a partner page is built on (partners.brand).
 // Pages on this site link relative (the custom domains may not point at Netlify yet); the CCES build tags <html data-brand="cces">.
 const BRAND_SITES = {
-  ccact: { label: 'theccact.com', origin: 'https://theccact.com' },
-  cces: { label: 'thecces.com', origin: 'https://thecces.com' },
+  // ponytail: Netlify addresses because theccact.com (old S3 site) and thecces.com (Wix) don't point at Netlify yet; swap to the domains once DNS moves.
+  ccact: { label: 'theccact.com', origin: 'https://theccact.netlify.app' },
+  cces: { label: 'thecces.com', origin: 'https://thecces.netlify.app' },
 };
 const EMPTY_TEXT = {
   pending: 'No applications are waiting for review.',
