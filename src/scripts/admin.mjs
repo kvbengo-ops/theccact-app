@@ -16,6 +16,7 @@ import {
 const BUCKET = 'admin-avatars';
 const PARTNER_BUCKET = 'partner-photos';
 // Which website a partner page is built on (partners.brand).
+// Pages on this site link relative (the custom domains may not point at Netlify yet); the CCES build tags <html data-brand="cces">.
 const BRAND_SITES = {
   ccact: { label: 'theccact.com', origin: 'https://theccact.com' },
   cces: { label: 'thecces.com', origin: 'https://thecces.com' },
@@ -247,7 +248,7 @@ export function setupAdmin(root, client) {
     brandSelect.value = row.partner_brand ?? 'ccact';
     return h('div', { class: 'app__page' },
       row.partner_status === 'live'
-        ? h('a', { class: 'page-url', href: `${BRAND_SITES[brandSelect.value].origin}${url}`, target: '_blank', rel: 'noopener noreferrer' }, svg('globe'), url)
+        ? h('a', { class: 'page-url', href: brandSelect.value === (document.documentElement.dataset.brand ?? 'ccact') ? url : `${BRAND_SITES[brandSelect.value].origin}${url}`, target: '_blank', rel: 'noopener noreferrer' }, svg('globe'), url)
         : h('span', { class: 'page-url' }, svg('globe'), url),
       h('span', { class: `chip chip--page-${row.partner_status}`, text: PAGE_STATUS[row.partner_status] ?? row.partner_status }),
       brandSelect,
