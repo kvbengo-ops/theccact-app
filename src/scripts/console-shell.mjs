@@ -1,4 +1,4 @@
-// Shared behaviour for the owner console and the affiliate portal:
+// Shared behavior for the owner console and the affiliate portal:
 // collapsible sidebar / mobile drawer, profile menu, dialogs, toast and password reveal.
 import { ICONS } from '../lib/icons.mjs';
 

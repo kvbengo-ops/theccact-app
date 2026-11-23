@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { h, setupShell, showError, svg } from './console-shell.mjs';
+import { AFFILIATE_FORMS } from '../content/affiliate-forms.mjs';
 import {
   CONTENT_FIELDS,
   countByStatus,
@@ -12,6 +13,19 @@ import {
   validateGrant,
   validateNewPassword,
 } from '../lib/admin-helpers.mjs';
+
+// Question text for each stored answer key; checkbox/radio sets use the short question shown above them.
+const ANSWER_LABELS = { ageConfirm: 'Confirms 18 years of age or older' };
+for (const sections of Object.values(AFFILIATE_FORMS)) {
+  for (const { title, items } of sections) {
+    let question = title;
+    for (const item of items) {
+      if (item.p) question = item.p.length < 160 ? item.p : title;
+      if (item.field) ANSWER_LABELS[item.field] ??= item.label;
+      if (item.group) ANSWER_LABELS[item.group] ??= question;
+    }
+  }
+}
 
 const BUCKET = 'admin-avatars';
 const PARTNER_BUCKET = 'partner-photos';
@@ -169,7 +183,7 @@ export function setupAdmin(root, client) {
     ].filter(Boolean).join(' · ');
     const main = h('div', {},
       h('h3', { class: 'app__name' }, row.name,
-        row.type && h('span', { class: `type-tag type-tag--${isOrg ? 'org' : 'ind'}` }, svg(isOrg ? 'building' : 'user'), isOrg ? 'Organisation' : 'Individual')),
+        row.type && h('span', { class: `type-tag type-tag--${isOrg ? 'org' : 'ind'}` }, svg(isOrg ? 'building' : 'user'), isOrg ? 'Organization' : 'Individual')),
       h('p', { class: 'app__line', text: row.email }),
       meta && h('p', { class: 'app__line', text: meta }),
       extra && h('p', { class: 'app__line', text: extra }),
@@ -178,6 +192,10 @@ export function setupAdmin(root, client) {
       row.introduction && h('details', { class: 'app__intro' },
         h('summary', { text: 'Read introduction' }),
         h('p', { text: row.introduction })),
+      row.answers && h('details', { class: 'app__intro' },
+        h('summary', { text: 'Read full application' }),
+        h('dl', { class: 'app__answers' }, Object.entries(row.answers).filter(([key]) => key !== 'type')
+          .map(([key, value]) => [h('dt', { text: ANSWER_LABELS[key] ?? key }), h('dd', { text: [value].flat().join('; ') })]))),
       partnerControls(row),
     );
     const side = h('div', { class: 'app__side' },
@@ -240,7 +258,7 @@ export function setupAdmin(root, client) {
     if (row.status !== 'approved') return null;
     if (!row.partner_slug) {
       return h('div', { class: 'app__page' },
-        h('button', { type: 'button', class: 'btn btn--outline-navy', onclick: () => openGrant(row) }, svg('link'), 'Grant partner page'));
+        h('button', { type: 'button', class: 'btn btn--outline-navy', onclick: () => openGrant(row) }, svg('link'), 'Grant affiliate page'));
     }
     const url = `/partners/${row.partner_slug}/`;
     const next = PAGE_NEXT[row.partner_status];
@@ -349,14 +367,14 @@ export function setupAdmin(root, client) {
     submit.disabled = false;
     if (error) {
       return showError($('#grant-error'), error.code === '23505'
-        ? 'That page address or account already has a partner page. Choose another address.'
+        ? 'That page address or account already has an affiliate page. Choose another address.'
         : 'Could not create the page. Check the details and try again.');
     }
     granting.partner_slug = values.slug;
     granting.partner_status = 'preview';
     $('#dlg-grant').close();
     renderApps();
-    toast(`Partner page /partners/${values.slug}/ created as a preview.`);
+    toast(`Affiliate page /partners/${values.slug}/ created as a preview.`);
   });
 
   /* ---------- Content (CMS) ---------- */

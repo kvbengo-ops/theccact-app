@@ -63,11 +63,9 @@ const homeHref = pageUrl('', partner);
                 href={item.href}
                 class:list={[
                   'primary-nav__link',
-                  item.isPartnerLink && 'primary-nav__link--partner',
                   isCurrent && 'is-active',
                 ]}
                 aria-current={isCurrent ? 'page' : undefined}
-                title={item.isPartnerLink ? item.label : undefined}
               >
                 {item.label}
               </a>
@@ -78,7 +76,7 @@ const homeHref = pageUrl('', partner);
           <EnrolLink
             destination={TEACHABLE_CATALOG_URL}
             partner={partner}
-            label="Enrol Now"
+            label="Enroll Now"
             class="btn btn--gold-compact primary-nav__cta"
           />
         </li>
@@ -277,16 +275,6 @@ const homeHref = pageUrl('', partner);
     color: var(--color-gold-light);
   }
 
-  .primary-nav__link--partner {
-    color: var(--color-gold-light);
-    font-weight: 600;
-    max-width: 24ch;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: inline-block;
-    line-height: 34px;
-    vertical-align: middle;
-  }
 
   .primary-nav__link.is-active {
     color: var(--color-white);
@@ -372,12 +360,6 @@ const homeHref = pageUrl('', partner);
       white-space: normal;
     }
 
-    .primary-nav__link--partner {
-      max-width: none;
-      display: inline-flex;
-      line-height: 1.4;
-      overflow: visible;
-    }
 
     .primary-nav__cta-item {
       margin-top: 10px;

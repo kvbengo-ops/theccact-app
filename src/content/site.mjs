@@ -1,7 +1,7 @@
 import { pageUrl } from '../lib/links.mjs';
 
 /**
- * The CCES site (SITE_BRAND=cces) is the same site with CCES's name, logo, colours and facts.
+ * The CCES site (SITE_BRAND=cces) is the same site with CCES's name, logo, colors and facts.
  * These swaps run over the built HTML/JS (astro.config.mjs), in order, so every page and component
  * is covered without a CCES copy of each string. Keys must match the built text (apostrophes are
  * HTML-escaped there, so keep them out of keys). Facts that need whole new copy live in pages.mjs.
@@ -9,9 +9,10 @@ import { pageUrl } from '../lib/links.mjs';
 export const CCES_REWRITES = [
   ['<html lang="en"', '<html lang="en" data-brand="cces"'],
   ['/media/hero-ccact', '/media/hero-cces'],
-  ['/ccact-logo-footer.webp', '/cces-logo.svg'],
-  ['/ccact-logo.png', '/cces-logo.svg'],
-  ['type="image/png" href="/cces-logo.svg"', 'type="image/svg+xml" href="/cces-logo.svg"'],
+  ['/ccact-logo-footer.webp', '/cces-crest.png'],
+  ['/ccact-logo.png', '/cces-crest.png'],
+  ['The CCACT Est. 2012 Continuing Education crest', 'The CCES crest'],
+  ['the South East Asian community', 'the South Asian community'],
   ['theccact@gmail.com', 'info@thecces.com'],
   [' (or info@theccact.online as listed on the legacy FAQ)', ''],
   ['founders are educators with more than 25 years of experience owning and operating a private healthcare college', 'Director is an educator with more than 25 years of experience owning and operating private healthcare colleges'],
@@ -52,13 +53,13 @@ export const HOME_HERO = {
   eyebrow: 'Continuing education · Est. 2012',
   headlineLine1: 'Your experience matters.',
   headlineLine2: 'Build your next chapter.',
-  lead: 'The Canadian Centre For Advanced Career Training offers more than 50 online continuing education courses designed to support internationally trained professionals, with a special focus on the South Asian community.',
+  lead: 'The Canadian Centre For Advanced Career Training offers more than 50 online continuing education courses designed to support internationally trained professionals, with a special focus on the South East Asian community.',
   primaryCtaLabel: 'Explore courses',
   secondaryCtaLabel: 'Find your starting point',
-  accountNote: 'Creating an account does not enrol you in a course or result in any charge.',
+  accountNote: 'Creating an account does not enroll you in a course or result in any charge.',
   whyTitle: 'Why study with CCACT',
   whyPoints: [
-    'Immediate access upon enrolment',
+    'Immediate access upon enrollment',
     '100% online, study anywhere, anytime',
     'Built around Canadian healthcare standards',
     'Certificate of Completion for listed courses',
@@ -82,7 +83,7 @@ export const HOME_STORY = {
       id: 'learning',
       label: 'Your learning',
       title: 'Online, self-paced, on your schedule',
-      body: 'Study from anywhere with immediate access on enrolment. Courses are built around Canadian healthcare standards and best practices.',
+      body: 'Study from anywhere with immediate access on enrollment. Courses are built around Canadian healthcare standards and best practices.',
       image: '/images/chapters/learning',
       alt: 'Illustrative photo: handwritten study notes beside a laptop on a sunlit table.',
     },
@@ -90,16 +91,16 @@ export const HOME_STORY = {
       id: 'next',
       label: 'Your next chapter',
       title: 'Confidence for Canadian care settings',
-      body: 'A Certificate of Completion is issued for listed courses. These are continuing-education courses: they support your development but do not grant a licence, diploma or immigration status.',
+      body: 'A Certificate of Completion is issued for listed courses. These are continuing-education courses: they support your development but do not grant a license, diploma or immigration status.',
       image: '/images/chapters/next',
       alt: 'Illustrative photo: a nurse walking into a bright, airy care facility corridor.',
     },
   ],
 };
 
-/** Course explorer interest filters, mapped to HOME_PROGRAMMES ids. "All programmes" always shows every category. */
+/** Course explorer interest filters, mapped to HOME_PROGRAMMES ids. "All programs" always shows every category. */
 export const HOME_INTERESTS = [
-  { id: 'all', label: 'All programmes', programmes: ['gerontology', 'crner', 'chs', 'hpc', 'dm', 'esl'] },
+  { id: 'all', label: 'All programs', programmes: ['gerontology', 'crner', 'chs', 'hpc', 'dm', 'esl'] },
   { id: 'canadian', label: 'Canadian healthcare', programmes: ['chs', 'dm'] },
   { id: 'review', label: 'Nursing review', programmes: ['crner'] },
   { id: 'older', label: 'Older adult care', programmes: ['gerontology', 'hpc'] },
@@ -113,7 +114,7 @@ export const HOME_COURSES_INTRO = {
 };
 
 /**
- * Six homepage programme cards anchored to Main.dc.html and verified live Teachable URLs.
+ * Six homepage program cards anchored to Main.dc.html and verified live Teachable URLs.
  * ESL has no live Teachable product page yet and intentionally routes to Contact for updates.
  */
 export const HOME_PROGRAMMES = [
@@ -124,7 +125,7 @@ export const HOME_PROGRAMMES = [
     blurb:
       'The role of the geriatric nurse, health promotion strategies and common health conditions in the aging population.',
     meta: '9 courses · bundle available',
-    ctaLabel: 'Browse & enrol',
+    ctaLabel: 'Browse & enroll',
     teachableUrl:
       'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Gerontology+Nursing',
   },
@@ -135,7 +136,7 @@ export const HOME_PROGRAMMES = [
     blurb:
       'Exam writing techniques, competency categories and comprehensive practice exam guides for the Canadian Nursing Exam.',
     meta: '7 courses · practice exams',
-    ctaLabel: 'Browse & enrol',
+    ctaLabel: 'Browse & enroll',
     teachableUrl:
       'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Nursing+Exam+Review',
   },
@@ -146,7 +147,7 @@ export const HOME_PROGRAMMES = [
     blurb:
       'Canadian standards and regulations in health care, including ethics, informed consent and the nurse–client relationship.',
     meta: '4 courses · bundle CAD $149',
-    ctaLabel: 'Browse & enrol',
+    ctaLabel: 'Browse & enroll',
     teachableUrl:
       'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Health+Care+System',
   },
@@ -157,8 +158,8 @@ export const HOME_PROGRAMMES = [
     blurb:
       'Compassionate end-of-life care within the Canadian healthcare context, covering ethics and symptom management.',
     meta: '2 courses · bundle available',
-    ctaLabel: 'Browse & enrol',
-    // No Teachable category exists for HPC; the catalogue search returns exactly HPC-101, HPC-102 and the bundle.
+    ctaLabel: 'Browse & enroll',
+    // No Teachable category exists for HPC; the catalog search returns exactly HPC-101, HPC-102 and the bundle.
     teachableUrl:
       'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&search=hospice',
   },
@@ -169,7 +170,7 @@ export const HOME_PROGRAMMES = [
     blurb:
       'Theoretical foundations for electrocardiography, phlebotomy and peripheral intravenous therapy initiation.',
     meta: '3 courses · theory only',
-    ctaLabel: 'Browse & enrol',
+    ctaLabel: 'Browse & enroll',
     teachableUrl:
       'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Diagnostic+Modalities',
   },
@@ -178,7 +179,7 @@ export const HOME_PROGRAMMES = [
     code: 'ESL',
     title: 'English Communication Skills',
     blurb:
-      'Professional English for healthcare settings, patient-centred communication, documentation and CELPIP preparation.',
+      'Professional English for healthcare settings, patient-centered communication, documentation and CELPIP preparation.',
     meta: '7 modules · expanding',
     ctaLabel: 'Join mailing list',
     internalPage: 'contact',
@@ -189,22 +190,10 @@ export const CONTINUING_EDUCATION_NOTICE = {
   heading: 'Continuing education notice',
   body: 'CCACT offers online continuing-education, review, and professional-development courses. These courses do not provide a diploma or degree and do not lead directly to professional licensing or registration in Canada. They are designed to strengthen knowledge, practical understanding, and confidence while supporting personal and professional development.',
   partnerNotice:
-    'CCACT and authorised affiliate partners cannot guarantee employment, admission, licensing, professional registration, or immigration results. Course enrolment and tuition payment occur directly with CCACT on Teachable; partners never collect tuition.',
+    'CCACT and its authorized affiliates cannot guarantee employment, admission, licensing, professional registration, or immigration results. Course enrollment and tuition payment occur directly with CCACT on Teachable; affiliates never collect tuition.',
   directoryNotice:
-    'Authorised CCACT partners introduce prospective students to CCACT programs and never collect tuition. All course enrolment and payment is completed directly with CCACT through Teachable, and no partner can guarantee employment, licensing, professional recognition, or immigration outcomes.',
+    'Authorized CCACT affiliates introduce prospective students to CCACT programs and never collect tuition. All course enrollment and payment is completed directly with CCACT through Teachable, and no affiliate can guarantee employment, licensing, professional recognition, or immigration outcomes.',
 };
-
-/**
- * Formats the partner navigation label cleanly for both individuals ("About Maria")
- * and organisations ("About Maple Leaf Recruiting").
- */
-export function getPartnerNavLabel(partner) {
-  if (!partner?.name) return 'About Partner';
-  const trimmed = String(partner.name).trim();
-  if (partner.type === 'organisation') return `About ${trimmed}`;
-  const firstWord = trimmed.split(/\s+/)[0] || trimmed;
-  return `About ${firstWord}`;
-}
 
 /** Computes 1-2 uppercase monogram initials for avatar fallback. */
 export function getPartnerInitials(name) {
@@ -218,26 +207,18 @@ export function getPartnerInitials(name) {
 }
 
 /**
- * Builds the primary header navigation list according to PRD context rules:
- * partner sites preserve partner routes and exclude Affiliates recruitment.
+ * Builds the primary header navigation list. Affiliate sites keep their own routes and show
+ * no Affiliates link (the affiliate's profile is reached from the strip under the header).
  */
 export function getPrimaryNavItems(partner = null) {
-  const sharedStart = [
+  return [
     { key: '', label: 'Home', href: pageUrl('', partner) },
     { key: 'about', label: 'About', href: pageUrl('about', partner) },
     { key: 'courses', label: 'Online Courses', href: pageUrl('courses', partner) },
     { key: 'registration', label: 'Registration', href: pageUrl('registration', partner) },
     { key: 'study-in-canada', label: 'Study in Canada', href: pageUrl('study-in-canada', partner) },
     { key: 'faq', label: 'FAQ', href: pageUrl('faq', partner) },
-  ];
-
-  const contextItem = partner
-    ? { key: 'about-partner', label: getPartnerNavLabel(partner), href: pageUrl('about-partner', partner), isPartnerLink: true }
-    : { key: 'affiliates', label: 'Affiliates', href: BRAND.mainAffiliatesHref, isPartnerLink: false };
-
-  return [
-    ...sharedStart,
-    contextItem,
+    ...(partner ? [] : [{ key: 'affiliates', label: 'Affiliates', href: BRAND.mainAffiliatesHref }]),
     { key: 'contact', label: 'Contact', href: pageUrl('contact', partner) },
   ];
 }
@@ -256,17 +237,17 @@ export function getFooterColumns(partner = null) {
 
   const contextColumn = partner
     ? {
-        heading: 'Your partner',
+        heading: 'Your affiliate',
         links: [
           { label: `About ${partner.name}`, href: pageUrl('about-partner', partner) },
-          { label: 'Verify this partner', href: BRAND.mainDirectoryHref },
+          { label: 'Verify this affiliate', href: BRAND.mainDirectoryHref },
         ],
       }
     : {
         heading: 'Affiliate program',
         links: [
           { label: 'Become an affiliate', href: BRAND.mainAffiliatesHref },
-          { label: 'Approved partners', href: BRAND.mainDirectoryHref },
+          { label: 'Approved affiliates', href: BRAND.mainDirectoryHref },
         ],
       };
 

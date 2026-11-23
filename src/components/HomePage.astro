@@ -11,7 +11,7 @@ interface Props {
 
 const { partner = null } = Astro.props;
 const story = HOME_STORY;
-// Home programme id -> its section anchor on the courses page.
+// Home program id -> its section anchor on the courses page.
 const courseAnchor: Record<string, string> = { gerontology: 'gerontology', crner: 'nursing-exam', chs: 'healthcare', hpc: 'palliative', dm: 'diagnostics', esl: 'esl' };
 const interestsFor = (id: string) => HOME_INTERESTS.filter((i) => i.programmes.includes(id)).map((i) => i.id).join(' ');
 ---
@@ -104,18 +104,18 @@ const interestsFor = (id: string) => HOME_INTERESTS.filter((i) => i.programmes.i
   <div class="container">
     <header class="explorer__head">
       <p class="section-eyebrow">Find your starting point</p>
-      <h2 id="explorer-heading" class="explorer__heading">Explore the programmes</h2>
-      <p class="explorer__lead">Choose an interest, then pick a programme to see what it covers. Every course is online and self-paced, with enrolment through our secure Teachable school.</p>
+      <h2 id="explorer-heading" class="explorer__heading">Explore the programs</h2>
+      <p class="explorer__lead">Choose an interest, then pick a program to see what it covers. Every course is online and self-paced, with enrollment through our secure Teachable school.</p>
     </header>
 
-    <div class="explorer__filters" role="group" aria-label="Filter programmes by interest" data-filters hidden>
+    <div class="explorer__filters" role="group" aria-label="Filter programs by interest" data-filters hidden>
       {HOME_INTERESTS.map((f, i) => (
         <button type="button" class="chip" aria-pressed={i === 0 ? 'true' : 'false'} data-filter={f.id}>{f.label}</button>
       ))}
     </div>
 
     <div class="explorer__body">
-      <div class="explorer__tabs" role="tablist" aria-orientation="vertical" aria-label="Programmes" data-tablist hidden>
+      <div class="explorer__tabs" role="tablist" aria-orientation="vertical" aria-label="Programs" data-tablist hidden>
         {HOME_PROGRAMMES.map((p, i) => (
           <button
             type="button"
@@ -162,7 +162,7 @@ const interestsFor = (id: string) => HOME_INTERESTS.filter((i) => i.programmes.i
     </div>
 
     <p class="explorer__foot">
-      <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label="Browse the full catalogue on Teachable" class="text-link" />
+      <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label="Browse the full catalog on Teachable" class="text-link" />
       <span aria-hidden="true">·</span>
       <a href={pageUrl('contact', partner)} class="text-link">Not sure? Talk to an advisor</a>
     </p>
@@ -213,7 +213,9 @@ const interestsFor = (id: string) => HOME_INTERESTS.filter((i) => i.programmes.i
         .to('.hero__veil', { autoAlpha: 0, duration: 0.4 }, 0.05)
         .to(stage, { backgroundColor: 'var(--color-cream)', duration: 0.2, ease: 'none' }, 0.28)
         .fromTo('[data-hero-media]', { clipPath: 'inset(0% 0% 0% 0% round 0px)' }, { clipPath: 'inset(16% 6% 16% 50% round 6px)', duration: 0.6 }, 0)
-        .fromTo('.hero__video', { scale: 1.12 }, { scale: 1, duration: 0.6 }, 0)
+        // Shrink the whole film into the card (not just clip it), so faces aren't cut off. 0.68 = card height (68%) / film height;
+        // xPercent moves the film's centre (62% across) to the card's centre (72%). ponytail: tied to the inset above and the 76%/24% film box.
+        .fromTo('.hero__video', { scale: 1.12, xPercent: 0, '--hero-fade': '30%' }, { scale: 0.68, xPercent: 13.2, '--hero-fade': '0%', duration: 0.6 }, 0)
         .fromTo('[data-statement-line]', { scaleX: 0 }, { scaleX: 1, duration: 0.25, ease: 'power2.out' }, 0.5)
         .fromTo('[data-statement-row]', { yPercent: 60, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.3, stagger: 0.12, ease: 'power3.out' }, 0.55);
     }
@@ -323,8 +325,8 @@ const interestsFor = (id: string) => HOME_INTERESTS.filter((i) => i.programmes.i
     .hero__video {
       width: 76%;
       margin-left: 24%;
-      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
-      mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 var(--hero-fade, 30%));
+      mask-image: linear-gradient(90deg, transparent 0%, #000 var(--hero-fade, 30%));
     }
   }
 
@@ -559,7 +561,7 @@ const interestsFor = (id: string) => HOME_INTERESTS.filter((i) => i.programmes.i
 
   .explorer__foot { margin: 48px 0 0; display: flex; flex-wrap: wrap; gap: 10px 16px; color: var(--color-text-subtle); }
 
-  /* Enhanced: vertical tabs on the left, one programme at a time on the right. */
+  /* Enhanced: vertical tabs on the left, one program at a time on the right. */
   .explorer.is-enhanced .explorer__body { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 32px 56px; align-items: start; }
   .explorer__tabs { display: flex; flex-direction: column; border-top: 1px solid var(--color-border); }
   .explorer__tab {

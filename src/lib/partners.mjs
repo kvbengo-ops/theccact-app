@@ -34,7 +34,7 @@ export function validatePartners(records) {
       if (p[field] !== undefined && (!Array.isArray(p[field]) || p[field].some(v => !text(v)))) fail(`${field} must be an array of non-empty strings`);
     }
     if (p.services?.length > 4) fail('services must contain at most four items');
-    if (p.website !== undefined && (p.type !== 'organisation' || !httpsUrl(p.website))) fail('website must be an HTTPS URL for an organisation');
+    if (p.website !== undefined && (p.type !== 'organisation' || !httpsUrl(p.website))) fail('website must be an HTTPS URL for an organization');
     if (p.image !== undefined && (!text(p.image) || (!/^\/partner-images\/[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*\.[a-zA-Z0-9]+$/.test(p.image) && !httpsUrl(p.image)))) fail('image must be an HTTPS URL or /partner-images/ path');
     if (p.status === 'live' && (!date(p.contentReviewedDate) || !date(p.partnerApprovedDate))) fail('live partners require content review and partner approval dates');
   }

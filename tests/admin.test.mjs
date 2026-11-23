@@ -25,7 +25,7 @@ test('validateGrant requires a valid slug, type and every content field', () => 
   assert.equal(validateGrant(ok), '');
   assert.match(validateGrant({ ...ok, slug: 'Maria Santos' }), /lowercase/);
   assert.match(validateGrant({ ...ok, slug: 'a--b' }), /lowercase/);
-  assert.match(validateGrant({ ...ok, type: '' }), /individual or an organisation/);
+  assert.match(validateGrant({ ...ok, type: '' }), /individual or an organization/);
   assert.match(validateGrant({ ...ok, bio: '  ' }), /bio/);
   assert.match(validateGrant({ ...ok, referralCode: '' }), /referral code/);
 });

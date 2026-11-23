@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { submitApplication } from '../src/scripts/affiliate-apply.mjs';
+import { submitApplication, toApplication } from '../src/scripts/affiliate-apply.mjs';
 
 test('submits only a valid application for the signed-in user', async () => {
   let submitted;
@@ -25,8 +25,27 @@ test('organisation applications need a contact and a secure website; extras are 
   assert.deepEqual(submitted, { user_id: 'u', name: 'ACME Care', location: null, role: null, introduction: null, type: 'organisation', contact_name: 'Lee', website: 'https://acme.example' });
   await assert.rejects(submitApplication(client, { id: 'u' }, { name: 'ACME', type: 'organisation' }), /contact person/);
   await assert.rejects(submitApplication(client, { id: 'u' }, { name: 'ACME', type: 'organisation', contact_name: 'Lee', website: 'http://acme.example' }), /https/);
-  await assert.rejects(submitApplication(client, { id: 'u' }, { name: 'Ada', type: 'robot' }), /individual or organisation/);
+  await assert.rejects(submitApplication(client, { id: 'u' }, { name: 'Ada', type: 'robot' }), /individual or organization/);
   await submitApplication(client, { id: 'u' }, { name: 'Ada', type: 'individual', languages: 'English, Tagalog' });
   assert.equal(submitted.languages, 'English, Tagalog');
   assert.equal(submitted.type, 'individual');
+});
+
+test('full applications map to the review columns and keep every answer except login details', async () => {
+  const ind = toApplication({ type: 'individual', fullLegalName: ' Ada Lovelace ', preferredName: '', email: 'a@x.ca', password: 'secret123', city: 'Toronto', country: 'Canada', currentOccupation: 'RN', website: 'http://ada.example', healthcareConnections: ['Nurse / Practical Nurse'], networkAudience: [] });
+  assert.equal(ind.name, 'Ada Lovelace');
+  assert.equal(ind.location, 'Toronto, Canada');
+  assert.equal(ind.role, 'RN');
+  assert.equal(ind.website, '');
+  assert.deepEqual(Object.keys(ind.answers).sort(), ['city', 'country', 'currentOccupation', 'fullLegalName', 'healthcareConnections', 'type', 'website']);
+  const org = toApplication({ type: 'organisation', contactName: 'Lee', companyName: 'ACME Care', categories: ['Nursing School or College', 'Career Consultant'], website: 'https://acme.example' });
+  assert.equal(org.name, 'ACME Care');
+  assert.equal(org.role, 'Nursing School or College, Career Consultant');
+  let submitted;
+  const client = { from: () => ({ insert: async row => { submitted = row; return { error: null }; } }) };
+  await submitApplication(client, { id: 'u' }, org);
+  assert.equal(submitted.contact_name, 'Lee');
+  assert.equal(submitted.website, 'https://acme.example');
+  assert.deepEqual(submitted.answers.categories, ['Nursing School or College', 'Career Consultant']);
+  assert.throws(() => toApplication({ type: 'individual', fullLegalName: 'A', professionalBackground: 'x'.repeat(40001) }), /too long/);
 });

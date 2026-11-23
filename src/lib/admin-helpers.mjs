@@ -34,9 +34,9 @@ export function slugify(name) {
 
 export function validateGrant({ slug, role, location, bio, referralCode, type }) {
   if (!SLUG_PATTERN.test(slug ?? '')) return 'Use lowercase letters, numbers and single hyphens for the page address.';
-  if (!['individual', 'organisation'].includes(type)) return 'Choose whether this is an individual or an organisation.';
+  if (!['individual', 'organisation'].includes(type)) return 'Choose whether this is an individual or an organization.';
   for (const [value, label] of [[role, 'role'], [location, 'location'], [bio, 'bio'], [referralCode, 'referral code']]) {
-    if (!String(value ?? '').trim()) return `Add the partner’s ${label}.`;
+    if (!String(value ?? '').trim()) return `Add the affiliate’s ${label}.`;
   }
   return '';
 }

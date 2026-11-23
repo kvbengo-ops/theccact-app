@@ -37,7 +37,7 @@ const approvedPartners = partners.filter((p) => p.status === 'live');
 <section class="band band--white" aria-labelledby="directory-list-heading">
   <div class="container">
     <h2 id="directory-list-heading" class="section-heading directory-heading">
-      Verified Partner Directory
+      Verified Affiliate Directory
     </h2>
 
     {approvedPartners.length === 0 ? (
@@ -50,7 +50,7 @@ const approvedPartners = partners.filter((p) => p.status === 'live');
         {approvedPartners.map((partner) => (
           <article class="editorial-card editorial-card--cream partner-dir-card">
             <p class="section-eyebrow">
-              {partner.type === 'organisation' ? 'Organisation Partner' : 'Individual Partner'}
+              {partner.type === 'organisation' ? 'Organization Affiliate' : 'Individual Affiliate'}
             </p>
             <h3 class="partner-dir-card__name">{partner.name}</h3>
             <p class="partner-dir-card__role">{partner.role}</p>
@@ -66,10 +66,10 @@ const approvedPartners = partners.filter((p) => p.status === 'live');
             </dl>
             <div class="partner-dir-links">
               <a href={pageUrl('', partner)} class="btn btn--gold partner-dir-cta">
-                Visit partner site
+                Visit affiliate site
               </a>
               <a href={pageUrl('about-partner', partner)} class="partner-dir-profile">
-                View partner profile
+                View affiliate profile
               </a>
             </div>
           </article>

@@ -8,9 +8,9 @@ const applyHref = '/affiliate-apply/';
 
 // ponytail: steps are static copy derived from the program description; move to pages.mjs if CCACT edits them.
 const steps = [
-  { icon: 'file', title: 'Apply', body: 'Tell us about yourself or your organisation. It takes a few minutes.' },
+  { icon: 'file', title: 'Apply', body: 'Tell us about yourself or your organization. It takes a few minutes.' },
   { icon: 'shield', title: 'CCACT reviews', body: 'We check your details before anything is published.' },
-  { icon: 'link', title: 'Share CCACT', body: 'Get your partner site and Teachable referral link to share with learners.' },
+  { icon: 'link', title: 'Share CCACT', body: 'Get your affiliate site and Teachable referral link to share with learners.' },
 ];
 
 const trackIcons: Record<string, string> = {
@@ -55,7 +55,7 @@ const trackIcons: Record<string, string> = {
 <section class="band band--cream" aria-labelledby="who-heading">
   <div class="container">
     <p class="section-eyebrow">Who can apply</p>
-    <h2 id="who-heading" class="section-heading">Two ways to partner</h2>
+    <h2 id="who-heading" class="section-heading">Two ways to join</h2>
 
     <div class="tracks">
       {AFFILIATES_PAGE.tracks.map((track) => (
@@ -82,7 +82,7 @@ const trackIcons: Record<string, string> = {
             href={track.id === 'apply-organisation' ? '/affiliate-apply/organisation/' : '/affiliate-apply/individual/'}
             class="btn btn--gold track__cta"
           >
-            {track.id === 'apply-organisation' ? 'Apply as an organisation' : 'Apply as an individual'}
+            {track.id === 'apply-organisation' ? 'Apply as an organization' : 'Apply as an individual'}
           </a>
         </article>
       ))}
@@ -103,7 +103,7 @@ const trackIcons: Record<string, string> = {
     <p class="terms__body">{AFFILIATES_PAGE.pendingDisclosureBody}</p>
     <p class="terms__contact">
       Questions? <a href={`mailto:${BRAND.contactEmail}`}>{BRAND.contactEmail}</a> ·
-      <a href={BRAND.mainDirectoryHref}>View approved partners</a>
+      <a href={BRAND.mainDirectoryHref}>View approved affiliates</a>
     </p>
   </div>
 </section>
@@ -236,7 +236,7 @@ const trackIcons: Record<string, string> = {
     stroke-linejoin: round;
   }
 
-  /* Profile-style badges: circle = a person, rounded square = an organisation. */
+  /* Profile-style badges: circle = a person, rounded square = an organization. */
   .badge {
     display: inline-flex;
     align-items: center;

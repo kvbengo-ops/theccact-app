@@ -15,9 +15,9 @@ export function pageUrl(page, partner) {
 
 export function enrolmentUrl(destination, partner) {
   let url;
-  try { url = new URL(destination); } catch { throw new Error('Invalid enrolment destination'); }
+  try { url = new URL(destination); } catch { throw new Error('Invalid enrollment destination'); }
   if (url.protocol !== 'https:' || url.hostname !== 'thecces.teachable.com') {
-    throw new Error('Enrolment destination must be the CCACT Teachable school');
+    throw new Error('Enrollment destination must be the CCACT Teachable school');
   }
   // Main site credits the brand; partner pages credit the partner's own Teachable affcode (referralCode).
   const affcode = partner ? partner.referralCode : MAIN_AFFCODE;

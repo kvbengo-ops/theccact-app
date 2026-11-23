@@ -1,6 +1,7 @@
 ---
-// One component, two forms: individual and organisation applications ask for different details.
+// One component, two forms: individual and organization applications ask for different details.
 import Icon from './Icon.astro';
+import { AFFILIATE_FORMS } from '../content/affiliate-forms.mjs';
 
 interface Props {
   type: 'individual' | 'organisation';
@@ -13,17 +14,19 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
 const copy = isOrg
   ? {
-      kicker: 'Organisation application',
-      heading: 'Apply as an organisation',
+      kicker: 'Organization application',
+      heading: 'Apply as an organization',
       intro: 'For immigration consultancies, education agencies, nursing schools and healthcare recruiters.',
-      gets: ['A dedicated CCACT site for your organisation', 'Your logo, description and location', 'A link to your website', 'Teachable referral links'],
+      gets: ['A dedicated CCACT site for your organization', 'Your logo, description and location', 'A link to your website', 'Teachable referral links'],
     }
   : {
       kicker: 'Individual application',
       heading: 'Apply as an individual',
       intro: 'For internationally educated nurses, graduates, educators and community connectors.',
-      gets: ['Your own authorised CCACT partner site', 'Your reviewed bio and optional portrait', 'Languages spoken and areas of support', 'Personal Teachable referral links'],
+      gets: ['Your own authorized CCACT affiliate site', 'Your reviewed bio and optional portrait', 'A listing in the affiliate directory, if you choose', 'Personal Teachable referral links'],
     };
+const sections = AFFILIATE_FORMS[type];
+const AUTOCOMPLETE = { fullLegalName: 'name', contactName: 'name', companyName: 'organization', email: 'email', phone: 'tel', mobilePhone: 'tel', city: 'address-level2', province: 'address-level1', country: 'country-name', postalCode: 'postal-code', businessAddress: 'street-address' };
 const otherHref = isOrg ? '/affiliate-apply/individual/' : '/affiliate-apply/organisation/';
 ---
 
@@ -41,43 +44,54 @@ const otherHref = isOrg ? '/affiliate-apply/individual/' : '/affiliate-apply/org
         {copy.gets.map((item) => <li><Icon name="check" />{item}</li>)}
       </ul>
       <ol class="steps">
-        <li><span>01</span><div><strong>{isOrg ? 'Tell us about your organisation' : 'Tell us about yourself'}</strong><p>Share your details with CCACT.</p></div></li>
-        <li><span>02</span><div><strong>Create your account</strong><p>Choose your login details and submit your application.</p></div></li>
+        <li><span>01</span><div><strong>{isOrg ? 'Tell us about your organization' : 'Tell us about yourself'}</strong><p>Share your details with CCACT.</p></div></li>
+        <li><span>02</span><div><strong>Create your password</strong><p>Your email from the form becomes your login. Then your application is sent.</p></div></li>
         <li><span>03</span><div><strong>Await review</strong><p>CCACT reviews every application before anything is published.</p></div></li>
       </ol>
-      <p class="switch">{isOrg ? 'Applying for yourself?' : 'Applying for an organisation?'} <a href={otherHref}>{isOrg ? 'Use the individual form' : 'Use the organisation form'}</a></p>
+      <p class="switch">{isOrg ? 'Applying for yourself?' : 'Applying for an organization?'} <a href={otherHref}>{isOrg ? 'Use the individual form' : 'Use the organization form'}</a></p>
       <a class="back-link" href="/affiliates/">← Back to affiliate information</a>
     </div>
 
     <div class="application-card" data-affiliate-application data-supabase-url={supabaseUrl} data-supabase-key={supabaseKey}>
       <p class="eyebrow">Your application</p>
-      <h2>{isOrg ? 'Organisation details' : 'Your details'}</h2>
+      <h2>{isOrg ? 'Business affiliate application' : 'Individual affiliate application'}</h2>
       <p class="card-intro">Your account stays pending until CCACT reviews your application.</p>
-      <p id="affiliate-status" role="status" aria-live="polite">Step 1 of 2: {isOrg ? 'tell us about your organisation' : 'tell us about yourself'}.</p>
+      <p id="affiliate-status" role="status" aria-live="polite">Step 1 of 2: complete the application.</p>
       {supabaseUrl && supabaseKey && <>
         <form id="affiliate-application">
           <input type="hidden" name="type" value={type} />
           <fieldset id="details-step">
-            <legend>Step 1 of 2 · {isOrg ? 'Organisation' : 'About you'}</legend>
-            {isOrg ? <>
-              <label>Organisation name <input name="name" maxlength="120" autocomplete="organization" required /></label>
-              <label>Organisation type <input name="role" maxlength="160" required placeholder="e.g. Immigration consultancy" /></label>
-              <label>Contact person <input name="contact_name" maxlength="120" autocomplete="name" required /><small>The person CCACT will speak with.</small></label>
-              <label>Website <input name="website" type="url" maxlength="300" inputmode="url" placeholder="https://" /><small>Optional. Must start with https://</small></label>
-              <label>Location <input name="location" maxlength="160" autocomplete="address-level2" /><small>Optional. City and country.</small></label>
-              <label>About your organisation <textarea name="introduction" maxlength="2000" rows="4"></textarea><small>Optional. Who you serve and how you would share CCACT courses.</small></label>
-            </> : <>
-              <label>Full name <input name="name" maxlength="120" autocomplete="name" required /></label>
-              <label>Profession or role <input name="role" maxlength="160" placeholder="e.g. Registered nurse" /><small>Optional</small></label>
-              <label>Location <input name="location" maxlength="160" autocomplete="address-level2" /><small>Optional. City and country.</small></label>
-              <label>Languages you speak <input name="languages" maxlength="200" placeholder="e.g. English, Tagalog" /><small>Optional. Separate with commas.</small></label>
-              <label>Tell us about yourself <textarea name="introduction" maxlength="2000" rows="4"></textarea><small>Optional. Your background and who you help.</small></label>
-            </>}
+            <legend>Step 1 of 2 · Application</legend>
+            {sections.map((section, i) => (
+              <section class="q-section" aria-labelledby={`q-${i + 1}`}>
+                <h3 id={`q-${i + 1}`}><span>{i + 1}</span>{section.title}</h3>
+                {section.items.map((item) => {
+                  if ('p' in item) return <p class="q-note">{item.p}</p>;
+                  if ('h' in item) return <h4>{item.h}</h4>;
+                  if ('li' in item) return <ul class="q-list">{item.li.map((li) => <li>{li}</li>)}</ul>;
+                  if ('check' in item) return <label class="choice"><input type="checkbox" name="ageConfirm" value="Yes" required />{item.check}</label>;
+                  if ('group' in item) return (
+                    <div class="choices" role="group">
+                      {item.options.map((option) => (
+                        <label class="choice"><input type={item.type} name={item.group} value={option} required={item.required} />{option}</label>
+                      ))}
+                    </div>
+                  );
+                  const props = { name: item.field, required: item.required, placeholder: item.placeholder, autocomplete: AUTOCOMPLETE[item.field] };
+                  return (
+                    <label>{item.label}{item.required && ' *'}
+                      {item.type === 'textarea'
+                        ? <textarea {...props} maxlength="2000" rows="4"></textarea>
+                        : <input {...props} type={item.field === 'declarationDate' ? 'date' : item.type} maxlength="300" />}
+                    </label>
+                  );
+                })}
+              </section>
+            ))}
             <button class="btn btn--gold" type="button" id="application-next">Continue</button>
           </fieldset>
           <fieldset id="account-step" hidden>
-            <legend>Step 2 of 2 · Your account</legend>
-            <label>Email address <input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+            <legend>Step 2 of 2 · Your password</legend>
             <label>Password <input name="password" type="password" autocomplete="new-password" minlength="8" aria-describedby="password-hint" required /><small id="password-hint">Use at least 8 characters.</small></label>
             <div class="actions"><button class="btn btn--outline-navy" type="button" id="application-back">Back</button><button class="btn btn--gold" type="submit">Create account and apply</button></div>
           </fieldset>
@@ -92,8 +106,9 @@ const otherHref = isOrg ? '/affiliate-apply/individual/' : '/affiliate-apply/org
 
 <script>import '../scripts/affiliate-apply.mjs';</script>
 <style>
-  .application-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: start; }
-  .application-intro { max-width: 480px; padding-top: 12px; }
+  .application-layout { display: grid; gap: 48px; }
+  .application-card { max-width: 880px; }
+  .application-intro { max-width: 720px; }
   .type-badge { display: inline-grid; place-items: center; width: 64px; height: 64px; margin-bottom: 18px; background: var(--color-navy); color: var(--color-gold-light); }
   .type-badge--ind { border-radius: 50%; }
   .type-badge--org { border-radius: 14px; }
@@ -127,5 +142,14 @@ const otherHref = isOrg ? '/affiliate-apply/individual/' : '/affiliate-apply/org
   input, select, textarea { width: 100%; min-height: 48px; padding: 12px; border: 1px solid var(--color-navy-outline); border-radius: var(--radius-sm); background: var(--color-white); color: var(--color-navy); font: inherit; font-size: 16px; }
   .actions { display: flex; flex-wrap: wrap; gap: 12px; }
   button[hidden], [hidden] { display: none; }
-  @media (max-width: 760px) { .application-layout { grid-template-columns: 1fr; gap: 36px; } .application-intro { padding-top: 0; } }
+  .q-section { display: grid; gap: 16px; padding-top: 28px; border-top: 1px solid var(--color-border); }
+  .q-section h3 { display: flex; align-items: center; gap: 12px; margin: 0; color: var(--color-navy); font-family: var(--font-serif); font-size: 1.45rem; }
+  .q-section h3 span { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--color-navy); color: var(--color-gold-light); font-family: var(--font-sans, inherit); font-size: 15px; }
+  .q-section h4 { margin: 8px 0 0; color: var(--color-navy); }
+  .q-note { margin: 0; color: var(--color-text-muted); font-size: 15px; line-height: 1.65; }
+  .q-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--color-text-muted); font-size: 15px; }
+  .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px 20px; }
+  label.choice { display: flex; align-items: flex-start; gap: 10px; font-weight: 400; color: var(--color-text); font-size: 15px; line-height: 1.5; }
+  label.choice input { width: 20px; min-height: 20px; height: 20px; margin: 2px 0 0; padding: 0; flex-shrink: 0; accent-color: var(--color-navy); }
+  @media (max-width: 760px) { .application-layout { gap: 36px; } }
 </style>

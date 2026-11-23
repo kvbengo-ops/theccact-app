@@ -141,6 +141,9 @@
   .console .app__intro { margin-top: 10px; font-size: 15px; }
   .console .app__intro summary { min-height: 32px; display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--color-navy); }
   .console .app__intro p { margin: 4px 0 0; line-height: 1.6; max-width: 62ch; overflow-wrap: anywhere; }
+  .console .app__answers { margin: 6px 0 0; max-width: 72ch; }
+  .console .app__answers dt { margin-top: 10px; font-weight: 700; color: var(--color-navy); }
+  .console .app__answers dd { margin: 2px 0 0; line-height: 1.6; overflow-wrap: anywhere; white-space: pre-line; }
   .console .app__side { display: grid; justify-items: end; gap: 12px; }
   .console .app__actions { display: flex; gap: 8px; }
   .console .app__actions .btn { min-height: 44px; padding: 0 18px; font-size: 14.5px; }

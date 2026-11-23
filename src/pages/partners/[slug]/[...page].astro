@@ -19,7 +19,7 @@ const pages = {
   registration: { component: RegistrationPage, ...REGISTRATION_PAGE },
   'study-in-canada': { component: StudyInCanadaPage, ...STUDY_IN_CANADA_PAGE },
   faq: { component: FaqPage, ...FAQ_PAGE },
-  'about-partner': { component: PartnerAboutPage, title: 'About our partner' },
+  'about-partner': { component: PartnerAboutPage, title: 'About our affiliate' },
   contact: { component: ContactPage, ...CONTACT_PAGE },
   privacy: { component: PrivacyPage, ...PRIVACY_PAGE },
 };
@@ -28,7 +28,7 @@ export async function getStaticPaths() {
   const url = import.meta.env.SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = import.meta.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
   // Dev: the fictional fixture, plus every real page except retired ones (incl. suspended) when the server key is set in .env.local.
-  // Real partners are flagged isPreview so their enrolment links stay disabled locally.
+  // Real partners are flagged isPreview so their enrollment links stay disabled locally.
   const partners = import.meta.env.DEV
     ? [
         { ...(await import('../../../content/fixtures/partner-preview.mjs')).FIXTURE_INDIVIDUAL_PARTNER },
@@ -46,7 +46,7 @@ const { component: Page, title, description } = pages[page];
 ---
 
 <BaseLayout title={title} description={description} activePage={page} partner={partner}>
-  {partner.isFixture && <p role="status" style="padding: 1rem; text-align: center; background: #ffeaa0; color: #222;">Test website — this partner is fictional and enrolment links are disabled.</p>}
-  {partner.isPreview && <p role="status" style="padding: 1rem; text-align: center; background: #ffeaa0; color: #222;">Local preview ({partner.status}) — only visible on your computer; enrolment links are disabled.</p>}
+  {partner.isFixture && <p role="status" style="padding: 1rem; text-align: center; background: #ffeaa0; color: #222;">Test website — this affiliate is fictional and enrollment links are disabled.</p>}
+  {partner.isPreview && <p role="status" style="padding: 1rem; text-align: center; background: #ffeaa0; color: #222;">Local preview ({partner.status}) — only visible on your computer; enrollment links are disabled.</p>}
   <Page partner={partner} />
 </BaseLayout>

@@ -12,12 +12,12 @@ export async function loadAffiliate(client) {
 }
 
 const PAGE_TEXT = {
-  live: { stat: 'Live', heading: 'Your page is live', detail: 'Share this link with learners. Enrolments through your page are attributed to you.' },
+  live: { stat: 'Live', heading: 'Your page is live', detail: 'Share this link with learners. Enrollments through your page are attributed to you.' },
   preview: { stat: 'Being prepared', heading: 'Your page is being prepared', detail: 'CCACT has created your page and is finishing the review. The link works once it goes live.' },
   review: { stat: 'In review', heading: 'Your page is in review', detail: 'CCACT is reviewing your page content.' },
   draft: { stat: 'Draft', heading: 'Your page is a draft', detail: 'CCACT is preparing your page content.' },
   suspended: { stat: 'Paused', heading: 'Your page is paused', detail: 'Your page is temporarily offline. Contact CCACT for details.' },
-  retired: { stat: 'Closed', heading: 'Your page is closed', detail: 'This partner page is no longer active. Contact CCACT for details.' },
+  retired: { stat: 'Closed', heading: 'Your page is closed', detail: 'This affiliate page is no longer active. Contact CCACT for details.' },
 };
 
 export function setupAffiliatePortal(root, client) {

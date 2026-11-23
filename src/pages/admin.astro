@@ -34,7 +34,7 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         <h1 class="login__title">Owner <em>console</em></h1>
         <p class="login__lead">Review affiliate applications and keep the site’s key messages up to date.</p>
       </div>
-      <p class="login__fine">For authorised CCACT staff.</p>
+      <p class="login__fine">For authorized CCACT staff.</p>
     </aside>
 
     <main class="login__main">
@@ -234,7 +234,7 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <dialog id="dlg-grant" class="dlg dlg--wide" aria-labelledby="dlg-grant-title">
     <form id="grant-form" class="dlg__body" novalidate>
       <div>
-        <h2 id="dlg-grant-title">Grant partner page</h2>
+        <h2 id="dlg-grant-title">Grant affiliate page</h2>
         <p class="muted" id="grant-for"></p>
       </div>
       <div class="field">
@@ -243,13 +243,13 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <span class="prefix__text" aria-hidden="true">/partners/</span>
           <input id="grant-slug" name="slug" required maxlength="60" autocomplete="off" spellcheck="false" aria-describedby="grant-slug-hint" />
         </div>
-        <small id="grant-slug-hint">Lowercase letters, numbers and hyphens. Every partner page uses the same template; only this content changes.</small>
+        <small id="grant-slug-hint">Lowercase letters, numbers and hyphens. Every affiliate page uses the same template; only this content changes.</small>
       </div>
       <fieldset class="field">
-        <legend>Partner type</legend>
+        <legend>Affiliate type</legend>
         <div>
           <label class="radio"><input type="radio" name="type" value="individual" /> Individual</label>
-          <label class="radio"><input type="radio" name="type" value="organisation" /> Organisation</label>
+          <label class="radio"><input type="radio" name="type" value="organisation" /> Organization</label>
         </div>
       </fieldset>
       <div class="grid2">
@@ -269,7 +269,7 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       <div class="field">
         <label for="grant-ref">Teachable affiliate code (affcode)</label>
         <input id="grant-ref" name="referralCode" required maxlength="120" pattern="[A-Za-z0-9_\-]+" autocomplete="off" spellcheck="false" aria-describedby="grant-ref-hint" />
-        <small id="grant-ref-hint">The partner's own Teachable affcode, e.g. 1360772_abcd1234 (the part after affcode= in their link).</small>
+        <small id="grant-ref-hint">The affiliate's own Teachable affcode, e.g. 1360772_abcd1234 (the part after affcode= in their link).</small>
       </div>
       <p class="note">The page starts as a <strong>preview</strong>. Choose “Go live” afterwards; it is published within about 2 minutes.</p>
       <p id="grant-error" class="form-error" role="alert" hidden></p>

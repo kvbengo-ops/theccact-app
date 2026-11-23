@@ -12,7 +12,7 @@ export const FIXTURE_INDIVIDUAL_PARTNER = {
   languages: ['English', 'Tagalog'],
   services: [
     'Introducing internationally trained nurses to CCACT continuing education',
-    'Explaining course structure and open online enrolment',
+    'Explaining course structure and open online enrollment',
   ],
   email: 'fixture-private-do-not-render@example.invalid',
   approvalDate: '2026-11-20',
@@ -26,7 +26,7 @@ export const FIXTURE_LONG_ORGANISATION_PARTNER = {
   slug: 'northbridge-international-healthcare-recruiting',
   name: 'Northbridge International Healthcare Recruiting & Career Advisory Corp.',
   type: 'organisation',
-  bio: 'Northbridge International is a sample fixture organisation used strictly to verify organisation profile layouts, long name wrapping, HTTPS external website linking, and service truncation caps.\n\nAll course enrolment occurs exclusively on Teachable.',
+  bio: 'Northbridge International is a sample fixture organization used strictly to verify organization profile layouts, long name wrapping, HTTPS external website linking, and service truncation caps.\n\nAll course enrollment occurs exclusively on Teachable.',
   role: 'Healthcare Recruitment Agency',
   location: 'Vancouver, Canada',
   contactName: 'Dr. Priya Nair (Fixture Contact)',
@@ -35,7 +35,7 @@ export const FIXTURE_LONG_ORGANISATION_PARTNER = {
   services: [
     'Program information for healthcare professionals',
     'Overview of CCACT self-paced courses',
-    'Direction to approved CCACT online enrolment links',
+    'Direction to approved CCACT online enrollment links',
     'Guidance to official CCACT FAQ & advisors',
     'Extra item 5 — verified capped at 4',
   ],

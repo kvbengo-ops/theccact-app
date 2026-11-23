@@ -18,26 +18,26 @@ const isOrg = partner.type === 'organisation';
 const profileHref = pageUrl('about-partner', partner);
 ---
 
-<aside class="partner-strip" aria-label="Authorised partner information">
+<aside class="partner-strip" aria-label="Authorized affiliate information">
   <div class="container partner-strip__inner">
     <a href={profileHref} class="partner-strip__identity">
       <span class:list={['partner-strip__avatar', isOrg && 'partner-strip__avatar--org']} aria-hidden="true">
         {partner.image ? <img src={partner.image} alt="" width="40" height="40" loading="eager" decoding="async" /> : initials}
       </span>
       <span class="partner-strip__text">
-        <span class="partner-strip__label">Your CCACT partner</span>
+        <span class="partner-strip__label">Your CCACT affiliate</span>
         <strong class="partner-strip__name">{partner.name}</strong>
       </span>
     </a>
 
     <span class="partner-strip__badge">
       <Icon name="shield" />
-      Authorised partner
+      Authorized affiliate
     </span>
 
-    <nav class="partner-strip__links" aria-label="Partner">
+    <nav class="partner-strip__links" aria-label="Affiliate">
       <a href={profileHref}>View profile</a>
-      <a href={BRAND.mainDirectoryHref}>Verify this partner</a>
+      <a href={BRAND.mainDirectoryHref}>Verify this affiliate</a>
     </nav>
   </div>
 </aside>

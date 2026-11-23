@@ -57,7 +57,7 @@ const contactHref = pageUrl('contact', partner);
 const coursesHref = pageUrl('courses', partner);
 const steps = [
   { icon: 'cap', title: 'Choose a course', body: `Browse CCACT’s online courses. ${firstName} can help you pick the right one.` },
-  { icon: 'shield', title: 'Enrol with CCACT', body: 'You enrol and pay directly with CCACT on Teachable. Partners never collect tuition.' },
+  { icon: 'shield', title: 'Enroll with CCACT', body: 'You enroll and pay directly with CCACT on Teachable. Affiliates never collect tuition.' },
   { icon: 'check', title: 'Learn online', body: 'Get immediate access and study at your own pace, from anywhere.' },
 ];
 ---
@@ -80,7 +80,7 @@ const steps = [
     </div>
 
     <div class="profile-hero__copy">
-      <p class="profile-hero__badge"><Icon name={isOrg ? 'building' : 'shield'} />{isOrg ? 'Official CCACT partner organisation' : 'Authorised CCACT partner'}</p>
+      <p class="profile-hero__badge"><Icon name={isOrg ? 'building' : 'shield'} />{isOrg ? 'Official CCACT affiliate organization' : 'Authorized CCACT affiliate'}</p>
       <h1 id="partner-name" class="profile-hero__name">{partner.name}</h1>
       <ul class="profile-hero__meta">
         <li><Icon name={isOrg ? 'building' : 'user'} />{partner.role}</li>
@@ -103,7 +103,7 @@ const steps = [
 <section class="band band--white" aria-labelledby="partner-profile-heading">
   <div class="container profile-layout">
     <div class="profile-main">
-      <p class="section-eyebrow">{isOrg ? 'About the organisation' : 'About your partner'}</p>
+      <p class="section-eyebrow">{isOrg ? 'About the organization' : 'About your affiliate'}</p>
       <h2 id="partner-profile-heading" class="section-heading">{isOrg ? `About ${partner.name}` : `Meet ${firstName}`}</h2>
       <div class="profile-bio">
         {bioParagraphs.map((paragraph) => <p>{paragraph}</p>)}
@@ -134,7 +134,7 @@ const steps = [
       <div class="trust-card">
         <p class="trust-card__title"><Icon name="shield" />Verified by CCACT</p>
         <dl class="trust-card__facts">
-          <div><dt><Icon name={isOrg ? 'building' : 'user'} />Partner type</dt><dd>{isOrg ? 'Organisation' : 'Individual'}</dd></div>
+          <div><dt><Icon name={isOrg ? 'building' : 'user'} />Affiliate type</dt><dd>{isOrg ? 'Organization' : 'Individual'}</dd></div>
           <div><dt><Icon name="pin" />Location</dt><dd>{partner.location}</dd></div>
           <div><dt><Icon name="calendar" />Approved</dt><dd>{approved}</dd></div>
           {isOrg && partner.contactName && <div><dt><Icon name="user" />Named contact</dt><dd>{partner.contactName}</dd></div>}
@@ -145,7 +145,7 @@ const steps = [
           </a>
         )}
         <a href={BRAND.mainDirectoryHref} class="trust-card__verify">
-          Check the approved partner directory <Icon name="arrow" />
+          Check the approved affiliate directory <Icon name="arrow" />
         </a>
       </div>
     </aside>
@@ -170,7 +170,7 @@ const steps = [
     <div class="callout-box steps__notice">{CONTINUING_EDUCATION_NOTICE.directoryNotice}</div>
 
     <div class="steps__cta">
-      <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label="Enrol now via Teachable" class="btn btn--gold" />
+      <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label="Enroll now via Teachable" class="btn btn--gold" />
       <a href={coursesHref} class="btn btn--outline-navy">Explore online courses</a>
     </div>
   </div>
@@ -202,7 +202,7 @@ const steps = [
     gap: 32px 48px;
   }
 
-  /* Organisation sites: light, logo-led hero */
+  /* Organization sites: light, logo-led hero */
   .profile-hero--org {
     background: var(--color-sand);
     color: var(--color-navy);

@@ -45,7 +45,7 @@ export const ABOUT_PAGE = {
   },
   directorsSection: {
     heading: 'Our Directors',
-    lead: 'Founded by Jean Robles and Jeanelle Robles in 2012, CCACT is guided by a family-led team with experience in education, student support, partnerships, business development, and community engagement. Together, our directors are committed to providing accessible online learning and creating new educational opportunities in Canada and internationally.',
+    lead: 'Founded by Jean Robles and Jeanelle Robles in 2012, CCACT is guided by a family-led team with experience in education, student support, collaboration, business development, and community engagement. Together, our directors are committed to providing accessible online learning and creating new educational opportunities in Canada and internationally.',
     members: [
       {
         name: 'Jean McInnes Robles',
@@ -53,7 +53,7 @@ export const ABOUT_PAGE = {
         photo: '/images/jean-mcinnes-robles.jpg',
         width: 574,
         height: 646,
-        bio: "Jean co-founded CCACT with her daughter, Jeanelle, in 2012. For 25 years, she owned and operated Robetech Institute, a private medical career college in Toronto. Her extensive experience in healthcare education, college operations, international partnerships, and program development guides CCACT's educational direction and international growth.",
+        bio: "Jean co-founded CCACT with her daughter, Jeanelle, in 2012. For 25 years, she owned and operated Robetech Institute, a private medical career college in Toronto. Her extensive experience in healthcare education, college operations, international collaboration, and program development guides CCACT's educational direction and international growth.",
       },
       {
         name: 'Jeanelle Robles',
@@ -98,7 +98,7 @@ if (SITE_BRAND === 'cces') {
     members: [
       { ...jean, name: 'Jean McInnes-Robles', role: 'International Executive Director', bio: "Jean provides strategic leadership for CCES and brings more than 35 years of experience in healthcare education and private college operations in Canada and internationally. She oversees the organization's vision, educational direction, external relationships, and commitment to quality professional development." },
       { ...jeanelle, role: 'National Executive Director – Director of National Partnerships', bio: "Jeanelle leads CCES's work with healthcare organizations, educational institutions, employers, and community organizations to expand learning opportunities and strengthen professional connections across Canada and internationally." },
-      { ...yvonne, role: 'Director of Student Success & Client Experience', bio: 'Yvonne and her team support learners throughout their CCES journey by providing enrolment assistance, student guidance, and ongoing client support. She is committed to ensuring students receive a positive, welcoming, and successful online learning experience.' },
+      { ...yvonne, role: 'Director of Student Success & Client Experience', bio: 'Yvonne and her team support learners throughout their CCES journey by providing enrollment assistance, student guidance, and ongoing client support. She is committed to ensuring students receive a positive, welcoming, and successful online learning experience.' },
       { ...edward, name: 'Edward (Eddie) Robles', role: 'Community Outreach Director', bio: 'Eddie supports CCES community engagement initiatives by building relationships with community organizations, healthcare networks, and professional groups. He helps increase awareness of CCES programs and connects learners with opportunities for professional growth.' },
     ],
   };
@@ -116,7 +116,7 @@ export const COURSES_PAGE = {
   },
   highlights: [
     'For health care professionals',
-    'Immediate access upon enrolment',
+    'Immediate access upon enrollment',
     '100% online — study anywhere, anytime',
     'Built around Canadian standards',
   ],
@@ -150,7 +150,7 @@ export const COURSES_PAGE = {
         'Comprehensive screening and assessment techniques',
       ],
       primaryCta: {
-        label: 'Browse & Enrol on Teachable',
+        label: 'Browse & Enroll on Teachable',
         teachableUrl:
           'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Gerontology+Nursing',
       },
@@ -180,7 +180,7 @@ export const COURSES_PAGE = {
       ],
       callout: 'Practice Exams Available: CRNER-106 (3 attempts) and CRNER-107 (8 attempts) give you real exam simulation to build confidence.',
       primaryCta: {
-        label: 'Browse & Enrol on Teachable',
+        label: 'Browse & Enroll on Teachable',
         teachableUrl:
           'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Nursing+Exam+Review',
       },
@@ -201,9 +201,9 @@ export const COURSES_PAGE = {
       detailTitle: 'CHS Bundle',
       detailParagraph:
         'The CHS.BC bundle includes all 4 Canadian Health Care System courses. Upon completion, you will receive a Certificate of Completion listing each course title.',
-      callout: 'Bundle Price: CAD $149 — Includes CHS101 through CHS104 with immediate access upon enrolment.',
+      callout: 'Bundle Price: CAD $149 — Includes CHS101 through CHS104 with immediate access upon enrollment.',
       primaryCta: {
-        label: 'Enrol in CHS Bundle — $149',
+        label: 'Enroll in CHS Bundle — $149',
         teachableUrl:
           'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Health+Care+System',
       },
@@ -232,7 +232,7 @@ export const COURSES_PAGE = {
         'Canadian standards for end-of-life care',
       ],
       primaryCta: {
-        label: 'Browse & Enrol on Teachable',
+        label: 'Browse & Enroll on Teachable',
         teachableUrl: TEACHABLE_CATALOG_URL,
       },
     },
@@ -252,9 +252,9 @@ export const COURSES_PAGE = {
       detailParagraph:
         'These courses cover the theoretical components of diagnostic modalities. Students will learn the underlying principles and knowledge required to perform ECG, phlebotomy, and IV therapy procedures.',
       callout:
-        'Recommended: Prior practical experience in a clinical setting is beneficial but not required for enrolment.',
+        'Recommended: Prior practical experience in a clinical setting is beneficial but not required for enrollment.',
       primaryCta: {
-        label: 'Enrol in DM Bundle',
+        label: 'Enroll in DM Bundle',
         teachableUrl:
           'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Diagnostic+Modalities',
       },
@@ -276,7 +276,7 @@ export const COURSES_PAGE = {
     photoHeight: 651,
     modules: [
       'Professional English for Healthcare Settings',
-      'Patient-Centred Communication',
+      'Patient-Centered Communication',
       'Professional Documentation and Report Writing',
       'Grammar, Pronunciation, and Vocabulary Development',
       'Speaking and Listening: Real-Life Healthcare Scenarios',
@@ -297,7 +297,7 @@ export const COURSES_PAGE = {
   },
   bottomCta: {
     heading: 'Ready to Start Learning?',
-    lead: 'All courses are hosted on our secure Teachable platform. Registration is open 24/7 — get immediate access upon enrolment.',
+    lead: 'All courses are hosted on our secure Teachable platform. Registration is open 24/7 — get immediate access upon enrollment.',
     primaryLabel: 'Browse All Courses on Teachable',
     secondaryLabel: 'Talk to an Advisor',
   },
@@ -306,15 +306,15 @@ export const COURSES_PAGE = {
 export const REGISTRATION_PAGE = {
   title: 'Registration — CCACT',
   description:
-    'Learn how enrolment works on Teachable, admission requirements, prerequisites, and 24/7 online access at CCACT.',
+    'Learn how enrollment works on Teachable, admission requirements, prerequisites, and 24/7 online access at CCACT.',
   hero: {
-    eyebrow: '24/7 Open Enrolment',
+    eyebrow: '24/7 Open Enrollment',
     title: 'Registration',
-    lead: 'Enrol in minutes — enter your email and payment method for immediate access to your study material.',
+    lead: 'Enroll in minutes — enter your email and payment method for immediate access to your study material.',
     primaryLabel: 'Browse Courses on Teachable',
     secondaryLabel: 'View Course Catalog',
   },
-  stepsHeading: 'How Enrolment Works',
+  stepsHeading: 'How Enrollment Works',
   stepsLead: 'Simply select the course you want from our list — the whole process takes just a few minutes.',
   steps: [
     { num: '1', title: 'Choose Your Course', body: 'Browse our catalog and select the course that fits your goals.' },
@@ -330,11 +330,11 @@ export const REGISTRATION_PAGE = {
   },
   openCard: {
     title: 'Open 24 Hours a Day',
-    body: "Registration is open 7 days a week, 24 hours a day. Enrol whenever it's convenient for you.",
-    note: 'Creating an account on Teachable does not enrol you in a course or result in any charge.',
+    body: "Registration is open 7 days a week, 24 hours a day. Enroll whenever it's convenient for you.",
+    note: 'Creating an account on Teachable does not enroll you in a course or result in any charge.',
   },
   whoCanEnroll: {
-    heading: 'Who Can Enrol?',
+    heading: 'Who Can Enroll?',
     body: 'Courses are open to anyone interested in healthcare and wellness, with most requiring no prerequisites. Students should be comfortable reading and understanding written English. Some advanced courses may suit those with healthcare backgrounds.',
   },
   requirements: {
@@ -348,7 +348,7 @@ export const REGISTRATION_PAGE = {
     notes: [
       {
         label: 'Prerequisites:',
-        text: 'Unless otherwise stated, there are no formal prerequisites for enrolment. Our courses are designed for nursing students, Practical Nurses (LPN/RPN), Registered Nurses (RN), Personal Support Workers (PSWs), Internationally Educated Nurses (IENs), and other health care professionals seeking continuing education and professional development.',
+        text: 'Unless otherwise stated, there are no formal prerequisites for enrollment. Our courses are designed for nursing students, Practical Nurses (LPN/RPN), Registered Nurses (RN), Personal Support Workers (PSWs), Internationally Educated Nurses (IENs), and other health care professionals seeking continuing education and professional development.',
       },
       {
         label: 'Note for Diagnostic Modality Courses:',
@@ -364,7 +364,7 @@ export const REGISTRATION_PAGE = {
   advisorBand: {
     heading: 'Need Help Choosing a Course?',
     body: 'Contact our student support team and tell us about your education, experience, and learning goals.',
-    ctaLabel: 'Send an Enquiry',
+    ctaLabel: 'Send an Inquiry',
   },
 };
 
@@ -406,7 +406,7 @@ export const STUDY_IN_CANADA_PAGE = {
 export const FAQ_PAGE = {
   title: 'Frequently Asked Questions — CCACT',
   description:
-    'Answers about CCACT online courses, eligibility, self-paced format, certificates, licensing, fees, and enrolment policies.',
+    'Answers about CCACT online courses, eligibility, self-paced format, certificates, licensing, fees, and enrollment policies.',
   hero: {
     eyebrow: 'Student Help Center',
     title: 'Frequently Asked Questions',
@@ -559,8 +559,8 @@ export const FAQ_PAGE = {
     },
     {
       id: 'before-enroll',
-      label: 'Before You Enrol',
-      title: 'Before You Enrol',
+      label: 'Before You Enroll',
+      title: 'Before You Enroll',
       items: [
         {
           q: 'How do I choose the right course?',
@@ -582,7 +582,7 @@ export const FAQ_PAGE = {
     },
   ],
   enrollmentNotice:
-    'Important Enrolment Notice: By enrolling, students should confirm that they have reviewed the course description and understand that CCACT courses are continuing education/CPD, not vocational training; practical placement is not included unless specifically stated; and course registrations are non-refundable and non-transferable.',
+    'Important Enrollment Notice: By enrolling, students should confirm that they have reviewed the course description and understand that CCACT courses are continuing education/CPD, not vocational training; practical placement is not included unless specifically stated; and course registrations are non-refundable and non-transferable.',
 };
 
 export const CONTACT_PAGE = {
@@ -596,10 +596,10 @@ export const CONTACT_PAGE = {
   },
   officeHours: 'Monday – Friday, 8:30 am – 4:30 pm (Eastern Standard Time)',
   introText:
-    'Have a question about our courses, registration, or student support? Contact us by email or complete the enquiry form, and our team will be happy to assist you.',
+    'Have a question about our courses, registration, or student support? Contact us by email or complete the inquiry form, and our team will be happy to assist you.',
   resources: [
     { key: 'courses', title: 'Course Catalog', body: 'Browse all our online courses.', cta: 'View Courses' },
-    { key: 'registration', title: 'Registration Info', body: 'Learn how enrolment works.', cta: 'Learn More' },
+    { key: 'registration', title: 'Registration Info', body: 'Learn how enrollment works.', cta: 'Learn More' },
     { key: 'faq', title: 'FAQ', body: 'Answers to common questions.', cta: 'Read FAQ' },
     { key: 'study-in-canada', title: 'Study in Canada', body: 'Explore immigration services.', cta: 'Explore' },
   ],
@@ -661,47 +661,47 @@ export const PRIVACY_PAGE = {
 };
 
 export const DIRECTORY_PAGE = {
-  title: 'Approved Partners Directory — CCACT',
+  title: 'Approved Affiliates Directory — CCACT',
   description:
-    'Verify authorised CCACT affiliate partners. Tuition is paid directly to CCACT through Teachable and partners never guarantee outcomes.',
+    'Verify authorized CCACT affiliates. Tuition is paid directly to CCACT through Teachable and affiliates never guarantee outcomes.',
   hero: {
     eyebrow: 'Student Protection & Verification',
-    title: 'Approved CCACT Partners',
-    lead: 'Confirm that an individual ambassador or partner organisation is officially authorised by CCACT.',
+    title: 'Approved CCACT Affiliates',
+    lead: 'Confirm that an individual ambassador or affiliate organization is officially authorized by CCACT.',
   },
-  emptyHeading: 'Partner Directory Launch In Progress',
+  emptyHeading: 'Affiliate Directory Launch In Progress',
   emptyBody:
-    'No partners are published in the public directory yet. Approved affiliate partners appear here after CCACT completes bio compliance review and partner preview approval.',
+    'No affiliates are published in the public directory yet. Approved affiliates appear here after CCACT completes bio compliance review and preview approval.',
 };
 
 export const AFFILIATES_PAGE = {
   title: 'Affiliates Program — CCACT',
   description:
-    'Information about becoming an authorised individual or organisation CCACT affiliate partner.',
+    'Information about becoming an authorized individual or organization CCACT affiliate.',
   hero: {
-    eyebrow: 'Main Site Program · Affiliate Partnerships',
-    title: 'Become a CCACT Affiliate Partner',
-    lead: 'Approved individual educators and partner organisations share verified CCACT course information through an official Teachable referral link and a dedicated CCACT partner microsite.',
+    eyebrow: 'Main Site Program · Affiliate Program',
+    title: 'Become a CCACT Affiliate',
+    lead: 'Approved individual educators and affiliate organizations share verified CCACT course information through an official Teachable referral link and a dedicated CCACT affiliate microsite.',
   },
   tracks: [
     {
       id: 'apply-individual',
-      heading: 'Individual partner',
+      heading: 'Individual affiliate',
       audience: 'For internationally educated nurses, graduates, educators, and community connectors.',
       summary:
         'Share verified CCACT course information with the learners you already support.',
-      gets: ['Your own authorised CCACT partner site', 'Your reviewed bio and optional headshot portrait', 'Languages spoken and areas of support', 'Personal Teachable referral links'],
+      gets: ['Your own authorized CCACT affiliate site', 'Your reviewed bio and optional headshot portrait', 'Languages spoken and areas of support', 'Personal Teachable referral links'],
     },
     {
       id: 'apply-organisation',
-      heading: 'Organisation partner',
+      heading: 'Organization affiliate',
       audience: 'For immigration consultancies, education agencies, nursing schools, and healthcare recruiters.',
       summary:
-        'Offer your clients and students verified CCACT course information through a dedicated partner site.',
-      gets: ['A dedicated CCACT site for your organisation', 'Your reviewed description, logo and location', 'Optional link to your website', 'Teachable referral links'],
+        'Offer your clients and students verified CCACT course information through a dedicated affiliate site.',
+      gets: ['A dedicated CCACT site for your organization', 'Your reviewed description, logo and location', 'Optional link to your website', 'Teachable referral links'],
     },
   ],
   pendingDisclosureHeading: 'Program Terms & Commission Details Pending Final Sign-Off',
   pendingDisclosureBody:
-    'The commission schedule, Affiliate Agreement wording, and existing live Affiliates copy (partners.html) are currently restricted on the legacy website and await formal CCACT approval before public publication. Per CCACT policy, referral attribution follows Teachable tracking rules and partners never collect tuition or guarantee employment, licensing, or immigration outcomes.',
+    'The commission schedule, Affiliate Agreement wording, and existing live Affiliates copy are currently restricted on the legacy website and await formal CCACT approval before public publication. Per CCACT policy, referral attribution follows Teachable tracking rules and affiliates never collect tuition or guarantee employment, licensing, or immigration outcomes.',
 };
