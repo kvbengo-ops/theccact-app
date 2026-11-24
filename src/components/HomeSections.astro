@@ -49,34 +49,49 @@ const message = ABOUT_PAGE.collegeMessage;
 </section>
 
 <!-- How enrollment works -->
-<section class="enrol" aria-labelledby="enrol-heading">
+<section class="enrol" aria-labelledby="enrol-heading" data-enrol>
   <div class="container enrol__inner">
     <div class="enrol__media">
-      <img
-        src={REGISTRATION_PAGE.photo.src}
-        alt={REGISTRATION_PAGE.photo.alt}
-        width={REGISTRATION_PAGE.photo.width}
-        height={REGISTRATION_PAGE.photo.height}
-        loading="lazy"
-        decoding="async"
-      />
+      {/* Brand film: CCES builds swap /media/enrol-ccact for /media/enrol-cces (CCES_REWRITES). On wide screens, scrolling scrubs it in step with 1–4. */}
+      <video
+        class="enrol__film"
+        src="/media/enrol-ccact.mp4"
+        poster="/media/enrol-ccact.webp"
+        width="1280"
+        height="720"
+        muted
+        playsinline
+        preload="none"
+        aria-hidden="true"
+      ></video>
+      {/* Wide screens: the same walk as 150 still frames (15 fps), drawn as you scroll. Paths swap per brand like the film. */}
+      <canvas
+        class="enrol__film enrol__canvas"
+        data-frames="/media/enrol-ccact-frames/"
+        data-frame-count="150"
+        style="background-image: url('/media/enrol-ccact.webp')"
+        aria-hidden="true"
+      ></canvas>
       <p class="enrol__open"><Icon name="clock" />{REGISTRATION_PAGE.openCard.title}</p>
     </div>
     <div>
       <p class="section-eyebrow">Getting started</p>
       <h2 id="enrol-heading" class="section-heading">{REGISTRATION_PAGE.stepsHeading}</h2>
       <p class="section-lead">{REGISTRATION_PAGE.stepsLead}</p>
-      <ol class="enrol__steps">
-        {steps.map((step) => (
-          <li>
-            <span class="enrol__num" aria-hidden="true">{step.num}</span>
-            <div>
-              <h3>{step.title}</h3>
-              <p>{step.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <div class="enrol__path" data-enrol-path>
+        <span class="enrol__dot" aria-hidden="true"></span>
+        <ol class="enrol__steps">
+          {steps.map((step) => (
+            <li data-enrol-step>
+              <span class="enrol__num" aria-hidden="true">{step.num}</span>
+              <div class="enrol__step-text">
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
       <p class="enrol__note">{REGISTRATION_PAGE.openCard.note}</p>
       <div class="enrol__actions">
         <EnrolLink destination={TEACHABLE_CATALOG_URL} partner={partner} label="Start on Teachable" class="btn btn--gold" />
@@ -144,8 +159,10 @@ const message = ABOUT_PAGE.collegeMessage;
     position: relative;
   }
 
-  .enrol__media img {
+  .enrol__film {
+    display: block;
     width: 100%;
+    height: auto;
     aspect-ratio: 4 / 3;
     object-fit: cover;
     border-radius: 8px;
@@ -175,7 +192,7 @@ const message = ABOUT_PAGE.collegeMessage;
   }
 
   .enrol__steps {
-    margin: 28px 0 0;
+    margin: 0;
     padding: 0;
     list-style: none;
     display: grid;
@@ -385,26 +402,80 @@ const message = ABOUT_PAGE.collegeMessage;
     }
   }
 
-  /* A gold line draws down through the steps as they scroll into view. */
-  .enrol__steps { position: relative; }
-  .enrol__steps::before {
+  /* Step path: a faint track from circle 1 to circle 4, a gold fill and a glowing dot that travel down it.
+     --y0/--y1 (first/last circle centres) are measured in script; the fallbacks fit the default layout. */
+  .enrol__path { position: relative; isolation: isolate; margin-top: 28px; --y0: 22px; --y1: calc(100% - 44px); }
+  .enrol__path::before,
+  .enrol__path::after {
     content: '';
     position: absolute;
-    left: 21.5px;
-    top: 22px;
-    bottom: 22px;
-    width: 1px;
-    background: var(--color-gold);
+    z-index: -1; /* behind the circles even when a list item carries a transform */
+    left: 21px;
+    top: var(--y0);
+    width: 2px;
+    border-radius: 2px;
+  }
+  .enrol__path::before { height: calc(var(--y1) - var(--y0)); background: var(--color-divider); }
+  .enrol__path::after {
+    height: calc((var(--y1) - var(--y0)) * var(--line, 1));
+    background: linear-gradient(180deg, var(--color-gold-light), var(--color-gold));
     transform-origin: top;
-    z-index: 0;
+  }
+  .enrol__dot {
+    position: absolute;
+    left: 22px;
+    top: calc(var(--y0) + (var(--y1) - var(--y0)) * var(--line, 1));
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border-radius: 50%;
+    background: var(--color-gold-light);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-gold) 28%, transparent), 0 0 22px 4px color-mix(in srgb, var(--color-gold) 55%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
   }
   .enrol__num { position: relative; z-index: 1; }
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
-      .enrol__steps::before { animation: line-draw linear both; animation-timeline: view(); animation-range: entry 30% cover 55%; }
+      .enrol:not(.is-scrubbed) .enrol__path::after { animation: line-draw linear both; animation-timeline: view(); animation-range: entry 30% cover 55%; }
     }
   }
   @keyframes line-draw { from { transform: scaleY(0); } }
+
+  /* Scrubbed mode (wide screens with motion): the section fills the screen and pins; scroll plays the film
+     while the dot travels the path. Steps behind it stay lit, the current one rings gold, the rest wait faded. */
+  .enrol.is-scrubbed .enrol__inner {
+    box-sizing: border-box;
+    min-height: 100svh;
+    padding-block: calc(var(--header-h, 72px) + 16px) 24px;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 6fr);
+    gap: 64px;
+  }
+  .enrol.is-scrubbed .enrol__film {
+    aspect-ratio: auto;
+    height: clamp(420px, calc(100svh - var(--header-h, 72px) - 120px), 760px);
+  }
+  /* The canvas shows the poster until its frames arrive. */
+  .enrol__canvas { display: none; background: var(--color-sand) center / cover no-repeat; }
+  .enrol.is-scrubbed .enrol__canvas { display: block; }
+  .enrol.is-scrubbed video.enrol__film { display: none; }
+  /* Pinned, the copy has to fit one screen beside the film. */
+  .enrol.is-scrubbed .section-lead { margin-bottom: 0; }
+  .enrol.is-scrubbed .enrol__path { margin-top: 20px; }
+  .enrol.is-scrubbed .enrol__steps { gap: 12px; }
+  .enrol.is-scrubbed .enrol__steps h3 { font-size: 20px; }
+  .enrol.is-scrubbed .enrol__steps p { font-size: 14.5px; }
+  .enrol.is-scrubbed .enrol__note { margin-top: 16px; }
+  .enrol.is-scrubbed .enrol__actions { margin-top: 16px; }
+  .enrol.is-scrubbed .enrol__dot { opacity: 1; }
+  /* Fade the words, never the circles: a see-through circle would show the track running behind it. */
+  .enrol.is-scrubbed .enrol__step-text { opacity: 0.32; transform: translateX(12px); transition: opacity 0.5s ease, transform 0.6s var(--ease-out, ease); }
+  .enrol.is-scrubbed .enrol__steps li.is-active .enrol__step-text { opacity: 0.72; transform: none; }
+  .enrol.is-scrubbed .enrol__steps li.is-current .enrol__step-text { opacity: 1; }
+  .enrol.is-scrubbed .enrol__num { color: var(--color-text-muted); transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.5s ease, transform 0.5s var(--ease-out, ease); }
+  .enrol.is-scrubbed li.is-active .enrol__num { background: var(--color-navy); color: var(--color-gold-light); border-color: var(--color-gold); }
+  .enrol.is-scrubbed li.is-current .enrol__num { transform: scale(1.1); box-shadow: 0 0 0 7px color-mix(in srgb, var(--color-gold) 22%, transparent); }
 
   @media (max-width: 960px) {
     .enrol__inner,
@@ -426,3 +497,178 @@ const message = ABOUT_PAGE.collegeMessage;
     }
   }
 </style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const enrol = document.querySelector<HTMLElement>('[data-enrol]');
+  const film = enrol?.querySelector<HTMLVideoElement>('video.enrol__film');
+  const canvas = enrol?.querySelector<HTMLCanvasElement>('canvas.enrol__canvas');
+  if (enrol && film && canvas) {
+    const path = enrol.querySelector<HTMLElement>('[data-enrol-path]')!;
+    const steps = Array.from(enrol.querySelectorAll<HTMLElement>('[data-enrol-step]'));
+    const nums = steps.map((step) => step.querySelector<HTMLElement>('.enrol__num')!);
+    const mm = gsap.matchMedia();
+
+    // The track runs from the centre of circle 1 to the centre of circle 4; each circle's place along it (0–1) is where it lights.
+    let stops: number[] = [];
+    const measure = () => {
+      const top = path.getBoundingClientRect().top;
+      const centres = nums.map((n) => { const r = n.getBoundingClientRect(); return r.top + r.height / 2 - top; });
+      const y0 = centres[0], y1 = centres[centres.length - 1];
+      path.style.setProperty('--y0', `${y0}px`);
+      path.style.setProperty('--y1', `${y1}px`);
+      stops = centres.map((c) => (c - y0) / (y1 - y0 || 1));
+    };
+    measure();
+    addEventListener('resize', measure);
+
+    // Wide screens with motion: pin the section; scroll walks the nurse down the corridor while the dot walks steps 1–4.
+    // The walk is a sequence of still frames drawn on a canvas, not a seeking <video>: video seeking stutters
+    // differently in every browser, frames behave the same everywhere.
+    mm.add('(min-width: 961px) and (prefers-reduced-motion: no-preference)', () => {
+      enrol.classList.add('is-scrubbed');
+      film.pause();
+      measure();
+
+      const FPS = 15; // ponytail: matches the ffmpeg extraction (fps=15) of public/media/enrol-*-frames
+      const count = Number(canvas.dataset.frameCount) || 150;
+      const base = canvas.dataset.frames!;
+      const dur = count / FPS;
+      const frames: (HTMLImageElement | undefined)[] = new Array(count);
+      const ctx = canvas.getContext('2d')!;
+      let alive = true;
+
+      // Load coarse to fine (every 16th frame, then the gaps), so wherever the visitor is there is a close frame early.
+      const order: number[] = [];
+      const queued = new Set<number>();
+      for (let stride = 16; stride >= 1; stride /= 2) {
+        for (let i = 0; i < count; i += stride) if (!queued.has(i)) { queued.add(i); order.push(i); }
+      }
+      let started = false;
+      const load = () => {
+        if (started) return;
+        started = true;
+        let next = 0;
+        const worker = async () => {
+          while (alive && next < order.length) {
+            const i = order[next++];
+            const img = new Image();
+            img.src = `${base}${String(i + 1).padStart(3, '0')}.webp`;
+            try { await img.decode(); frames[i] = img; paint(); } catch { /* a missing frame falls back to its neighbour */ }
+          }
+        };
+        for (let k = 0; k < 6; k++) worker();
+      };
+      const near = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { load(); near.disconnect(); } }, { rootMargin: '150% 0px' });
+      near.observe(enrol);
+
+      // Draw the frame for the current moment, cross-fading into the next one so slow scrolling stays smooth.
+      let cw = 0, ch = 0, painted = '';
+      const closest = (i: number) => { for (let d = 0; d < count; d++) { if (frames[i - d]) return i - d; if (frames[i + d]) return i + d; } return -1; };
+      const cover = (img: HTMLImageElement, alpha: number) => {
+        const s = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+        const w = img.naturalWidth * s, h = img.naturalHeight * s;
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+      };
+      let shown = 0;
+      const paint = () => {
+        if (!cw || !ch) return;
+        const f = shown * (count - 1);
+        const i = Math.floor(f), frac = f - i;
+        const a = closest(i);
+        if (a < 0) return;
+        const b = a === i && frames[i + 1] && frac > 0.04 ? i + 1 : -1;
+        const key = `${a}:${b}:${b < 0 ? 0 : frac.toFixed(2)}:${cw}x${ch}`;
+        if (key === painted) return;
+        painted = key;
+        cover(frames[a]!, 1);
+        if (b >= 0) cover(frames[b]!, frac);
+        ctx.globalAlpha = 1;
+      };
+      const size = () => {
+        const r = canvas.getBoundingClientRect();
+        const dpr = Math.min(devicePixelRatio || 1, 2);
+        cw = canvas.width = Math.round(r.width * dpr);
+        ch = canvas.height = Math.round(r.height * dpr);
+        painted = '';
+        paint();
+      };
+      const ro = new ResizeObserver(size);
+      ro.observe(canvas);
+
+      const draw = (p: number) => {
+        // The dot reaches circle 4 at 85% of the walk, leaving the last moments on the final step.
+        const line = Math.min(1, p / 0.85);
+        path.style.setProperty('--line', line.toFixed(4));
+        let current = 0;
+        steps.forEach((step, i) => { const on = line >= stops[i] - 0.015; step.classList.toggle('is-active', on); if (on) current = i; });
+        steps.forEach((step, i) => step.classList.toggle('is-current', i === current));
+      };
+
+      // Scroll only sets where she should be. She gets there at a steady walking pace: easing in, never faster
+      // than WALK x real speed, easing out as she arrives. Fast flicks, slow drags and reversing all look alike.
+      const WALK = 1.1;
+      const maxV = WALK / dur;   // walk progress per second at top speed
+      const accel = maxV * 2.5;  // reaches top speed in about 0.4 s
+      let target = 0, vel = 0, last = 0, raf = 0;
+      const tick = (now: number) => {
+        const dt = last ? Math.min(0.1, (now - last) / 1000) : 1 / 60;
+        last = now;
+        const gap = target - shown;
+        const want = Math.max(-maxV, Math.min(maxV, gap * 3));
+        vel += Math.max(-accel * dt, Math.min(accel * dt, want - vel));
+        shown += vel * dt;
+        if ((gap > 0 && shown > target) || (gap < 0 && shown < target)) { shown = target; vel = 0; }
+        shown = Math.max(0, Math.min(1, shown));
+        draw(shown);
+        paint();
+        if (Math.abs(target - shown) > 0.0003 || Math.abs(vel) > 0.0003) raf = requestAnimationFrame(tick);
+        else { raf = 0; last = 0; vel = 0; }
+      };
+      const seek = (p: number) => { target = p; if (!raf) raf = requestAnimationFrame(tick); };
+      draw(0);
+
+      const trigger = ScrollTrigger.create({
+        trigger: enrol,
+        start: 'top top',
+        end: '+=300%',
+        pin: true,
+        anticipatePin: 1,
+        // This script can run before the homepage's own pinned sequences are created; measure after them,
+        // since their pin spacing sits above this section.
+        refreshPriority: -1,
+        onRefresh: measure,
+        onUpdate: (self) => seek(self.progress),
+      });
+      seek(trigger.progress);
+      return () => {
+        alive = false;
+        near.disconnect();
+        ro.disconnect();
+        cancelAnimationFrame(raf);
+        trigger.kill();
+        enrol.classList.remove('is-scrubbed');
+        path.style.removeProperty('--line');
+        steps.forEach((step) => step.classList.remove('is-active', 'is-current'));
+        measure();
+      };
+    });
+
+    // Smaller screens with motion: the film just loops while it is on screen.
+    mm.add('(max-width: 960px) and (prefers-reduced-motion: no-preference)', () => {
+      film.loop = true;
+      const io = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) film.play().catch(() => {});
+        else film.pause();
+      }, { threshold: 0.25 });
+      io.observe(film);
+      return () => { io.disconnect(); film.pause(); film.loop = false; };
+    });
+    // Reduced motion: the poster stays still.
+  }
+</script>

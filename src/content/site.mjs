@@ -9,6 +9,7 @@ import { pageUrl } from '../lib/links.mjs';
 export const CCES_REWRITES = [
   ['<html lang="en"', '<html lang="en" data-brand="cces"'],
   ['/media/hero-ccact', '/media/hero-cces'],
+  ['/media/enrol-ccact', '/media/enrol-cces'],
   ['/images/chapters/', '/images/chapters/cces/'],
   ['/images/courses/gerontology.webp', '/images/courses/cces/gerontology.webp'],
   ['/ccact-logo-footer.webp', '/cces-crest.png'],
