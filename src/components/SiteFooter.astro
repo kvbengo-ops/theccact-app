@@ -16,10 +16,10 @@ const homeHref = pageUrl('', partner);
     <div class="site-footer__brand">
       <a href={homeHref} class="site-footer__logo-link" aria-label={`${BRAND.shortName} home`}>
         <img
-          src="/ccact-logo-footer.webp"
+          src="/ccact-logo.png"
           alt={BRAND.logoAlt}
-          width="288"
-          height="288"
+          width="407"
+          height="381"
           class="site-footer__logo"
           loading="lazy"
           decoding="async"
@@ -89,34 +89,22 @@ const homeHref = pageUrl('', partner);
     min-width: 0;
   }
 
-  /* Crest art has a white background: a lit white tile with a gold hairline ring and layered shadow gives it depth on navy. */
+  /* Both crests have transparent backgrounds, so they sit straight on the footer color. */
   .site-footer__logo-link {
     display: inline-flex;
     margin: 0 0 20px;
-    padding: 12px;
-    background: linear-gradient(180deg, var(--color-white) 0%, var(--color-cream) 100%);
-    border-radius: 10px;
-    box-shadow:
-      0 0 0 1px rgba(227, 201, 138, 0.45),
-      0 2px 4px rgba(0, 0, 0, 0.25),
-      0 16px 32px rgba(0, 0, 0, 0.35);
-    transition: box-shadow 0.2s ease;
+    border-radius: 6px;
   }
 
-  .site-footer__logo-link:hover,
   .site-footer__logo-link:focus-visible {
-    box-shadow:
-      0 0 0 2px var(--color-gold),
-      0 2px 4px rgba(0, 0, 0, 0.25),
-      0 18px 36px rgba(0, 0, 0, 0.4);
+    outline: 2px solid var(--color-gold);
+    outline-offset: 4px;
   }
 
   .site-footer__logo {
     display: block;
     width: auto;
     height: 128px;
-    aspect-ratio: 1 / 1;
-    object-fit: contain;
   }
 
   .site-footer__wordmark {
