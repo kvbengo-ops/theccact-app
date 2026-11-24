@@ -9,6 +9,7 @@ import { pageUrl } from '../lib/links.mjs';
 export const CCES_REWRITES = [
   ['<html lang="en"', '<html lang="en" data-brand="cces"'],
   ['/media/hero-ccact', '/media/hero-cces'],
+  ['/images/chapters/', '/images/chapters/cces/'],
   ['/ccact-logo-footer.webp', '/cces-crest.png'],
   ['/ccact-logo.png', '/cces-crest.png'],
   ['The CCACT Est. 2012 Continuing Education crest', 'The CCES crest'],
@@ -77,7 +78,7 @@ export const HOME_STORY = {
       title: 'Built for professionals trained around the world',
       body: 'Our certificate and review courses are designed for internationally educated nurses, practical nurses, Personal Support Workers and caregivers who want to keep growing.',
       image: '/images/chapters/experience',
-      alt: 'Illustrative photo: a nurse in navy scrubs standing by a bright hospital window.',
+      alt: 'Illustrative photo: two nurses in navy scrubs standing together in a bright hospital corridor.',
     },
     {
       id: 'learning',
@@ -93,7 +94,7 @@ export const HOME_STORY = {
       title: 'Confidence for Canadian care settings',
       body: 'A Certificate of Completion is issued for listed courses. These are continuing-education courses: they support your development but do not grant a license, diploma or immigration status.',
       image: '/images/chapters/next',
-      alt: 'Illustrative photo: a nurse walking into a bright, airy care facility corridor.',
+      alt: 'Illustrative photo: three nurses talking together as they walk down a bright care facility corridor.',
     },
   ],
 };
