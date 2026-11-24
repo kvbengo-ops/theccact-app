@@ -194,10 +194,13 @@ const homeHref = pageUrl('', partner);
 
   .brand-lockup__img {
     width: auto;
-    height: 40px;
-    aspect-ratio: 407 / 381;
+    height: 54px;
     object-fit: contain;
     flex-shrink: 0;
+  }
+
+  :global([data-brand="cces"]) .brand-lockup__img {
+    height: 40px;
   }
 
   .brand-lockup__text {
