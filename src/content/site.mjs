@@ -11,6 +11,7 @@ export const CCES_REWRITES = [
   ['/media/hero-ccact', '/media/hero-cces'],
   ['/media/enrol-ccact', '/media/enrol-cces'],
   ['/images/chapters/', '/images/chapters/cces/'],
+  ['/images/closing-', '/images/cces/closing-'],
   ['/images/courses/gerontology.webp', '/images/courses/cces/gerontology.webp'],
   ['/ccact-logo-footer.webp', '/cces-crest.png'],
   ['/ccact-logo.png', '/cces-crest.png'],
