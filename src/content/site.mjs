@@ -50,7 +50,7 @@ export const BRAND = {
   contactPhone: 'WhatsApp / Text: +1 416-893-8158',
   copyright: '© 2026 Canadian Centre For Advanced Career Training (CCACT). All rights reserved.',
   mainAffiliatesHref: '/affiliates/',
-  mainDirectoryHref: '/affiliates/#directory',
+  mainDirectoryHref: '/affiliates/directory/',
 };
 
 export const HOME_HERO = {

@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AffiliateDirectory from '../../components/AffiliateDirectory.astro';
+import { DIRECTORY_PAGE } from '../../content/pages.mjs';
+import { loadLivePartners } from '../../lib/partner-source.mjs';
+
+const partners = await loadLivePartners({
+  url: import.meta.env.SUPABASE_URL ?? process.env.SUPABASE_URL,
+  key: import.meta.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY,
+  required: Boolean(import.meta.env.CF_PAGES || process.env.CF_PAGES),
+});
+---
+
+<BaseLayout
+  title={DIRECTORY_PAGE.title}
+  description={DIRECTORY_PAGE.description}
+  activePage="affiliates"
+  partner={null}
+>
+  <AffiliateDirectory partners={partners} />
+</BaseLayout>

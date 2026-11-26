@@ -660,8 +660,10 @@ export const PRIVACY_PAGE = {
   ],
 };
 
-// The directory section of the Affiliates page.
+// The affiliate directory page (/affiliates/directory/).
 export const DIRECTORY_PAGE = {
+  title: 'Affiliate Directory — CCACT',
+  description: 'The directory of approved CCACT affiliates. Confirm that an individual or organization is officially authorized by CCACT.',
   eyebrow: 'Student Protection & Verification',
   heading: 'Approved CCACT Affiliates',
   lead: 'Confirm that an individual ambassador or affiliate organization is officially authorized by CCACT.',

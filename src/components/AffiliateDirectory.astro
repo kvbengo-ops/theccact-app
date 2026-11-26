@@ -1,0 +1,202 @@
+---
+// The public directory of approved (live) affiliates, so students can confirm an affiliate is authorized.
+import { DIRECTORY_PAGE } from '../content/pages.mjs';
+import { CONTINUING_EDUCATION_NOTICE, getPartnerInitials } from '../content/site.mjs';
+import { pageUrl } from '../lib/links.mjs';
+import PageHero from './PageHero.astro';
+
+interface Props {
+  partners?: Array<{
+    slug: string;
+    name: string;
+    type: 'individual' | 'organisation';
+    role: string;
+    location: string;
+    approvalDate: string;
+    status: string;
+    image?: string;
+  }>;
+}
+
+const { partners = [] } = Astro.props;
+const approvedPartners = partners
+  .filter((p) => p.status === 'live')
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+
+<PageHero eyebrow={DIRECTORY_PAGE.eyebrow} title={DIRECTORY_PAGE.heading} lead={DIRECTORY_PAGE.lead} />
+
+<section class="band band--white" aria-label="Approved affiliates">
+  <div class="container">
+    <div class="callout-box directory-notice">
+      <strong>Verification &amp; Tuition Policy:</strong> {CONTINUING_EDUCATION_NOTICE.directoryNotice}
+    </div>
+
+    {approvedPartners.length === 0 ? (
+      <div class="editorial-card editorial-card--cream empty-state">
+        <h2 class="empty-state__title">{DIRECTORY_PAGE.emptyHeading}</h2>
+        <p class="empty-state__body">{DIRECTORY_PAGE.emptyBody}</p>
+      </div>
+    ) : (
+      <ul class="editorial-grid-3 directory-grid">
+        {approvedPartners.map((partner) => (
+          <li class="editorial-card editorial-card--cream partner-dir-card">
+            <div class:list={['partner-dir-card__photo', !partner.image && 'partner-dir-card__photo--empty']}>
+              {partner.image
+                ? <img src={partner.image} alt={`Portrait of ${partner.name}`} width="480" height="360" loading="lazy" decoding="async" />
+                : <span aria-hidden="true">{getPartnerInitials(partner.name)}</span>}
+            </div>
+            <p class="section-eyebrow">
+              {partner.type === 'organisation' ? 'Organization Affiliate' : 'Individual Affiliate'}
+            </p>
+            <h2 class="partner-dir-card__name">{partner.name}</h2>
+            <p class="partner-dir-card__role">{partner.role}</p>
+            <dl class="partner-dir-meta">
+              <div>
+                <dt>Location</dt>
+                <dd>{partner.location}</dd>
+              </div>
+              <div>
+                <dt>Approved</dt>
+                <dd>{partner.approvalDate}</dd>
+              </div>
+            </dl>
+            <div class="partner-dir-links">
+              <a href={pageUrl('', partner)} class="btn btn--gold partner-dir-cta">Visit affiliate site</a>
+              <a href={pageUrl('about-partner', partner)} class="partner-dir-profile">View affiliate profile</a>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</section>
+
+<style>
+  .directory-grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .partner-dir-card__photo {
+    margin: -4px -4px 6px;
+    border-radius: 6px;
+    overflow: clip;
+    background: var(--color-navy);
+  }
+
+  .partner-dir-card__photo img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    object-position: center 25%;
+  }
+
+  .partner-dir-card__photo--empty {
+    aspect-ratio: 4 / 3;
+    display: grid;
+    place-items: center;
+  }
+
+  .partner-dir-card__photo--empty span {
+    font-family: var(--font-serif);
+    font-size: 3.5rem;
+    font-weight: 600;
+    color: var(--color-gold-light);
+    letter-spacing: 0.04em;
+  }
+
+  .directory-notice {
+    margin-bottom: 28px;
+  }
+
+  .empty-state {
+    max-width: 720px;
+  }
+
+  .empty-state__title {
+    margin: 0 0 8px;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    color: var(--color-navy);
+  }
+
+  .empty-state__body {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.62;
+    color: var(--color-text-muted);
+  }
+
+  .partner-dir-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .partner-dir-card__name {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    color: var(--color-navy);
+    overflow-wrap: anywhere;
+  }
+
+  .partner-dir-card__role {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text-muted);
+  }
+
+  .partner-dir-meta {
+    margin: 6px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13.5px;
+  }
+
+  .partner-dir-meta div {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .partner-dir-meta dt {
+    color: var(--color-text-muted);
+  }
+
+  .partner-dir-meta dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-navy);
+    text-align: right;
+  }
+
+  .partner-dir-links {
+    margin-top: auto;
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .partner-dir-cta {
+    width: 100%;
+  }
+
+  .partner-dir-profile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--color-navy);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+</style>
