@@ -32,6 +32,8 @@ interface Props {
 const { partner } = Astro.props;
 // ponytail: an optional second photo is a repo file, not a DB column; add a column + console upload if more affiliates want one.
 const storyImage = existsSync(`public/partner-images/${partner.slug}/story.jpg`) ? `/partner-images/${partner.slug}/story.jpg` : null;
+// Same idea for the round photo: avatar.jpg overrides the DB portrait in circles only (home page portrait keeps partner.image).
+const avatarImage = existsSync(`public/partner-images/${partner.slug}/avatar.jpg`) ? `/partner-images/${partner.slug}/avatar.jpg` : partner.image;
 const isOrg = partner.type === 'organisation';
 const initials = getPartnerInitials(partner.name);
 const firstName = isOrg ? partner.name : partner.name.trim().split(/\s+/)[0];
@@ -68,9 +70,9 @@ const steps = [
 <section class:list={['profile-hero', isOrg && 'profile-hero--org']} aria-labelledby="partner-name">
   <div class="container profile-hero__inner">
     <div class:list={['profile-hero__media', isOrg && 'profile-hero__media--org']}>
-      {partner.image ? (
+      {avatarImage ? (
         <img
-          src={partner.image}
+          src={avatarImage}
           alt={isOrg ? `${partner.name} logo` : `${partner.name}, ${partner.role}`}
           width="220"
           height="220"
