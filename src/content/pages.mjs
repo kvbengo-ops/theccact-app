@@ -664,8 +664,8 @@ export const PRIVACY_PAGE = {
 export const DIRECTORY_PAGE = {
   title: 'Affiliate Directory — CCACT',
   description: 'The directory of approved CCACT affiliates. Confirm that an individual or organization is officially authorized by CCACT.',
-  eyebrow: 'Student Protection & Verification',
-  heading: 'Affiliate Directory',
+  eyebrow: 'Affiliate Directory',
+  heading: 'Meet the Affiliates',
   lead: 'Confirm that an individual ambassador or affiliate organization is officially authorized by CCACT.',
   emptyHeading: 'Affiliate Directory Launch In Progress',
   emptyBody:
