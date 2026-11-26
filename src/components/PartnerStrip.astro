@@ -37,7 +37,7 @@ const profileHref = pageUrl('about-partner', partner);
 
     <nav class="partner-strip__links" aria-label="Affiliate">
       <a href={profileHref}>View profile</a>
-      <a href={BRAND.mainDirectoryHref}>Verify this affiliate</a>
+      {BRAND.mainDirectoryHref && <a href={BRAND.mainDirectoryHref}>Verify this affiliate</a>}
     </nav>
   </div>
 </aside>

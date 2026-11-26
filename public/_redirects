@@ -1,5 +1,5 @@
-# Affiliates join by invitation and the directory is /affiliates/directory/.
+# Affiliates join by invitation. The affiliate directory is hidden for now.
 /affiliate-apply/  /affiliates/  301
 /affiliate-apply   /affiliates/  301
-/partners/         /affiliates/directory/  301
-/partners          /affiliates/directory/  301
+/partners/         /affiliates/  301
+/partners          /affiliates/  301

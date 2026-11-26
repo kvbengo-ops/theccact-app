@@ -25,7 +25,7 @@ const trackIcons: Record<string, string> = {
   lead={AFFILIATES_PAGE.hero.lead}
 >
   <div class="page-hero__actions">
-    <a href={BRAND.mainDirectoryHref} class="btn btn--gold">Meet our affiliates</a>
+    {BRAND.mainDirectoryHref && <a href={BRAND.mainDirectoryHref} class="btn btn--gold">Meet our affiliates</a>}
     <a href="#how-it-works" class="btn btn--outline-light">How it works</a>
   </div>
 </PageHero>

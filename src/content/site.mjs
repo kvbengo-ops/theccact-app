@@ -50,7 +50,9 @@ export const BRAND = {
   contactPhone: 'WhatsApp / Text: +1 416-893-8158',
   copyright: '© 2026 Canadian Centre For Advanced Career Training (CCACT). All rights reserved.',
   mainAffiliatesHref: '/affiliates/',
-  mainDirectoryHref: '/affiliates/directory/',
+  // ponytail: directory hidden for now. To show it: set '/affiliates/directory/', rename src/pages/affiliates/_directory.astro
+  // back to directory.astro, and point /partners in public/_redirects at it.
+  mainDirectoryHref: null,
 };
 
 export const HOME_HERO = {
@@ -245,14 +247,14 @@ export function getFooterColumns(partner = null) {
         links: [
           { label: `About ${partner.name}`, href: pageUrl('about-partner', partner) },
           { label: 'Verify this affiliate', href: BRAND.mainDirectoryHref },
-        ],
+        ].filter((link) => link.href),
       }
     : {
         heading: 'Affiliate program',
         links: [
           { label: 'Affiliate program', href: BRAND.mainAffiliatesHref },
           { label: 'Approved affiliates', href: BRAND.mainDirectoryHref },
-        ],
+        ].filter((link) => link.href),
       };
 
   return { quickLinks, contextColumn };

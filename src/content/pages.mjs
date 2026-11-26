@@ -660,7 +660,7 @@ export const PRIVACY_PAGE = {
   ],
 };
 
-// The affiliate directory page (/affiliates/directory/).
+// The affiliate directory page (hidden: src/pages/affiliates/_directory.astro).
 export const DIRECTORY_PAGE = {
   title: 'Affiliate Directory — CCACT',
   description: 'The directory of approved CCACT affiliates. Confirm that an individual or organization is officially authorized by CCACT.',

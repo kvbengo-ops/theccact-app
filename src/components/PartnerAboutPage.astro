@@ -148,9 +148,11 @@ const steps = [
             <Icon name="globe" />Visit website<span class="sr-only"> (opens in a new tab)</span>
           </a>
         )}
-        <a href={BRAND.mainDirectoryHref} class="trust-card__verify">
-          Check the approved affiliate directory <Icon name="arrow" />
-        </a>
+        {BRAND.mainDirectoryHref && (
+          <a href={BRAND.mainDirectoryHref} class="trust-card__verify">
+            Check the approved affiliate directory <Icon name="arrow" />
+          </a>
+        )}
       </div>
     </aside>
   </div>
