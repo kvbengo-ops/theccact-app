@@ -1,16 +1,32 @@
 ---
-import { AFFILIATES_PAGE } from '../content/pages.mjs';
-import { BRAND } from '../content/site.mjs';
+// The affiliate program, for information only: affiliates join by invitation (the owner sends invite links from
+// the console), so this page has no application buttons. It also carries the full directory of approved affiliates.
+import { AFFILIATES_PAGE, DIRECTORY_PAGE } from '../content/pages.mjs';
+import { BRAND, CONTINUING_EDUCATION_NOTICE } from '../content/site.mjs';
+import { pageUrl } from '../lib/links.mjs';
 import PageHero from './PageHero.astro';
 import { ICONS as icons } from '../lib/icons.mjs';
 
-const applyHref = '/affiliate-apply/';
+interface Props {
+  partners?: Array<{
+    slug: string;
+    name: string;
+    type: 'individual' | 'organisation';
+    role: string;
+    location: string;
+    approvalDate: string;
+    status: string;
+  }>;
+}
+
+const { partners = [] } = Astro.props;
+const approvedPartners = partners.filter((p) => p.status === 'live');
 
 // ponytail: steps are static copy derived from the program description; move to pages.mjs if CCACT edits them.
 const steps = [
-  { icon: 'file', title: 'Apply', body: 'Tell us about yourself or your organization. It takes a few minutes.' },
-  { icon: 'shield', title: 'CCACT reviews', body: 'We check your details before anything is published.' },
-  { icon: 'link', title: 'Share CCACT', body: 'Get your affiliate site and Teachable referral link to share with learners.' },
+  { icon: 'mail', title: 'By invitation', body: 'CCACT invites individuals and organizations it knows and trusts to apply.' },
+  { icon: 'shield', title: 'CCACT reviews', body: 'We check every application before anything is published.' },
+  { icon: 'link', title: 'Share CCACT', body: 'Affiliates get their own site and Teachable referral link to share with learners.' },
 ];
 
 const trackIcons: Record<string, string> = {
@@ -25,7 +41,7 @@ const trackIcons: Record<string, string> = {
   lead={AFFILIATES_PAGE.hero.lead}
 >
   <div class="page-hero__actions">
-    <a href={applyHref} class="btn btn--gold">Apply now</a>
+    <a href="#directory" class="btn btn--gold">Meet our affiliates</a>
     <a href="#how-it-works" class="btn btn--outline-light">How it works</a>
   </div>
 </PageHero>
@@ -54,8 +70,8 @@ const trackIcons: Record<string, string> = {
 
 <section class="band band--cream" aria-labelledby="who-heading">
   <div class="container">
-    <p class="section-eyebrow">Who can apply</p>
-    <h2 id="who-heading" class="section-heading">Two ways to join</h2>
+    <p class="section-eyebrow">{AFFILIATES_PAGE.tracksEyebrow}</p>
+    <h2 id="who-heading" class="section-heading">{AFFILIATES_PAGE.tracksHeading}</h2>
 
     <div class="tracks">
       {AFFILIATES_PAGE.tracks.map((track) => (
@@ -69,7 +85,7 @@ const trackIcons: Record<string, string> = {
           <h3 class="track__title">{track.heading}</h3>
           <p class="track__audience">{track.audience}</p>
           <p class="track__summary">{track.summary}</p>
-          <p class="track__label">What you get</p>
+          <p class="track__label">What affiliates get</p>
           <ul class="track__list">
             {track.gets.map((item) => (
               <li>
@@ -78,20 +94,59 @@ const trackIcons: Record<string, string> = {
               </li>
             ))}
           </ul>
-          <a
-            href={track.id === 'apply-organisation' ? '/affiliate-apply/organisation/' : '/affiliate-apply/individual/'}
-            class="btn btn--gold track__cta"
-          >
-            {track.id === 'apply-organisation' ? 'Apply as an organization' : 'Apply as an individual'}
-          </a>
         </article>
       ))}
     </div>
 
     <div class="apply-row">
-      <p class="apply-row__text">Each type has its own short application.</p>
-      <a href={applyHref} class="btn btn--outline-navy">Not sure? Compare options</a>
+      <p class="apply-row__text">{AFFILIATES_PAGE.inviteNote}</p>
+      <a href="/contact/" class="btn btn--outline-navy">Contact us</a>
     </div>
+  </div>
+</section>
+
+<section id="directory" class="band band--white" aria-labelledby="directory-heading">
+  <div class="container">
+    <p class="section-eyebrow">{DIRECTORY_PAGE.eyebrow}</p>
+    <h2 id="directory-heading" class="section-heading directory-heading">{DIRECTORY_PAGE.heading}</h2>
+    <p class="directory-lead">{DIRECTORY_PAGE.lead}</p>
+
+    <div class="callout-box directory-notice">
+      <strong>Verification &amp; Tuition Policy:</strong> {CONTINUING_EDUCATION_NOTICE.directoryNotice}
+    </div>
+
+    {approvedPartners.length === 0 ? (
+      <div class="editorial-card editorial-card--cream empty-state">
+        <h3 class="empty-state__title">{DIRECTORY_PAGE.emptyHeading}</h3>
+        <p class="empty-state__body">{DIRECTORY_PAGE.emptyBody}</p>
+      </div>
+    ) : (
+      <div class="editorial-grid-3 directory-grid">
+        {approvedPartners.map((partner) => (
+          <article class="editorial-card editorial-card--cream partner-dir-card">
+            <p class="section-eyebrow">
+              {partner.type === 'organisation' ? 'Organization Affiliate' : 'Individual Affiliate'}
+            </p>
+            <h3 class="partner-dir-card__name">{partner.name}</h3>
+            <p class="partner-dir-card__role">{partner.role}</p>
+            <dl class="partner-dir-meta">
+              <div>
+                <dt>Location</dt>
+                <dd>{partner.location}</dd>
+              </div>
+              <div>
+                <dt>Approved</dt>
+                <dd>{partner.approvalDate}</dd>
+              </div>
+            </dl>
+            <div class="partner-dir-links">
+              <a href={pageUrl('', partner)} class="btn btn--gold partner-dir-cta">Visit affiliate site</a>
+              <a href={pageUrl('about-partner', partner)} class="partner-dir-profile">View affiliate profile</a>
+            </div>
+          </article>
+        ))}
+      </div>
+    )}
   </div>
 </section>
 
@@ -102,8 +157,7 @@ const trackIcons: Record<string, string> = {
     </h2>
     <p class="terms__body">{AFFILIATES_PAGE.pendingDisclosureBody}</p>
     <p class="terms__contact">
-      Questions? <a href={`mailto:${BRAND.contactEmail}`}>{BRAND.contactEmail}</a> ·
-      <a href={BRAND.mainDirectoryHref}>View approved affiliates</a>
+      Questions? <a href={`mailto:${BRAND.contactEmail}`}>{BRAND.contactEmail}</a>
     </p>
   </div>
 </section>
@@ -287,15 +341,6 @@ const trackIcons: Record<string, string> = {
     gap: 12px;
   }
 
-  .track__cta {
-    margin-top: auto;
-    align-self: flex-start;
-  }
-
-  .track__list {
-    margin-bottom: 12px;
-  }
-
   .apply-row {
     margin-top: 28px;
     display: flex;
@@ -316,6 +361,114 @@ const trackIcons: Record<string, string> = {
     font-weight: 700;
     color: var(--color-navy);
     font-size-adjust: 0.44;
+  }
+
+  /* Directory of approved affiliates */
+  #directory {
+    scroll-margin-top: var(--header-h, 72px);
+  }
+
+  .directory-heading {
+    margin-bottom: 8px;
+  }
+
+  .directory-lead {
+    margin: 0 0 20px;
+    max-width: 64ch;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+  }
+
+  .directory-notice {
+    margin-bottom: 28px;
+  }
+
+  .empty-state {
+    max-width: 720px;
+  }
+
+  .empty-state__title {
+    margin: 0 0 8px;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    color: var(--color-navy);
+  }
+
+  .empty-state__body {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.62;
+    color: var(--color-text-muted);
+  }
+
+  .partner-dir-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .partner-dir-card__name {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    color: var(--color-navy);
+    overflow-wrap: anywhere;
+  }
+
+  .partner-dir-card__role {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text-muted);
+  }
+
+  .partner-dir-meta {
+    margin: 6px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13.5px;
+  }
+
+  .partner-dir-meta div {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .partner-dir-meta dt {
+    color: var(--color-text-muted);
+  }
+
+  .partner-dir-meta dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-navy);
+    text-align: right;
+  }
+
+  .partner-dir-links {
+    margin-top: auto;
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .partner-dir-cta {
+    width: 100%;
+  }
+
+  .partner-dir-profile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--color-navy);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .terms {

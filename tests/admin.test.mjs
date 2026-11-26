@@ -9,7 +9,12 @@ import {
   matchesQuery,
   slugify,
   validateGrant,
+  validateManualPage,
   SLUG_PATTERN,
+  validateInvite,
+  inviteStatus,
+  inviteLink,
+  inviteMailto,
 } from '../src/lib/admin-helpers.mjs';
 
 test('slugify makes URL-safe partner slugs that pass the database rule', () => {
@@ -28,6 +33,15 @@ test('validateGrant requires a valid slug, type and every content field', () => 
   assert.match(validateGrant({ ...ok, type: '' }), /individual or an organization/);
   assert.match(validateGrant({ ...ok, bio: '  ' }), /bio/);
   assert.match(validateGrant({ ...ok, referralCode: '' }), /referral code/);
+});
+
+test('validateManualPage also needs a name, email and website', () => {
+  const ok = { name: 'Maria Santos', email: 'maria@example.com', brand: 'cces', slug: 'maria-santos', type: 'individual', role: 'RN', location: 'Toronto', bio: 'Bio', referralCode: 'MS1' };
+  assert.equal(validateManualPage(ok), '');
+  assert.match(validateManualPage({ ...ok, name: ' ' }), /name/);
+  assert.match(validateManualPage({ ...ok, email: 'maria' }), /email/);
+  assert.match(validateManualPage({ ...ok, brand: '' }), /website/);
+  assert.match(validateManualPage({ ...ok, referralCode: '' }), /referral code/);
 });
 
 test('matchesQuery searches name, email, role and location', () => {
@@ -73,4 +87,20 @@ test('content field keys match the database allow-list', () => {
     ['announcement', 'hero_lead', 'courses_lead', 'footer_tagline'],
   );
   assert.ok(CONTENT_FIELDS.every((f) => f.max <= 400));
+});
+
+test("invites: valid email and type, status, link to the right form, ready-to-send email", () => {
+  assert.equal(validateInvite({ email: "a@b.co", type: "individual" }), "");
+  assert.match(validateInvite({ email: "nope", type: "individual" }), /email/);
+  assert.match(validateInvite({ email: "a@b.co", type: "company" }), /individual or organization/);
+  assert.equal(inviteStatus({ used_at: "x", revoked_at: null }), "used");
+  assert.equal(inviteStatus({ used_at: null, revoked_at: "x" }), "revoked");
+  assert.equal(inviteStatus({ used_at: null, revoked_at: null }), "open");
+  assert.equal(inviteLink("https://thecces.com", { type: "organisation", token: "t1" }), "https://thecces.com/affiliate-apply/organisation/?invite=t1");
+  assert.equal(inviteLink("https://x.test", { type: "individual", token: "t2" }), "https://x.test/affiliate-apply/individual/?invite=t2");
+  const mail = inviteMailto("https://x.test/a?invite=t2", { email: "maria@ex.com", note: "Maria" }, "CCES");
+  assert.ok(mail.startsWith("mailto:maria%40ex.com?subject="));
+  const body = decodeURIComponent(mail.split("&body=")[1]);
+  assert.match(body, /^Hello Maria,/);
+  assert.ok(body.includes("https://x.test/a?invite=t2") && body.includes("CCES affiliate"));
 });

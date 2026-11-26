@@ -2,6 +2,13 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AffiliatesPage from '../components/AffiliatesPage.astro';
 import { AFFILIATES_PAGE } from '../content/pages.mjs';
+import { loadLivePartners } from '../lib/partner-source.mjs';
+
+const partners = await loadLivePartners({
+  url: import.meta.env.SUPABASE_URL ?? process.env.SUPABASE_URL,
+  key: import.meta.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY,
+  required: Boolean(import.meta.env.CF_PAGES || process.env.CF_PAGES),
+});
 ---
 
 <BaseLayout
@@ -10,5 +17,5 @@ import { AFFILIATES_PAGE } from '../content/pages.mjs';
   activePage="affiliates"
   partner={null}
 >
-  <AffiliatesPage />
+  <AffiliatesPage partners={partners} />
 </BaseLayout>

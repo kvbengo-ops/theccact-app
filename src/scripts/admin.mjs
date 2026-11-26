@@ -6,11 +6,16 @@ import {
   countByStatus,
   formatDate,
   initials,
+  inviteLink,
+  inviteMailto,
+  inviteStatus,
   matchesQuery,
   SLUG_PATTERN,
   slugify,
   validateAvatar,
   validateGrant,
+  validateInvite,
+  validateManualPage,
   validateNewPassword,
 } from '../lib/admin-helpers.mjs';
 
@@ -33,8 +38,8 @@ const PARTNER_BUCKET = 'partner-photos';
 // Pages on this site link relative (the custom domains may not point at Netlify yet); the CCES build tags <html data-brand="cces">.
 const BRAND_SITES = {
   // ponytail: Netlify addresses because theccact.com (old S3 site) and thecces.com (Wix) don't point at Netlify yet; swap to the domains once DNS moves.
-  ccact: { label: 'theccact.com', origin: 'https://theccact.netlify.app' },
-  cces: { label: 'thecces.com', origin: 'https://thecces.netlify.app' },
+  ccact: { label: 'theccact.com', name: 'CCACT', origin: 'https://theccact.netlify.app' },
+  cces: { label: 'thecces.com', name: 'CCES', origin: 'https://thecces.netlify.app' },
 };
 const EMPTY_TEXT = {
   pending: 'No applications are waiting for review.',
@@ -50,7 +55,7 @@ const STATUS = {
 
 export function setupAdmin(root, client) {
   const $ = (selector) => root.querySelector(selector);
-  const state = { user: null, rows: [], filter: 'pending', query: '', content: {}, avatarUrl: null };
+  const state = { user: null, rows: [], invites: [], filter: 'pending', query: '', content: {}, avatarUrl: null };
 
   const setView = (view) => { root.dataset.state = view; };
   const say = (message) => { $('#admin-status').textContent = message; };
@@ -105,9 +110,10 @@ export function setupAdmin(root, client) {
     }
     state.user = user;
     state.rows = data;
-    await Promise.all([loadAvatar(), loadContent()]);
+    await Promise.all([loadAvatar(), loadContent(), loadInvites()]);
     paintProfile();
     renderApps();
+    renderInvites();
     renderContent();
     shell.route();
     setView('app');
@@ -117,7 +123,7 @@ export function setupAdmin(root, client) {
   async function signOut() {
     const { error } = await client.auth.signOut();
     if (error) return toast('Could not sign out. Please try again.', 'error');
-    Object.assign(state, { user: null, rows: [], content: {}, avatarUrl: null });
+    Object.assign(state, { user: null, rows: [], invites: [], content: {}, avatarUrl: null });
     closeMenu();
     setView('login');
     loginForm.elements.email.focus();
@@ -180,6 +186,7 @@ export function setupAdmin(root, client) {
     const extra = [
       row.contact_name && `Contact: ${row.contact_name}`,
       row.languages && `Languages: ${row.languages}`,
+      !row.user_id && 'Added by you · no affiliate account',
     ].filter(Boolean).join(' · ');
     const main = h('div', {},
       h('h3', { class: 'app__name' }, row.name,
@@ -325,6 +332,8 @@ export function setupAdmin(root, client) {
     granting = row;
     grantForm.reset();
     showError($('#grant-error'), '');
+    $('#dlg-grant-title').textContent = 'Grant affiliate page';
+    $('#grant-manual').hidden = true;
     $('#grant-for').textContent = `For ${row.name} · ${row.email}`;
     grantForm.elements.slug.value = slugify(row.name);
     grantForm.elements.role.value = row.role ?? '';
@@ -334,6 +343,23 @@ export function setupAdmin(root, client) {
     $('#dlg-grant').showModal();
     grantForm.elements.slug.focus();
   }
+
+  // A page for an affiliate who has not signed up: the owner fills in everything.
+  $('#apps-add').addEventListener('click', () => {
+    granting = { manual: true };
+    grantForm.reset();
+    showError($('#grant-error'), '');
+    $('#dlg-grant-title').textContent = 'Add affiliate page';
+    $('#grant-for').textContent = 'No sign-up needed. The affiliate does not get a login.';
+    $('#grant-manual').hidden = false;
+    grantForm.elements.brand.value = document.documentElement.dataset.brand === 'cces' ? 'cces' : 'ccact';
+    grantForm.querySelector('input[name="type"][value="individual"]').checked = true;
+    $('#dlg-grant').showModal();
+    grantForm.elements.name.focus();
+  });
+  grantForm.elements.name.addEventListener('blur', (event) => {
+    if (granting?.manual && !grantForm.elements.slug.value) grantForm.elements.slug.value = slugify(event.target.value);
+  });
 
   grantForm.elements.slug.addEventListener('blur', (event) => {
     if (!SLUG_PATTERN.test(event.target.value)) event.target.value = slugify(event.target.value);
@@ -351,24 +377,32 @@ export function setupAdmin(root, client) {
       bio: f.bio.value.trim(),
       referralCode: f.referralCode.value.trim(),
     };
-    const problem = validateGrant(values);
+    if (granting.manual) Object.assign(values, { name: f.name.value.trim(), email: f.email.value.trim().toLowerCase(), brand: f.brand.value });
+    const problem = granting.manual ? validateManualPage(values) : validateGrant(values);
     if (problem) return showError($('#grant-error'), problem);
     const submit = grantForm.querySelector('button[type="submit"]');
     submit.disabled = true;
-    const { error } = await client.rpc('admin_grant_partner_page', {
-      applicant_id: granting.user_id,
+    const page = {
       page_slug: values.slug,
       page_type: values.type,
       page_role: values.role,
       page_location: values.location,
       page_bio: values.bio,
       page_referral_code: values.referralCode,
-    });
+    };
+    const { error } = granting.manual
+      ? await client.rpc('admin_create_partner_page', { ...page, page_name: values.name, page_email: values.email, page_brand: values.brand })
+      : await client.rpc('admin_grant_partner_page', { applicant_id: granting.user_id, ...page });
     submit.disabled = false;
     if (error) {
       return showError($('#grant-error'), error.code === '23505'
         ? 'That page address or account already has an affiliate page. Choose another address.'
         : 'Could not create the page. Check the details and try again.');
+    }
+    if (granting.manual) {
+      granting = { user_id: null, email: values.email, name: values.name, type: values.type, role: values.role, location: values.location,
+        status: 'approved', created_at: new Date().toISOString(), partner_brand: values.brand };
+      state.rows.unshift(granting);
     }
     granting.partner_slug = values.slug;
     granting.partner_status = 'preview';
@@ -376,6 +410,98 @@ export function setupAdmin(root, client) {
     renderApps();
     toast(`Affiliate page /partners/${values.slug}/ created as a preview.`);
   });
+
+  /* ---------- Invites (affiliates can only apply with one) ---------- */
+  const INVITE_STATUS = {
+    open: { icon: 'clock', label: 'Not used yet' },
+    used: { icon: 'check', label: 'Applied' },
+    revoked: { icon: 'x', label: 'Cancelled' },
+  };
+  const inviteForm = $('#invite-form');
+  inviteForm.elements.brand.value = document.documentElement.dataset.brand === 'cces' ? 'cces' : 'ccact';
+  const linkFor = (invite) => inviteLink(BRAND_SITES[invite.brand]?.origin ?? BRAND_SITES.ccact.origin, invite);
+  const mailFor = (invite) => inviteMailto(linkFor(invite), invite, BRAND_SITES[invite.brand]?.name ?? 'CCACT');
+
+  async function loadInvites() {
+    const { data, error } = await client.rpc('admin_invites');
+    state.invites = error ? [] : data;
+  }
+
+  async function copyLink(link) {
+    try { await navigator.clipboard.writeText(link); toast('Invite link copied.'); }
+    catch { toast('Could not copy. Select the link and copy it yourself.', 'error'); }
+  }
+
+  inviteForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const f = inviteForm.elements;
+    const invite = {
+      email: f.email.value.trim().toLowerCase(),
+      type: inviteForm.querySelector('input[name="type"]:checked')?.value ?? '',
+      brand: f.brand.value,
+      note: f.note.value.trim(),
+    };
+    const problem = validateInvite(invite);
+    if (problem) return showError($('#invite-error'), problem);
+    showError($('#invite-error'), '');
+    const submit = inviteForm.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    const { data: token, error } = await client.rpc('admin_create_invite', {
+      invite_email: invite.email, invite_type: invite.type, invite_brand: invite.brand, invite_note: invite.note,
+    });
+    submit.disabled = false;
+    if (error) return showError($('#invite-error'), 'Could not create the invite. Please try again.');
+    const created = { ...invite, token, created_at: new Date().toISOString(), used_at: null, revoked_at: null };
+    state.invites.unshift(created);
+    $('#invite-created-email').textContent = invite.email;
+    $('#invite-created-link').value = linkFor(created);
+    $('#invite-mail').href = mailFor(created);
+    $('#invite-created').hidden = false;
+    inviteForm.reset();
+    inviteForm.elements.brand.value = invite.brand;
+    renderInvites();
+    toast(`Invite created for ${invite.email}.`);
+  });
+  $('#invite-copy').addEventListener('click', () => copyLink($('#invite-created-link').value));
+
+  function renderInvites() {
+    const list = $('#invites');
+    list.replaceChildren();
+    if (!state.invites.length) {
+      list.append(h('div', { class: 'empty' }, svg('mail'), h('p', { text: 'No invites yet. Create one above.' })));
+      return;
+    }
+    for (const invite of state.invites) list.append(inviteRow(invite));
+  }
+
+  function inviteRow(invite) {
+    const key = inviteStatus(invite);
+    const status = INVITE_STATUS[key];
+    const isOrg = invite.type === 'organisation';
+    const meta = [BRAND_SITES[invite.brand]?.label, `Created ${formatDate(invite.created_at)}`, invite.used_at && `Applied ${formatDate(invite.used_at)}`].filter(Boolean).join(' · ');
+    const main = h('div', {},
+      h('h3', { class: 'app__name' }, invite.note || invite.email,
+        h('span', { class: `type-tag type-tag--${isOrg ? 'org' : 'ind'}` }, svg(isOrg ? 'building' : 'user'), isOrg ? 'Organization' : 'Individual')),
+      invite.note && h('p', { class: 'app__line', text: invite.email }),
+      h('p', { class: 'app__line', text: meta }),
+      invite.applicant_name && h('p', { class: 'app__line', text: `${invite.applicant_name}'s application is under Applications.` }),
+    );
+    const actions = key === 'open' && h('div', { class: 'app__actions' },
+      h('button', { type: 'button', class: 'btn btn--gold-compact', text: 'Copy link', onclick: () => copyLink(linkFor(invite)) }),
+      h('a', { class: 'btn btn--outline-navy', href: mailFor(invite), text: 'Email' }),
+      twoStep('Cancel invite', 'Confirm cancel', 'btn btn--danger', (button) => revokeInvite(invite, button)));
+    const side = h('div', { class: 'app__side' }, h('span', { class: `chip chip--${key}` }, svg(status.icon), status.label), actions);
+    return h('article', { class: 'app-row' }, h('span', { class: 'avatar', 'aria-hidden': 'true' }, svg('mail')), main, side);
+  }
+
+  async function revokeInvite(invite, button) {
+    button.disabled = true;
+    const { error } = await client.rpc('admin_revoke_invite', { invite_token: invite.token });
+    if (error) { button.disabled = false; return toast('Could not cancel this invite. Refresh and try again.', 'error'); }
+    invite.revoked_at = new Date().toISOString();
+    renderInvites();
+    toast(`Invite for ${invite.email} cancelled. The link no longer works.`);
+  }
 
   /* ---------- Content (CMS) ---------- */
   async function loadContent() {

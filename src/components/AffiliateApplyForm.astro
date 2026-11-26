@@ -27,7 +27,6 @@ const copy = isOrg
     };
 const sections = AFFILIATE_FORMS[type];
 const AUTOCOMPLETE = { fullLegalName: 'name', contactName: 'name', companyName: 'organization', email: 'email', phone: 'tel', mobilePhone: 'tel', city: 'address-level2', province: 'address-level1', country: 'country-name', postalCode: 'postal-code', businessAddress: 'street-address' };
-const otherHref = isOrg ? '/affiliate-apply/individual/' : '/affiliate-apply/organisation/';
 ---
 
 <section class="band band--sand">
@@ -48,7 +47,6 @@ const otherHref = isOrg ? '/affiliate-apply/individual/' : '/affiliate-apply/org
         <li><span>02</span><div><strong>Create your password</strong><p>Your email from the form becomes your login. Then your application is sent.</p></div></li>
         <li><span>03</span><div><strong>Await review</strong><p>CCACT reviews every application before anything is published.</p></div></li>
       </ol>
-      <p class="switch">{isOrg ? 'Applying for yourself?' : 'Applying for an organization?'} <a href={otherHref}>{isOrg ? 'Use the individual form' : 'Use the organization form'}</a></p>
       <a class="back-link" href="/affiliates/">← Back to affiliate information</a>
     </div>
 
@@ -56,9 +54,13 @@ const otherHref = isOrg ? '/affiliate-apply/individual/' : '/affiliate-apply/org
       <p class="eyebrow">Your application</p>
       <h2>{isOrg ? 'Business affiliate application' : 'Individual affiliate application'}</h2>
       <p class="card-intro">Your account stays pending until CCACT reviews your application.</p>
-      <p id="affiliate-status" role="status" aria-live="polite">Step 1 of 2: complete the application.</p>
+      <p id="affiliate-status" role="status" aria-live="polite">Checking your invitation…</p>
+      <div id="invite-required" class="invite-required" hidden>
+        <p>CCACT affiliates join by invitation. If you received an invitation, open the personal link in your email; it fills in your email address for you.</p>
+        <p>Would you like to become an affiliate? <a href="/contact/">Contact us</a>.</p>
+      </div>
       {supabaseUrl && supabaseKey && <>
-        <form id="affiliate-application">
+        <form id="affiliate-application" hidden>
           <input type="hidden" name="type" value={type} />
           <fieldset id="details-step">
             <legend>Step 1 of 2 · Application</legend>
@@ -125,8 +127,10 @@ const otherHref = isOrg ? '/affiliate-apply/individual/' : '/affiliate-apply/org
   .steps span { color: var(--color-gold-dark); font-family: var(--font-serif); font-size: 23px; line-height: 1.2; }
   .steps strong { color: var(--color-navy); }
   .steps p { margin: 4px 0 0; color: var(--color-text-muted); font-size: 14.5px; }
-  .switch { font-size: 15px; }
-  .switch a { font-weight: 700; }
+  .invite-required { margin-top: 16px; display: grid; gap: 8px; color: var(--color-text); font-size: 15.5px; line-height: 1.6; }
+  .invite-required p { margin: 0; }
+  .invite-required a { font-weight: 700; }
+  input:read-only { background: var(--color-cream); color: var(--color-text-muted); }
   .back-link { font-weight: 700; }
   .application-card { background: var(--color-white); border: 1px solid var(--color-border); border-top: 4px solid var(--color-gold); padding: clamp(24px, 4vw, 40px); box-shadow: 0 12px 35px rgb(21 35 62 / 7%); }
   .application-card h2 { font-size: 1.9rem; }

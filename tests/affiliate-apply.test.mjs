@@ -49,3 +49,21 @@ test('full applications map to the review columns and keep every answer except l
   assert.deepEqual(submitted.answers.categories, ['Nursing School or College', 'Career Consultant']);
   assert.throws(() => toApplication({ type: 'individual', fullLegalName: 'A', professionalBackground: 'x'.repeat(40001) }), /too long/);
 });
+
+test('invite links: only a well-formed token is read, and only an open invite is returned', async () => {
+  const { inviteToken, loadInvite } = await import('../src/scripts/affiliate-apply.mjs');
+  const token = '0f8fad5b-d9cb-469f-a165-70867728950e';
+  assert.equal(inviteToken(`?invite=${token.toUpperCase()}`), token);
+  assert.equal(inviteToken('?invite=not-a-token'), '');
+  assert.equal(inviteToken(''), '');
+  const client = rows => ({ rpc: async (name, args) => { assert.equal(name, 'invite_details'); assert.equal(args.invite_token, token); return rows; } });
+  assert.deepEqual(await loadInvite(client({ data: [{ email: 'a@b.co', type: 'individual' }], error: null }), token), { email: 'a@b.co', type: 'individual' });
+  assert.equal(await loadInvite(client({ data: [], error: null }), token), null);
+  assert.equal(await loadInvite(client({ data: null, error: { code: 'x' } }), token), null);
+  assert.equal(await loadInvite({ rpc: () => { throw new Error('should not call'); } }, ''), null);
+});
+
+test('a submission blocked by the invite rule explains why', async () => {
+  const client = { from: () => ({ insert: async () => ({ error: { code: '42501', message: 'private detail' } }) }) };
+  await assert.rejects(submitApplication(client, { id: '1' }, { name: 'Ada' }), /invitation is no longer valid/);
+});

@@ -660,29 +660,28 @@ export const PRIVACY_PAGE = {
   ],
 };
 
+// The directory section of the Affiliates page.
 export const DIRECTORY_PAGE = {
-  title: 'Approved Affiliates Directory — CCACT',
-  description:
-    'Verify authorized CCACT affiliates. Tuition is paid directly to CCACT through Teachable and affiliates never guarantee outcomes.',
-  hero: {
-    eyebrow: 'Student Protection & Verification',
-    title: 'Approved CCACT Affiliates',
-    lead: 'Confirm that an individual ambassador or affiliate organization is officially authorized by CCACT.',
-  },
+  eyebrow: 'Student Protection & Verification',
+  heading: 'Approved CCACT Affiliates',
+  lead: 'Confirm that an individual ambassador or affiliate organization is officially authorized by CCACT.',
   emptyHeading: 'Affiliate Directory Launch In Progress',
   emptyBody:
     'No affiliates are published in the public directory yet. Approved affiliates appear here after CCACT completes bio compliance review and preview approval.',
 };
 
 export const AFFILIATES_PAGE = {
-  title: 'Affiliates Program — CCACT',
+  title: 'Affiliates — CCACT',
   description:
-    'Information about becoming an authorized individual or organization CCACT affiliate.',
+    'The CCACT affiliate program and the directory of approved individual and organization affiliates.',
   hero: {
-    eyebrow: 'Main Site Program · Affiliate Program',
-    title: 'Become a CCACT Affiliate',
-    lead: 'Approved individual educators and affiliate organizations share verified CCACT course information through an official Teachable referral link and a dedicated CCACT affiliate microsite.',
+    eyebrow: 'Affiliate Program',
+    title: 'The CCACT Affiliate Program',
+    lead: 'Approved individual educators and affiliate organizations share verified CCACT course information through an official Teachable referral link and a dedicated CCACT affiliate site. Affiliates join by invitation from CCACT.',
   },
+  tracksEyebrow: 'Our affiliates',
+  tracksHeading: 'Two kinds of affiliates',
+  inviteNote: 'Affiliates join by invitation. Interested?',
   tracks: [
     {
       id: 'apply-individual',

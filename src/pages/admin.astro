@@ -86,6 +86,12 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             </a>
           </li>
           <li>
+            <a href="#invites" data-tab="invites" class="nav__link" data-tip="Invites">
+              <Icon name="mail" />
+              <span class="nav__label">Invites</span>
+            </a>
+          </li>
+          <li>
             <a href="#content" data-tab="content" class="nav__link" data-tip="Content">
               <Icon name="pencil" />
               <span class="nav__label">Content</span>
@@ -168,10 +174,65 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             <input id="app-search" type="search" placeholder="Search name, email, role or location" autocomplete="off" />
           </div>
           <button type="button" id="apps-refresh" class="btn btn--outline-navy toolbar__btn"><Icon name="refresh" />Refresh</button>
+          <button type="button" id="apps-add" class="btn btn--gold-compact toolbar__btn"><Icon name="link" />Add affiliate page</button>
         </div>
 
         <p id="apps-summary" class="apps-summary"></p>
         <div id="apps" class="apps"></div>
+      </section>
+
+      <!-- Invites -->
+      <section id="panel-invites" class="panel" aria-labelledby="invites-title" hidden>
+        <div class="panel__head">
+          <div>
+            <h1 id="invites-title" class="panel__title">Affiliate invites</h1>
+            <p class="muted">Affiliates can only apply with an invite. Create a personal link for one email address, then send it yourself.</p>
+          </div>
+        </div>
+
+        <form id="invite-form" class="invite-form" novalidate>
+          <div class="grid2">
+            <div class="field">
+              <label for="invite-email">Email address</label>
+              <input id="invite-email" name="email" type="email" required autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="field">
+              <label for="invite-note">Their name <span class="muted">(optional)</span></label>
+              <input id="invite-note" name="note" maxlength="200" autocomplete="off" />
+            </div>
+          </div>
+          <div class="grid2">
+            <fieldset class="field">
+              <legend>Application type</legend>
+              <div>
+                <label class="radio"><input type="radio" name="type" value="individual" checked /> Individual</label>
+                <label class="radio"><input type="radio" name="type" value="organisation" /> Organization</label>
+              </div>
+            </fieldset>
+            <div class="field">
+              <label for="invite-brand">Website</label>
+              <select id="invite-brand" name="brand">
+                <option value="ccact">theccact.com</option>
+                <option value="cces">thecces.com</option>
+              </select>
+            </div>
+          </div>
+          <p id="invite-error" class="form-error" role="alert" hidden></p>
+          <div><button class="btn btn--gold" type="submit">Create invite link</button></div>
+        </form>
+
+        <div id="invite-created" class="note invite-created" hidden>
+          <p><strong>Invite ready.</strong> Send this link to <span id="invite-created-email"></span>. It works once, and only with that email address.</p>
+          <div class="invite-created__row">
+            <label class="sr-only" for="invite-created-link">Invite link</label>
+            <input id="invite-created-link" readonly />
+            <button type="button" class="btn btn--gold-compact" id="invite-copy">Copy link</button>
+            <a class="btn btn--outline-navy" id="invite-mail" href="#">Open email</a>
+          </div>
+        </div>
+
+        <h2 class="invites__heading">Sent invites</h2>
+        <div id="invites" class="apps"></div>
       </section>
 
       <!-- Content -->
@@ -236,6 +297,26 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       <div>
         <h2 id="dlg-grant-title">Grant affiliate page</h2>
         <p class="muted" id="grant-for"></p>
+      </div>
+      <div id="grant-manual" class="grant-manual" hidden>
+        <div class="grid2">
+          <div class="field">
+            <label for="grant-name">Affiliate name</label>
+            <input id="grant-name" name="name" maxlength="160" required autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="grant-email">Their email</label>
+            <input id="grant-email" name="email" type="email" required autocomplete="off" spellcheck="false" aria-describedby="grant-email-hint" />
+            <small id="grant-email-hint">Kept private. Never shown on the page.</small>
+          </div>
+        </div>
+        <div class="field">
+          <label for="grant-brand">Website</label>
+          <select id="grant-brand" name="brand">
+            <option value="ccact">theccact.com</option>
+            <option value="cces">thecces.com</option>
+          </select>
+        </div>
       </div>
       <div class="field">
         <label for="grant-slug">Page address</label>

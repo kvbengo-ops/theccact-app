@@ -41,6 +41,14 @@ export function validateGrant({ slug, role, location, bio, referralCode, type })
   return '';
 }
 
+// A page the owner adds directly, for an affiliate with no account.
+export function validateManualPage(values) {
+  if (!String(values.name ?? '').trim()) return 'Add the affiliate’s name.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email ?? '')) return 'Enter a valid email address.';
+  if (!['ccact', 'cces'].includes(values.brand)) return 'Choose the website for this page.';
+  return validateGrant(values);
+}
+
 // Case-insensitive match on the fields an owner would search by.
 export function matchesQuery(row, query) {
   const q = String(query ?? '').trim().toLowerCase();
@@ -73,4 +81,40 @@ export function formatDate(iso) {
   return Number.isNaN(date.getTime())
     ? ''
     : date.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// Invites: affiliates can only apply through a personal link the owner sends.
+export function validateInvite({ email, type }) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email ?? '')) return 'Enter a valid email address.';
+  if (!['individual', 'organisation'].includes(type)) return 'Choose individual or organization.';
+  return '';
+}
+
+export function inviteStatus(invite) {
+  if (invite.used_at) return 'used';
+  if (invite.revoked_at) return 'revoked';
+  return 'open';
+}
+
+// The apply form for the invite's type, on the website the affiliate will belong to.
+export function inviteLink(origin, { type, token }) {
+  return `${origin}/affiliate-apply/${type === 'organisation' ? 'organisation' : 'individual'}/?invite=${token}`;
+}
+
+// A ready-to-send email the owner opens in her own mail app.
+export function inviteMailto(link, { email, note }, brandName) {
+  const hello = note ? `Hello ${note},` : 'Hello,';
+  const body = [
+    hello,
+    '',
+    `You are invited to apply to become a ${brandName} affiliate. Use your personal link to complete your application:`,
+    '',
+    link,
+    '',
+    `The link works once and only with this email address (${email}).`,
+    '',
+    'Thank you,',
+    brandName,
+  ].join('\n');
+  return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`Your invitation to become a ${brandName} affiliate`)}&body=${encodeURIComponent(body)}`;
 }

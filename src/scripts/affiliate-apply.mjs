@@ -37,11 +37,30 @@ export function toApplication(answers) {
   };
 }
 
+// Applications are by invitation: the link carries ?invite=<uuid>, and the database only accepts an application
+// from the invited email while the invite is open.
+const TOKEN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export function inviteToken(search) {
+  const token = (new URLSearchParams(search).get('invite') ?? '').trim();
+  return TOKEN.test(token) ? token.toLowerCase() : '';
+}
+
+// { email, type } for an open invite, otherwise null.
+export async function loadInvite(client, token) {
+  if (!token) return null;
+  const { data, error } = await client.rpc('invite_details', { invite_token: token });
+  return error ? null : data?.[0] ?? null;
+}
+
 export async function submitApplication(client, user, data) {
   if (!user) throw new Error('Please sign in before submitting your application.');
   const details = applicationDetails(data);
   const { error } = await client.from('affiliate_applications').insert({ user_id: user.id, ...details, location: details.location || null, role: details.role || null, introduction: details.introduction || null, ...(data.answers && { answers: data.answers }) });
-  if (error) throw new Error(error.code === '23505' ? 'You have already submitted an application.' : 'Your application could not be submitted. Please try again.');
+  if (error) {
+    if (error.code === '23505') throw new Error('You have already submitted an application.');
+    if (error.code === '42501') throw new Error('Your invitation is no longer valid, or was sent to a different email address. Please contact us for a new invitation.');
+    throw new Error('Your application could not be submitted. Please try again.');
+  }
 }
 
 export function setupApplicationPage(root, client) {
@@ -50,8 +69,11 @@ export function setupApplicationPage(root, client) {
   const accountStep = root.querySelector('#account-step');
   const status = root.querySelector('#affiliate-status');
   const logout = root.querySelector('#affiliate-logout');
+  const required = root.querySelector('#invite-required');
   const say = message => { status.textContent = message; };
   let user = null;
+  let invite = null;
+  const needInvite = () => { application.hidden = true; required.hidden = false; say('Affiliate applications are by invitation only.'); };
   // Checkbox sets come back as arrays; single fields as strings.
   const answers = () => {
     const form = new FormData(application);
@@ -68,12 +90,18 @@ export function setupApplicationPage(root, client) {
     user = result.data.user;
     logout.hidden = !user;
     root.querySelector('#affiliate-login-link').hidden = Boolean(user);
-    application.hidden = Boolean(user);
-    if (!user) return say('Step 1 of 2: complete the application.');
+    application.hidden = true;
+    required.hidden = true;
+    if (!user) {
+      if (!invite) return needInvite();
+      application.hidden = false;
+      return say('Step 1 of 2: complete the application.');
+    }
     const { data, error } = await client.from('affiliate_applications').select('status').maybeSingle();
     if (error) return say('Unable to load your application. Please try again.');
     if (data?.status === 'approved') return location.replace('/affiliate/dashboard/');
     if (data) return say(`Your application status: ${data.status}.`);
+    if (!invite) return needInvite();
     const draft = user.user_metadata?.affiliate_application;
     if (draft) {
       try {
@@ -120,7 +148,18 @@ export function setupApplicationPage(root, client) {
     showStep(1);
     await refresh();
   });
-  refresh().catch(() => say('Unable to connect. Please try again.'));
+  async function start() {
+    invite = await loadInvite(client, inviteToken(location.search));
+    if (invite) {
+      // The invite decides the form: send an organization invite to the organization form, and the other way round.
+      const formType = application.elements.type.value;
+      if (invite.type !== formType) return location.replace(`/affiliate-apply/${invite.type}/${location.search}`);
+      application.elements.email.value = invite.email;
+      application.elements.email.readOnly = true;
+    }
+    await refresh();
+  }
+  start().catch(() => say('Unable to connect. Please try again.'));
 }
 
 if (typeof document !== 'undefined') {

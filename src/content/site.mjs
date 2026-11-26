@@ -50,7 +50,7 @@ export const BRAND = {
   contactPhone: 'WhatsApp / Text: +1 416-893-8158',
   copyright: '© 2026 Canadian Centre For Advanced Career Training (CCACT). All rights reserved.',
   mainAffiliatesHref: '/affiliates/',
-  mainDirectoryHref: '/partners/',
+  mainDirectoryHref: '/affiliates/#directory',
 };
 
 export const HOME_HERO = {
@@ -250,7 +250,7 @@ export function getFooterColumns(partner = null) {
     : {
         heading: 'Affiliate program',
         links: [
-          { label: 'Become an affiliate', href: BRAND.mainAffiliatesHref },
+          { label: 'Affiliate program', href: BRAND.mainAffiliatesHref },
           { label: 'Approved affiliates', href: BRAND.mainDirectoryHref },
         ],
       };
