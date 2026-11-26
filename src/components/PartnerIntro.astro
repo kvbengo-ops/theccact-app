@@ -1,4 +1,5 @@
 ---
+import { existsSync } from 'node:fs';
 // Partner home: a personal introduction to the partner, inside the same institutional template.
 // Only verified record fields are shown; nothing is written in the partner's voice.
 import { getPartnerInitials } from '../content/site.mjs';
@@ -11,6 +12,8 @@ interface Props {
 
 const { partner } = Astro.props;
 const isOrg = partner.type === 'organisation';
+// public/partner-images/<slug>/portrait.jpg (640x800) overrides the DB photo here, like avatar.jpg for the round photos.
+const portrait = existsSync(`public/partner-images/${partner.slug}/portrait.jpg`) ? `/partner-images/${partner.slug}/portrait.jpg` : partner.image;
 const firstPara = String(partner.bio ?? '').split(/\r?\n\s*\r?\n/)[0].trim();
 // ponytail: plain character cut at a word boundary; fine for short bios.
 const excerpt = firstPara.length > 260 ? `${firstPara.slice(0, 260).replace(/\s+\S*$/, '')}…` : firstPara;
@@ -19,9 +22,9 @@ const firstName = isOrg ? partner.name : String(partner.name).trim().split(/\s+/
 
 <section class="partner-intro" aria-labelledby="partner-intro-heading">
   <div class="container partner-intro__inner">
-    <div class:list={['partner-intro__portrait', isOrg && 'partner-intro__portrait--org', !partner.image && 'partner-intro__portrait--empty']}>
-      {partner.image
-        ? <img src={partner.image} alt={`Portrait of ${partner.name}`} width="640" height="800" loading="lazy" decoding="async" />
+    <div class:list={['partner-intro__portrait', isOrg && 'partner-intro__portrait--org', !portrait && 'partner-intro__portrait--empty']}>
+      {portrait
+        ? <img src={portrait} alt={`Portrait of ${partner.name}`} width="640" height="800" loading="lazy" decoding="async" />
         : <span aria-hidden="true">{getPartnerInitials(partner.name)}</span>}
     </div>
 
