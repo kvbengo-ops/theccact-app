@@ -1,0 +1,1014 @@
+import { createClient } from '@supabase/supabase-js';
+import { ICONS } from '../lib/icons.mjs';
+import {
+  LEARN_NEXT_KEY,
+  authRedirectError,
+  buildLoginUrl,
+  googleSignInEnabled,
+  signInWithGoogle,
+  checkCheckoutDetails,
+  loadCheckoutCourse,
+  selfEnroll,
+  startCheckout,
+  courseMatches,
+  greeting,
+  loadLearningOverview,
+  checkNewPassword,
+  formatDate,
+  loadMyInformation,
+  saveNewPassword,
+  setReminders,
+  signInStudentWithPassword,
+  collectAnswers,
+  courseOverviewUrl,
+  fetchCertificatePdf,
+  formatDuration,
+  lessonUrl,
+  loadCourseOverviewData,
+  loadDashboardData,
+  loadStudentUser,
+  loadLessonData,
+  markLessonDone,
+  submitQuickCheck,
+  verifyCertificate,
+  normalizeBrand,
+  sanitizeLearnNext,
+  sendStudentSignInLink,
+} from './learn-helpers.mjs';
+
+const EXTRA_ICONS = {
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+};
+
+function h(tag, props = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [key, value] of Object.entries(props ?? {})) {
+    if (value == null || value === false) continue;
+    if (key === 'class') el.className = value;
+    else if (key === 'text') el.textContent = value;
+    else if (key.startsWith('on')) el.addEventListener(key.slice(2), value);
+    else el.setAttribute(key, value === true ? '' : value);
+  }
+  el.append(...kids.flat().filter((kid) => kid != null && kid !== false));
+  return el;
+}
+
+function svg(name) {
+  const path = ICONS[name] ?? EXTRA_ICONS[name] ?? '';
+  const template = document.createElement('template');
+  template.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+  return template.content.firstChild;
+}
+
+function showMessage(el, message = '') {
+  if (!el) return;
+  el.textContent = message;
+  el.hidden = !message;
+}
+
+function readNextFromStorage() {
+  try {
+    const saved = sessionStorage.getItem(LEARN_NEXT_KEY);
+    if (!saved) return '';
+    sessionStorage.removeItem(LEARN_NEXT_KEY);
+    const safe = sanitizeLearnNext(saved);
+    return safe !== '/learn/' ? safe : '';
+  } catch {
+    return '';
+  }
+}
+
+function saveNextToStorage(nextPath) {
+  try {
+    const safe = sanitizeLearnNext(nextPath);
+    if (safe !== '/learn/') sessionStorage.setItem(LEARN_NEXT_KEY, safe);
+    else sessionStorage.removeItem(LEARN_NEXT_KEY);
+  } catch {
+    /* ignore storage errors in restricted browsing */
+  }
+}
+
+function buildFallbackMedia() {
+  return h('div', { class: 'learn-card__fallback', 'aria-hidden': 'true' }, svg('cap'));
+}
+
+function courseMedia(course, className) {
+  const media = h('div', { class: className });
+  if (course.image) {
+    const img = h('img', { src: course.image, alt: '', loading: 'lazy', decoding: 'async' });
+    img.addEventListener('error', () => media.replaceChildren(buildFallbackMedia()), { once: true });
+    media.append(img);
+  } else {
+    media.append(buildFallbackMedia());
+  }
+  return media;
+}
+
+// Thin bar with one short line of text: "1 of 3 lessons" and the percent.
+function meter(course) {
+  return h('div', { class: 'meter' },
+    h('div', {
+      class: 'learn-progress',
+      role: 'progressbar',
+      'aria-valuemin': '0',
+      'aria-valuemax': '100',
+      'aria-valuenow': String(course.progressPercent),
+      'aria-label': `${course.title}: ${course.progressText}`,
+    }, h('span', { class: 'learn-progress__fill', style: `width: ${course.progressPercent}%` })),
+    h('p', { class: 'meter__text' },
+      h('span', { text: course.complete ? 'Completed' : course.progressText }),
+      h('span', { text: `${course.progressPercent}%` })),
+  );
+}
+
+function certificateButton(course, onDownloadCert, label = true) {
+  return h('button', {
+    type: 'button',
+    class: label ? 'btn btn--outline-navy mc__action' : 'icon-btn',
+    'aria-label': label ? null : `Download certificate for ${course.title}`,
+    title: label ? null : 'Download certificate',
+    onclick: (event) => onDownloadCert(course.courseId, event.currentTarget),
+  }, svg('download'), label ? 'Certificate' : null);
+}
+
+function buildCourseCard(course, onDownloadCert) {
+  const started = course.doneLessons > 0;
+  const action = course.complete
+    ? certificateButton(course, onDownloadCert)
+    : course.nextLessonId
+      ? h('a', { class: 'btn btn--gold mc__action', href: lessonUrl(course.nextLessonId) }, started ? 'Continue' : 'Start', svg('arrow'))
+      : null;
+  return h('article', { class: 'mc', 'data-course': course.courseId },
+    courseMedia(course, 'mc__media'),
+    h('div', { class: 'mc__body' },
+      h('h3', { class: 'mc__title' },
+        h('a', { href: courseOverviewUrl(course.courseId), text: course.title }),
+        course.complete ? h('span', { class: 'mc__done', title: 'Completed' }, svg('check')) : null),
+      meter(course),
+      action),
+  );
+}
+
+function buildModuleCard(mod, moduleNumber, nextLessonId) {
+  const summaryText = `${mod.doneCount} of ${mod.totalCount} done`;
+  const list = h('ol', { class: 'learn-lesson-list' });
+
+  for (const lesson of mod.lessons) {
+    const duration = formatDuration(lesson.lengthMinutes);
+    const isNext = !lesson.done && lesson.unlocked && lesson.lessonId === nextLessonId;
+    const statusLabel = lesson.done ? 'Done' : isNext ? 'Up next' : lesson.unlocked ? 'Available' : 'Locked';
+    const statusClass = lesson.done
+      ? 'learn-lesson-badge--done'
+      : isNext
+        ? 'learn-lesson-badge--next'
+        : lesson.unlocked
+          ? 'learn-lesson-badge--open'
+          : 'learn-lesson-badge--locked';
+
+    const iconName = lesson.done ? 'check' : lesson.unlocked ? 'play' : 'lock';
+    const content = [
+      h('span', { class: `learn-lesson__icon ${lesson.done ? 'is-done' : lesson.unlocked ? 'is-open' : 'is-locked'}`, 'aria-hidden': 'true' }, svg(iconName)),
+      h(
+        'span',
+        { class: 'learn-lesson__text' },
+        h('span', { class: 'learn-lesson__title', text: `${lesson.number}. ${lesson.title}` }),
+        !lesson.unlocked
+          ? h('span', { class: 'learn-lesson__lock-hint', text: 'Complete the previous lesson to unlock.' })
+          : null,
+      ),
+      h(
+        'span',
+        { class: 'learn-lesson__meta' },
+        duration ? h('span', { class: 'learn-lesson__length', text: duration }) : null,
+        h('span', { class: `learn-lesson-badge ${statusClass}`, text: statusLabel }),
+      ),
+    ];
+
+    if (lesson.unlocked) {
+      list.append(
+        h(
+          'li',
+          { class: 'learn-lesson-item' },
+          h(
+            'a',
+            {
+              class: `learn-lesson learn-lesson--unlocked ${lesson.done ? 'is-done' : ''} ${isNext ? 'is-next' : ''}`,
+              href: lessonUrl(lesson.lessonId),
+            },
+            ...content,
+          ),
+        ),
+      );
+    } else {
+      list.append(
+        h(
+          'li',
+          { class: 'learn-lesson-item' },
+          h(
+            'div',
+            { class: 'learn-lesson learn-lesson--locked', 'aria-disabled': 'true' },
+            ...content,
+          ),
+        ),
+      );
+    }
+  }
+
+  return h(
+    'section',
+    { class: 'learn-module editorial-card', 'aria-labelledby': `module-title-${mod.moduleId}` },
+    h(
+      'div',
+      { class: 'learn-module__head' },
+      h(
+        'div',
+        {},
+        h('p', { class: 'learn-module__kicker', text: `Module ${moduleNumber}` }),
+        h('h2', { id: `module-title-${mod.moduleId}`, class: 'learn-module__title', text: mod.title }),
+      ),
+      h('span', { class: 'learn-module__count', text: summaryText }),
+    ),
+    list,
+  );
+}
+
+export function setupLearnPortal(root, client) {
+  const page = root.dataset.learnPage;
+  const siteBrand = normalizeBrand(root.dataset.siteBrand || document.documentElement.dataset.brand);
+  const brandName = root.dataset.brandName || 'CCACT';
+  const $ = (selector) => root.querySelector(selector);
+
+  const setState = (state) => {
+    root.dataset.state = state;
+  };
+
+  function paintSignedInUser(user) {
+    const emailEl = document.querySelector('#learn-user-email'); // in the page header, outside root
+    if (emailEl) emailEl.textContent = user?.email ?? '';
+    for (const logoutBtn of document.querySelectorAll('[data-logout]')) {
+      if (logoutBtn.dataset.bound) continue;
+      logoutBtn.dataset.bound = '1';
+      logoutBtn.addEventListener('click', async () => {
+        logoutBtn.disabled = true;
+        try {
+          await client.auth.signOut();
+        } finally {
+          location.replace('/learn/login/');
+        }
+      });
+    }
+  }
+
+  async function handleCertificateDownload(courseId, button, statusEl) {
+    if (!button) return;
+    const originalChildren = [...button.childNodes];
+    button.disabled = true;
+    button.textContent = 'Preparing certificate…';
+    showMessage(statusEl, '');
+    try {
+      const { blob, filename } = await fetchCertificatePdf(client, courseId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (error) {
+      showMessage(statusEl, error.message || 'Could not download your certificate right now.');
+      statusEl?.focus?.();
+    } finally {
+      button.disabled = false;
+      button.replaceChildren(...originalChildren);
+    }
+  }
+
+  // "Continue with Google" on the sign-in and checkout pages.
+  async function setupGoogle(redirectTo, errorEl, beforeLeave = () => {}) {
+    const box = $('.learn-oauth');
+    if (!box) return;
+    if (!(await googleSignInEnabled(root.dataset.supabaseUrl, root.dataset.supabaseKey))) return;
+    box.hidden = false;
+    const button = box.querySelector('[data-google]');
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      showMessage(errorEl, '');
+      try {
+        beforeLeave();
+        await signInWithGoogle(client, redirectTo);
+      } catch (error) {
+        showMessage(errorEl, error.message);
+        button.disabled = false;
+      }
+    });
+  }
+
+  function setupLoginView() {
+    const form = $('#learn-login-form');
+    const emailInput = $('#learn-email');
+    const errorEl = $('#learn-login-error');
+    const sentPanel = $('#learn-login-sent');
+    const sentEmailEl = $('#learn-sent-email');
+    const resetBtn = $('#learn-login-reset');
+
+    const redirectMessage = authRedirectError(location.search, location.hash);
+    if (redirectMessage) showMessage(errorEl, redirectMessage);
+
+    const nextFromQuery = new URLSearchParams(location.search).get('next') || '';
+    saveNextToStorage(nextFromQuery);
+
+    if (form && !form.dataset.bound) {
+      form.dataset.bound = '1';
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        showMessage(errorEl, '');
+        const button = form.querySelector('button[type="submit"]');
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Sending link…';
+        try {
+          const redirectTo = `${location.origin}/learn/`;
+          const { email } = await sendStudentSignInLink(client, emailInput?.value, redirectTo);
+          if (sentEmailEl) sentEmailEl.textContent = email;
+          form.hidden = true;
+          if (sentPanel) {
+            sentPanel.hidden = false;
+            sentPanel.focus?.();
+          }
+        } catch (error) {
+          showMessage(errorEl, error.message || 'Could not send the sign-in link right now.');
+          emailInput?.focus();
+        } finally {
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      });
+    }
+
+    if (resetBtn && !resetBtn.dataset.bound) {
+      resetBtn.dataset.bound = '1';
+      resetBtn.addEventListener('click', () => {
+        if (sentPanel) sentPanel.hidden = true;
+        if (form) form.hidden = false;
+        showMessage(errorEl, '');
+        emailInput?.focus();
+      });
+    }
+
+    const passwordForm = $('#learn-password-form');
+    const swap = (usePassword) => {
+      form.hidden = usePassword;
+      if (sentPanel) sentPanel.hidden = true;
+      passwordForm.hidden = !usePassword;
+      showMessage(errorEl, '');
+      (usePassword ? $('#learn-pw-email') : emailInput)?.focus();
+    };
+    if (passwordForm && !passwordForm.dataset.bound) {
+      passwordForm.dataset.bound = '1';
+      $('#learn-use-password')?.addEventListener('click', () => swap(true));
+      $('#learn-use-link')?.addEventListener('click', () => swap(false));
+      passwordForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        showMessage(errorEl, '');
+        const button = passwordForm.querySelector('button[type="submit"]');
+        button.disabled = true;
+        try {
+          await signInStudentWithPassword(client, $('#learn-pw-email').value, $('#learn-pw').value);
+          location.replace(sanitizeLearnNext(new URLSearchParams(location.search).get('next')));
+        } catch (error) {
+          showMessage(errorEl, error.message);
+          button.disabled = false;
+        }
+      });
+    }
+
+    setupGoogle(`${location.origin}/learn/`, errorEl);
+    setState('login');
+  }
+
+  async function renderDashboard() {
+    const statusEl = $('#learn-status');
+    const { active, completed, current, studentName } = await loadLearningOverview(client, siteBrand);
+    const onCertClick = (courseId, btn) => handleCertificateDownload(courseId, btn, statusEl);
+    const all = [...active, ...completed];
+    const empty = all.length === 0;
+    $('#learn-empty').hidden = !empty;
+
+    if (page === 'courses') {
+      $('#crs-body').hidden = empty;
+      for (const [key, count] of [['all', all.length], ['active', active.length], ['done', completed.length]]) {
+        $(`[data-count="${key}"]`).textContent = String(count);
+      }
+      const grid = $('#crs-grid');
+      const cards = all.map((course) => [course, buildCourseCard(course, onCertClick)]);
+      grid.replaceChildren(...cards.map(([, card]) => card));
+      let status = 'all';
+      const search = $('#crs-search');
+      const apply = () => {
+        let shown = 0;
+        for (const [course, card] of cards) {
+          card.hidden = !courseMatches(course, status, search.value);
+          if (!card.hidden) shown += 1;
+        }
+        $('#crs-none').hidden = shown > 0;
+      };
+      for (const tab of root.querySelectorAll('[data-filter]')) {
+        tab.addEventListener('click', () => {
+          status = tab.dataset.filter;
+          for (const other of root.querySelectorAll('[data-filter]')) other.setAttribute('aria-pressed', String(other === tab));
+          apply();
+        });
+      }
+      search.addEventListener('input', apply);
+      setState('app');
+      return;
+    }
+
+    // Dashboard
+    const firstName = String(studentName ?? '').trim().split(/\s+/)[0];
+    $('#dash-greeting').textContent = firstName ? `${greeting()}, ${firstName}` : greeting();
+    $('#dash-body').hidden = empty;
+    if (empty) {
+      setState('app');
+      return;
+    }
+
+    const hero = $('#dash-continue');
+    hero.hidden = !current;
+    if (current) {
+      const started = current.doneLessons > 0;
+      hero.replaceChildren(
+        courseMedia(current, 'dash-continue__media'),
+        h('p', { class: 'dash-continue__label', text: started ? 'Continue where you left off' : 'Start your course' }),
+        h('h2', { class: 'dash-continue__title' }, h('a', { href: courseOverviewUrl(current.courseId), text: current.title })),
+        current.next ? h('p', { class: 'dash-continue__next', text: `Next: ${current.next.title}` }) : null,
+        h('div', { class: 'dash-continue__foot' },
+          meter(current),
+          current.nextLessonId
+            ? h('a', { class: 'btn btn--gold', href: lessonUrl(current.nextLessonId) }, started ? 'Resume' : 'Start', svg('arrow'))
+            : null),
+      );
+    }
+
+    $('#dash-progress').replaceChildren(...active.map((course) => h('li', {},
+      h('a', { href: courseOverviewUrl(course.courseId), text: course.title }),
+      meter(course))));
+    $('#dash-progress-none').hidden = active.length > 0;
+
+    const certs = completed.filter((course) => course.certificateNumber);
+    $('#dash-certs').replaceChildren(...certs.map((course) => h('li', {},
+      h('a', { href: courseOverviewUrl(course.courseId), text: course.title }),
+      certificateButton(course, onCertClick, false))));
+    $('#dash-certs-none').hidden = certs.length > 0;
+    $('#dash-n-courses').textContent = String(all.length);
+    $('#dash-n-lessons').textContent = String(all.reduce((sum, course) => sum + course.doneLessons, 0));
+    $('#dash-n-certs').textContent = String(certs.length);
+    setState('app');
+  }
+
+  async function renderSettings(user) {
+    const info = await loadMyInformation(client, user);
+    const html = document.documentElement;
+
+    $('#set-avatar').textContent = (info.name || info.email || '?').trim().charAt(0).toUpperCase();
+    $('#set-name').textContent = info.name || 'Name not set';
+    $('#set-email').textContent = info.email;
+    $('#set-since').textContent = formatDate(info.accountCreated);
+    $('#set-last').textContent = formatDate(info.lastSignIn);
+    $('#set-courses').textContent = String(info.courses.length);
+    $('#set-certs').textContent = String(info.courses.filter((course) => course.certificate).length);
+
+    // Preview my information
+    const dialog = $('#set-info-dialog');
+    const group = (title, pairs) => h('section', { class: 'set-info-group' },
+      h('h3', { text: title }),
+      h('dl', {}, pairs.flatMap(([term, value]) => [h('dt', { text: term }), h('dd', { text: String(value) })])));
+    const themeLabel = () => {
+      let value = 'light';
+      try { value = localStorage.getItem('learn-theme') || 'light'; } catch { /* default */ }
+      return document.querySelector(`#theme-${value}`)?.dataset.label || 'Light';
+    };
+    $('#set-preview').addEventListener('click', () => {
+      $('#set-info').replaceChildren(
+        group('Account', [
+          ['Email', info.email],
+          ['Name on certificates', info.name || 'Not set'],
+          ['Account created', formatDate(info.accountCreated)],
+          ['Last sign-in', formatDate(info.lastSignIn)],
+        ]),
+        h('section', { class: 'set-info-group' },
+          h('h3', { text: `Courses (${info.courses.length})` }),
+          info.courses.length
+            ? info.courses.map((course) => h('div', { class: 'set-info-course' }, h('dl', {},
+                [['Course', course.title], ['Enrolled', formatDate(course.enrolledAt)],
+                  ['Progress', `${course.lessonsDone} of ${course.lessonsTotal} lessons`],
+                  ['Certificate', course.certificate ? `#${course.certificate.number}, ${formatDate(course.certificate.issuedAt)}` : 'Not yet']]
+                  .flatMap(([term, value]) => [h('dt', { text: term }), h('dd', { text: value })]))))
+            : h('p', { class: 'set-note', text: 'You are not enrolled in any courses.' })),
+        group('Preferences', [
+          ['Reminder emails', $('#set-reminders').checked ? 'On' : 'Off'],
+          ['Theme (this device)', themeLabel()],
+        ]),
+      );
+      dialog.showModal();
+    });
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog || event.target.closest('[data-close]')) dialog.close();
+    });
+    $('#set-download').addEventListener('click', () => {
+      const data = { ...info, reminderEmails: $('#set-reminders').checked, exportedAt: new Date().toISOString() };
+      delete data.remindersOn;
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+      const link = h('a', { href: url, download: 'my-information.json' });
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    });
+
+    // Password
+    const say = (el, message, kind = 'ok') => { el.textContent = message; el.dataset.kind = kind; el.hidden = !message; };
+    const reveal = $('[data-reveal]');
+    reveal.addEventListener('click', () => {
+      const show = reveal.getAttribute('aria-pressed') !== 'true';
+      for (const input of [$('#set-password'), $('#set-password-confirm')]) input.type = show ? 'text' : 'password';
+      reveal.setAttribute('aria-pressed', String(show));
+      reveal.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      reveal.replaceChildren(svg(show ? 'eyeoff' : 'eye'));
+    });
+    const passwordForm = $('#set-password-form');
+    const passwordMsg = $('#set-password-msg');
+    passwordForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const password = $('#set-password').value;
+      const problem = checkNewPassword(password, $('#set-password-confirm').value);
+      if (problem) return say(passwordMsg, problem, 'error');
+      const submit = passwordForm.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      try {
+        await saveNewPassword(client, password);
+        passwordForm.reset();
+        say(passwordMsg, 'Password saved. You can now sign in with your email and this password.');
+      } catch (error) {
+        say(passwordMsg, error.message, 'error');
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    $('#set-signout-all').addEventListener('click', async (event) => {
+      event.currentTarget.disabled = true;
+      try { await client.auth.signOut({ scope: 'global' }); } finally { location.replace('/learn/login/'); }
+    });
+
+    // Reminder emails
+    const reminders = $('#set-reminders');
+    const remindersMsg = $('#set-reminders-msg');
+    reminders.checked = info.remindersOn;
+    reminders.addEventListener('change', async () => {
+      reminders.disabled = true;
+      try {
+        await setReminders(client, reminders.checked);
+        say(remindersMsg, reminders.checked ? 'Reminder emails are on.' : 'Reminder emails are off.');
+      } catch (error) {
+        reminders.checked = !reminders.checked;
+        say(remindersMsg, error.message, 'error');
+      } finally {
+        reminders.disabled = false;
+      }
+    });
+
+    // Appearance: name of the saved theme, kept current as the picker changes it.
+    const paintTheme = () => { $('#set-theme-name').textContent = themeLabel(); };
+    paintTheme();
+    new MutationObserver(paintTheme).observe(html, { attributes: true, attributeFilter: ['data-theme'] });
+    $('#set-theme').addEventListener('click', (event) => {
+      event.stopPropagation(); // the picker closes on clicks outside itself
+      document.querySelector('.theme-picker__open')?.click();
+    });
+
+    setState('app');
+  }
+
+  async function renderCourseOverview() {
+    const statusEl = $('#learn-course-status');
+    const notFoundEl = $('#course-not-found');
+    const contentEl = $('#course-content');
+    const courseId = new URLSearchParams(location.search).get('id') || '';
+
+    const data = await loadCourseOverviewData(client, siteBrand, courseId);
+    if (!data) {
+      if (contentEl) contentEl.hidden = true;
+      if (notFoundEl) notFoundEl.hidden = false;
+      setState('app');
+      return;
+    }
+
+    const { course, modules, firstLessonId, nextLessonId } = data;
+    document.title = `${course.title} — ${root.dataset.platformName || brandName}`;
+
+    const titleEl = $('#course-title');
+    const descEl = $('#course-description');
+    const metaEl = $('#course-meta');
+    const progressTextEl = $('#course-progress-text');
+    const progressPctEl = $('#course-progress-pct');
+    const progressBarEl = $('#course-progress-bar');
+    const progressFillEl = $('#course-progress-fill');
+    const heroActionsEl = $('#course-hero-actions');
+    const modulesEl = $('#course-modules');
+
+    if (titleEl) titleEl.textContent = course.title;
+    if (descEl) {
+      descEl.textContent = course.description;
+      descEl.hidden = !course.description;
+    }
+
+    if (metaEl) {
+      const chips = [];
+      const totalDuration = formatDuration(course.totalMinutes);
+      if (totalDuration) chips.push(h('span', { class: 'learn-course-hero__stat' }, svg('clock'), `Estimated time: ${totalDuration}`));
+      const lessonWord = course.totalLessons === 1 ? 'lesson' : 'lessons';
+      chips.push(h('span', { class: 'learn-course-hero__stat' }, svg('cap'), `${course.totalLessons} ${lessonWord}`));
+      if (course.complete) {
+        chips.push(h('span', { class: 'learn-course-hero__stat learn-course-hero__stat--done' }, svg('check'), 'Completed'));
+      }
+      metaEl.replaceChildren(...chips);
+    }
+
+    if (progressTextEl) progressTextEl.textContent = `${course.progressText} complete`;
+    if (progressPctEl) progressPctEl.textContent = `${course.progressPercent}%`;
+    if (progressBarEl) {
+      progressBarEl.setAttribute('aria-valuenow', String(course.progressPercent));
+      progressBarEl.setAttribute('aria-valuetext', `${course.progressText} (${course.progressPercent}%)`);
+    }
+    if (progressFillEl) progressFillEl.style.width = `${course.progressPercent}%`;
+
+    if (heroActionsEl) {
+      const actions = [];
+      const resumeLessonId = course.nextLessonId ?? nextLessonId;
+      if (!course.complete && resumeLessonId) {
+        actions.push(
+          h('a', { class: 'btn btn--gold', href: lessonUrl(resumeLessonId) }, 'Resume', svg('arrow')),
+        );
+      } else if (course.complete) {
+        actions.push(
+          h(
+            'button',
+            {
+              type: 'button',
+              class: 'btn btn--gold',
+              'data-cert-course': course.courseId,
+              onclick: (event) => handleCertificateDownload(course.courseId, event.currentTarget, statusEl),
+            },
+            svg('download'),
+            'Download certificate',
+          ),
+        );
+        if (firstLessonId) {
+          actions.push(
+            h('a', { class: 'btn btn--outline-light', href: lessonUrl(firstLessonId) }, 'Review first lesson'),
+          );
+        }
+      }
+      heroActionsEl.replaceChildren(...actions);
+      heroActionsEl.hidden = actions.length === 0;
+    }
+
+    if (modulesEl) {
+      if (modules.length === 0) {
+        modulesEl.replaceChildren(
+          h(
+            'div',
+            { class: 'editorial-card learn-empty-modules' },
+            h('p', { text: 'Lessons for this course are being prepared. Please check back soon.' }),
+          ),
+        );
+      } else {
+        const resumeLessonId = course.nextLessonId ?? nextLessonId;
+        modulesEl.replaceChildren(
+          ...modules.map((mod, idx) => buildModuleCard(mod, idx + 1, resumeLessonId)),
+        );
+      }
+    }
+
+    if (notFoundEl) notFoundEl.hidden = true;
+    if (contentEl) contentEl.hidden = false;
+    setState('app');
+  }
+
+  async function renderLesson() {
+    const lessonId = new URLSearchParams(location.search).get('id') || '';
+    const data = await loadLessonData(client, siteBrand, lessonId);
+    $('#lesson-missing').hidden = data.state !== 'missing';
+    $('#lesson-locked').hidden = data.state !== 'locked';
+    $('#lesson-content').hidden = data.state !== 'open';
+    if (data.state !== 'open') {
+      setState('app');
+      return;
+    }
+
+    const { lesson, questions, course, number, total, next } = data;
+    const statusEl = $('#lesson-status');
+    document.title = `${lesson.title} — ${root.dataset.platformName || brandName}`;
+    $('#lesson-title').textContent = lesson.title;
+    $('#lesson-kicker').textContent = `${course.title} · Lesson ${number} of ${total}`;
+    $('#lesson-course-link').href = courseOverviewUrl(course.courseId);
+
+    const paragraphs = String(lesson.reading ?? '').split(/\n\s*\n/).filter((text) => text.trim());
+    $('#lesson-reading').replaceChildren(...paragraphs.map((text) => h('p', { text: text.trim() })));
+    // ponytail: video player and file downloads wait for the video host and private file bucket (L05).
+    $('#lesson-video-note').hidden = !lesson.video_id;
+
+    let done = lesson.done;
+    const footer = $('#lesson-footer');
+    const paintFooter = () => {
+      const items = [];
+      if (done) items.push(h('span', { class: 'learn-pill learn-pill--done' }, svg('check'), 'Done'));
+      if (!done && !lesson.has_check) {
+        items.push(h('button', {
+          type: 'button',
+          class: 'btn btn--gold',
+          onclick: async (event) => {
+            const button = event.currentTarget;
+            button.disabled = true;
+            showMessage(statusEl, '');
+            try {
+              await markLessonDone(client, lesson.lesson_id);
+              done = true;
+              paintFooter();
+              footer.querySelector('a')?.focus();
+            } catch (error) {
+              button.disabled = false;
+              showMessage(statusEl, error.message);
+            }
+          },
+        }, 'Mark as done'));
+      }
+      // A later lesson is open when this one is done, or when the course does not lock lessons in order.
+      if (next && (done || next.unlocked)) {
+        items.push(h('a', { class: `btn ${done ? 'btn--gold' : 'btn--outline-navy'}`, href: lessonUrl(next.lessonId) }, 'Next lesson', svg('arrow')));
+      }
+      items.push(h('a', { class: 'btn btn--outline-navy', href: courseOverviewUrl(course.courseId) }, 'Course overview'));
+      footer.replaceChildren(...items);
+    };
+    paintFooter();
+
+    const form = $('#lesson-check-form');
+    const resultEl = $('#lesson-check-result');
+    $('#lesson-check').hidden = questions.length === 0;
+
+    const paintCheck = () => {
+      resultEl.textContent = '';
+      const fields = questions.map((question, position) => {
+        const many = question.type === 'multiple';
+        return h('fieldset', { class: 'lp-question', 'data-question': question.question_id },
+          h('legend', { text: `${position + 1}. ${question.text}` }),
+          many ? h('p', { class: 'lp-hint', text: 'Select all that apply.' }) : null,
+          question.options.map((option, index) => h('label', { class: 'lp-option' },
+            h('input', { type: many ? 'checkbox' : 'radio', name: question.question_id, value: String(index) }),
+            h('span', { text: String(option) }))),
+        );
+      });
+      form.replaceChildren(...fields, h('button', { type: 'submit', class: 'btn btn--gold' }, 'Check my answers'));
+    };
+
+    form.onsubmit = async (event) => {
+      event.preventDefault();
+      showMessage(statusEl, '');
+      const answers = collectAnswers(questions, new FormData(form).entries());
+      if (!answers) {
+        resultEl.textContent = 'Please answer every question.';
+        return;
+      }
+      const button = form.querySelector('button[type="submit"]');
+      if (!button) return;
+      button.disabled = true;
+      let outcome;
+      try {
+        outcome = await submitQuickCheck(client, lesson.lesson_id, answers);
+      } catch (error) {
+        button.disabled = false;
+        showMessage(statusEl, error.message);
+        return;
+      }
+      for (const result of outcome.results) {
+        const fieldset = form.querySelector(`[data-question="${result.question_id}"]`);
+        if (!fieldset) continue;
+        fieldset.disabled = true;
+        fieldset.append(h('div', { class: `lp-feedback ${result.correct ? 'is-right' : 'is-wrong'}` },
+          h('strong', { text: result.correct ? 'Correct' : 'Not quite' }),
+          result.explanation ? h('p', { text: result.explanation }) : null,
+          result.review_at ? h('p', { text: `Review: ${result.review_at}` }) : null));
+      }
+      resultEl.textContent = outcome.passed
+        ? `You passed with ${outcome.score}%.${next ? '' : ' That was the last lesson.'}`
+        : `You scored ${outcome.score}%. Review the lesson and try again.`;
+      if (outcome.passed) {
+        done = true;
+        paintFooter();
+        button.remove();
+      } else {
+        button.replaceWith(h('button', {
+          type: 'button',
+          class: 'btn btn--gold',
+          onclick: () => { paintCheck(); form.querySelector('input')?.focus(); },
+        }, 'Try again'));
+      }
+      resultEl.focus();
+    };
+    if (questions.length) paintCheck();
+    setState('app');
+  }
+
+  // Public page: no sign-in.
+  async function renderVerify() {
+    const number = (new URLSearchParams(location.search).get('n') || '').trim();
+    const out = $('#verify-result');
+    $('#verify-number').value = number;
+    setState('app');
+    if (!number) return;
+    out.replaceChildren(h('p', { text: 'Checking…' }));
+    try {
+      const found = await verifyCertificate(client, number);
+      out.replaceChildren(found
+        ? h('div', { class: 'lp-feedback is-right' },
+            h('strong', { text: 'This certificate is genuine.' }),
+            h('p', { text: `Course: ${found.course_title}` }),
+            h('p', { text: `Issued by: ${found.brand.toUpperCase()}` }),
+            h('p', { text: `Date: ${new Date(found.issued_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}` }))
+        : h('div', { class: 'lp-feedback is-wrong' },
+            h('strong', { text: 'No certificate has that number.' }),
+            h('p', { text: 'Check the number and try again.' })));
+    } catch (error) {
+      out.replaceChildren(h('p', { class: 'learn-alert', text: error.message }));
+    }
+  }
+
+  // Public test checkout: details form, email link, then enrollment on return.
+  async function renderCheckout() {
+    const params = new URLSearchParams(location.search);
+    const courseId = params.get('course') || '';
+    const course = await loadCheckoutCourse(client, siteBrand, courseId);
+    $('#co-missing').hidden = Boolean(course);
+    $('#co-main').hidden = !course;
+    if (!course) {
+      setState('app');
+      return;
+    }
+    document.title = `Checkout: ${course.title} — ${root.dataset.platformName || brandName}`;
+    $('#co-title').textContent = course.title;
+    const lessons = Number(course.total_lessons);
+    $('#co-meta').textContent = `${lessons} ${lessons === 1 ? 'lesson' : 'lessons'} · ${formatDuration(course.total_minutes)}`;
+
+    const errorEl = $('#co-error');
+    const NAME_KEY = 'learn-checkout-name';
+    const enroll = async (user, button) => {
+      if (button) button.disabled = true;
+      showMessage(errorEl, '');
+      let name = user.user_metadata?.full_name || '';
+      try { name = name || localStorage.getItem(NAME_KEY) || ''; } catch { /* storage blocked */ }
+      try {
+        await selfEnroll(client, courseId, name);
+        try { localStorage.removeItem(NAME_KEY); } catch { /* storage blocked */ }
+        location.replace(courseOverviewUrl(courseId));
+      } catch (error) {
+        showMessage(errorEl, error.message);
+        if (button) button.disabled = false;
+      }
+    };
+
+    const user = await loadStudentUser(client);
+    if (user) {
+      $('#co-form').hidden = true;
+      $('#co-signed').hidden = false;
+      $('#co-user').textContent = user.email ?? '';
+      $('#co-enroll').addEventListener('click', (event) => enroll(user, event.currentTarget));
+      if (params.get('confirm')) {
+        await enroll(user, $('#co-enroll'));
+        return;
+      }
+      setState('app');
+      return;
+    }
+
+    await setupGoogle(`${location.origin}/learn/checkout/?course=${encodeURIComponent(courseId)}&confirm=1`, errorEl);
+
+    const form = $('#co-form');
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const name = $('#co-name').value;
+      const email = $('#co-email').value;
+      const problem = checkCheckoutDetails(name, email);
+      if (problem) {
+        showMessage(errorEl, problem);
+        return;
+      }
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      showMessage(errorEl, '');
+      try {
+        try { localStorage.setItem(NAME_KEY, name.trim()); } catch { /* storage blocked */ }
+        const back = `${location.origin}/learn/checkout/?course=${encodeURIComponent(courseId)}&confirm=1`;
+        await startCheckout(client, { name, email }, back);
+        form.hidden = true;
+        $('#co-sent-email').textContent = email.trim();
+        $('#co-sent').hidden = false;
+        $('#co-sent').focus();
+      } catch (error) {
+        showMessage(errorEl, error.message);
+        button.disabled = false;
+      }
+    });
+    setState('app');
+  }
+
+  async function boot() {
+    if (page === 'checkout') {
+      await renderCheckout();
+      return;
+    }
+    if (page === 'verify') {
+      await renderVerify();
+      return;
+    }
+    if (page === 'login') setupLoginView();
+    const user = await loadStudentUser(client);
+    if (!user) {
+      if (page === 'login') return;
+      const errMsg = authRedirectError(location.search, location.hash);
+      const target = buildLoginUrl(`${location.pathname}${location.search}`, errMsg ? 'expired' : '');
+      location.replace(target);
+      return;
+    }
+
+    if (page === 'login') {
+      const next = sanitizeLearnNext(new URLSearchParams(location.search).get('next'));
+      location.replace(next);
+      return;
+    }
+
+    if (page === 'dashboard') {
+      const savedNext = readNextFromStorage();
+      if (savedNext) {
+        location.replace(savedNext);
+        return;
+      }
+    }
+
+    paintSignedInUser(user);
+    if (page === 'dashboard' || page === 'courses') await renderDashboard();
+    else if (page === 'settings') await renderSettings(user);
+    else if (page === 'course') await renderCourseOverview();
+    else if (page === 'lesson') await renderLesson();
+    else setState('app');
+  }
+
+  const retryBtn = $('#learn-retry');
+  if (retryBtn) {
+    retryBtn.addEventListener('click', () => {
+      setState('loading');
+      boot().catch(showBootError);
+    });
+  }
+
+  function showBootError(error) {
+    if (page === 'login') {
+      setupLoginView();
+      showMessage($('#learn-login-error'), error?.message || 'Unable to verify your session right now. You can still request a new sign-in link.');
+      return;
+    }
+    const errorText = $('#learn-boot-error-text');
+    if (errorText) errorText.textContent = error?.message || 'Unable to connect right now. Please try again.';
+    setState('error');
+  }
+
+  boot().catch(showBootError);
+}
+
+if (typeof document !== 'undefined') {
+  const root = document.querySelector('[data-learn-page]');
+  if (root) {
+    const { supabaseUrl, supabaseKey, learnPage } = root.dataset;
+    if (supabaseUrl && supabaseKey) {
+      setupLearnPortal(root, createClient(supabaseUrl, supabaseKey));
+    } else if (learnPage === 'login') {
+      const form = root.querySelector('#learn-login-form');
+      const errorEl = root.querySelector('#learn-login-error');
+      if (form) form.hidden = true;
+      if (errorEl) {
+        errorEl.textContent = 'Student sign-in is not configured yet. Please contact CCACT.';
+        errorEl.hidden = false;
+      }
+      root.dataset.state = 'login';
+    } else {
+      const errorText = root.querySelector('#learn-boot-error-text');
+      const retryBtn = root.querySelector('#learn-retry');
+      if (retryBtn) retryBtn.hidden = true;
+      if (errorText) errorText.textContent = 'The student learning portal is not configured yet. Please contact CCACT.';
+      root.dataset.state = 'error';
+    }
+  }
+}

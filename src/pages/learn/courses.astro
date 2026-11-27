@@ -1,0 +1,80 @@
+---
+import LearnLayout from '../../layouts/LearnLayout.astro';
+import LearnEmpty from '../../components/LearnEmpty.astro';
+import Icon from '../../components/Icon.astro';
+import { BRAND } from '../../content/site.mjs';
+import { PLATFORM_NAME, WEBSITE } from '../../scripts/learn-brand.mjs';
+
+---
+
+<LearnLayout
+  page="courses"
+  requiresAuth={true}
+  title={`Courses — ${PLATFORM_NAME}`}
+  description={`Your enrolled ${BRAND.shortName} courses.`}
+>
+  <div class="container learn-page">
+    <div class="crs-head">
+      <h1 class="learn-page__title">Courses</h1>
+      <a href={`${WEBSITE}/courses/`} class="crs-market" target="_blank" rel="noopener noreferrer">
+        <span class="crs-market__icon"><Icon name="bag" /></span>
+        <span class="crs-market__text"><strong>Marketplace</strong><small>Browse more courses</small></span>
+        <Icon name="external" class="crs-market__out" /><span class="sr-only"> (opens in a new tab)</span>
+      </a>
+    </div>
+    <p id="learn-status" class="learn-alert" role="alert" tabindex="-1" hidden></p>
+
+    <div id="crs-body" hidden>
+      <div class="crs-toolbar">
+        <div class="crs-tabs" role="group" aria-label="Show courses">
+          <button type="button" data-filter="all" aria-pressed="true">All <span data-count="all">0</span></button>
+          <button type="button" data-filter="active" aria-pressed="false">In progress <span data-count="active">0</span></button>
+          <button type="button" data-filter="done" aria-pressed="false">Completed <span data-count="done">0</span></button>
+        </div>
+        <div class="crs-search">
+          <Icon name="search" />
+          <input id="crs-search" type="search" placeholder="Search your courses" aria-label="Search your courses" autocomplete="off" />
+        </div>
+      </div>
+
+      <div id="crs-grid" class="learn-cards"></div>
+      <p id="crs-none" class="crs-none" role="status" hidden>No courses match.</p>
+    </div>
+
+    <LearnEmpty />
+
+  </div>
+</LearnLayout>
+<script>import '../../scripts/learn-portal.mjs';</script>
+
+<style is:global>
+  .crs-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+  .crs-tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: var(--color-sand); border-radius: 999px; }
+  .crs-tabs button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: none; color: var(--ink); font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+  .crs-tabs button span { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--surface); font-size: 12.5px; text-align: center; font-variant-numeric: tabular-nums; }
+  .crs-tabs button[aria-pressed='true'] { background: var(--color-navy); color: var(--color-white); }
+  .crs-tabs button[aria-pressed='true'] span { background: var(--color-gold-light); color: var(--color-navy); }
+  .crs-search { display: flex; align-items: center; gap: 8px; flex: 0 1 300px; min-width: 0; padding: 0 12px; background: var(--surface); border: 1px solid var(--color-border); border-radius: 999px; }
+  .crs-search:focus-within { border-color: var(--color-gold); outline: 2px solid var(--color-gold); outline-offset: 1px; }
+  .crs-search svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--color-text-muted); }
+  .crs-search input { flex: 1; min-width: 0; min-height: 42px; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 16px; outline: none; }
+  .crs-none { color: var(--color-text-muted); }
+  .crs-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin-bottom: 20px; }
+  .crs-head .learn-page__title { margin: 0; }
+  .crs-market { display: inline-flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 16px 8px 8px; background: var(--surface); border: 1px solid var(--color-border); border-radius: 12px; color: var(--ink); text-decoration: none; transition: border-color 0.15s ease; }
+  .crs-market:hover { border-color: var(--color-gold); color: var(--ink); }
+  .crs-market__icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--color-gold-light); color: #15233e; }
+  .crs-market__icon svg { width: 20px; height: 20px; }
+  .crs-market__text { display: grid; line-height: 1.25; text-align: left; }
+  .crs-market__text strong { font-size: 15px; }
+  .crs-market__text small { font-size: 13px; color: var(--color-text-muted); }
+  .crs-market__out { width: 16px; height: 16px; margin-left: 4px; color: var(--color-text-muted); }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+
+  @media (max-width: 640px) {
+    .crs-search { flex-basis: 100%; }
+    .crs-tabs { display: flex; width: 100%; flex-wrap: nowrap; }
+    .crs-tabs button { flex: 1; justify-content: center; gap: 6px; padding: 0 8px; font-size: 13.5px; white-space: nowrap; }
+  }
+</style>

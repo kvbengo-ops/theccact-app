@@ -1,0 +1,106 @@
+---
+import LearnLayout from '../../layouts/LearnLayout.astro';
+import LearnEmpty from '../../components/LearnEmpty.astro';
+import Icon from '../../components/Icon.astro';
+import { BRAND } from '../../content/site.mjs';
+import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
+---
+
+<LearnLayout
+  page="dashboard"
+  requiresAuth={true}
+  title={`Dashboard — ${PLATFORM_NAME}`}
+  description={`Your ${BRAND.shortName} learning progress.`}
+>
+  <div class="container learn-page dash">
+    <h1 id="dash-greeting" class="learn-page__title">Welcome back</h1>
+    <p id="learn-status" class="learn-alert" role="alert" tabindex="-1" hidden></p>
+
+    <div id="dash-body" class="dash-layout" hidden>
+      <div class="dash-main">
+        <section id="dash-continue" class="dash-continue" aria-label="Continue learning"></section>
+
+        <section class="dash-card" aria-labelledby="dash-progress-title">
+          <div class="dash-card__head">
+            <h2 id="dash-progress-title" class="dash-card__title">In progress</h2>
+            <a href="/learn/courses/" class="dash-card__link">All courses <Icon name="arrow" /></a>
+          </div>
+          <ul id="dash-progress" class="dash-list"></ul>
+          <p id="dash-progress-none" class="dash-card__empty" hidden>Nothing in progress.</p>
+        </section>
+      </div>
+
+      <aside class="dash-side" aria-label="Summary">
+        <section class="dash-card" aria-labelledby="dash-summary-title">
+          <h2 id="dash-summary-title" class="dash-card__title">Your progress</h2>
+          <ul class="dash-summary">
+            <li><strong id="dash-n-courses">0</strong><span>Courses</span></li>
+            <li><strong id="dash-n-lessons">0</strong><span>Lessons done</span></li>
+            <li><strong id="dash-n-certs">0</strong><span>Certificates</span></li>
+          </ul>
+        </section>
+
+        <section class="dash-card" aria-labelledby="dash-certs-title">
+          <h2 id="dash-certs-title" class="dash-card__title">Certificates</h2>
+          <ul id="dash-certs" class="dash-list dash-list--compact"></ul>
+          <p id="dash-certs-none" class="dash-card__empty" hidden>Finish a course to earn one.</p>
+        </section>
+      </aside>
+    </div>
+
+    <LearnEmpty />
+  </div>
+</LearnLayout>
+<script>import '../../scripts/learn-portal.mjs';</script>
+
+<style is:global>
+  .dash .learn-page__title { margin-bottom: 24px; }
+  .dash-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+  .dash-main, .dash-side { display: grid; gap: 20px; min-width: 0; }
+
+  .dash-card, .dash-continue { padding: 22px 24px; background: var(--surface); border: 1px solid var(--color-border); border-radius: 12px; }
+  .dash-card__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .dash .dash-card__title { margin: 0 0 6px; font-family: var(--font-sans); font-size: 15px; font-weight: 700; color: var(--color-text-muted); }
+  .dash-card__head .dash-card__title { margin: 0; }
+  .dash-card__link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 700; text-decoration: none; }
+  .dash-card__link svg { width: 16px; height: 16px; }
+  .dash-card__empty { margin: 8px 0 0; color: var(--color-text-muted); }
+
+  .dash-continue { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 8px 24px; align-items: center; }
+  .dash-continue__media { grid-row: 1 / 5; align-self: stretch; display: grid; min-height: 150px; overflow: hidden; border-radius: 10px; background: var(--color-sand); }
+  .dash-continue__media img { width: 100%; height: 100%; object-fit: cover; }
+  .dash-continue__label { margin: 0; font-size: 13px; font-weight: 700; color: var(--color-text-muted); }
+  .dash-continue__title { margin: 0; font-family: var(--font-sans); font-size: 21px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+  .dash-continue__title a { text-decoration: none; }
+  .dash-continue__next { margin: 0; color: var(--color-text-muted); overflow-wrap: anywhere; }
+  .dash-continue__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin-top: 8px; }
+  .dash-continue__foot .meter { flex: 1 1 200px; }
+  .dash-continue .btn { gap: 8px; min-height: 44px; padding: 0 22px; }
+  .dash-continue .btn svg { width: 18px; height: 18px; }
+
+  .dash-summary { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+  .dash-summary li { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--color-border); }
+  .dash-summary li:first-child { border-top: 0; }
+  .dash-summary strong { order: 2; font-family: var(--font-serif); font-size: 26px; font-variant-numeric: lining-nums; line-height: 1; color: var(--ink); }
+  .dash-summary span { color: var(--color-text-muted); }
+
+  .dash-list { margin: 0; padding: 0; list-style: none; }
+  .dash-list li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 220px); align-items: center; gap: 8px 24px; padding: 14px 0; border-top: 1px solid var(--color-border); }
+  .dash-list li:first-child { border-top: 0; }
+  .dash-list a { font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+  .dash-list a:hover { text-decoration: underline; }
+  .dash-list--compact li { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+
+  @media (max-width: 1080px) {
+    .dash-layout { grid-template-columns: 1fr; }
+    .dash-side { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  }
+
+  @media (max-width: 640px) {
+    .dash-card, .dash-continue { padding: 18px; }
+    .dash-continue { grid-template-columns: 1fr; }
+    .dash-continue__media { grid-row: auto; min-height: 0; aspect-ratio: 5 / 2; }
+    .dash-list li { grid-template-columns: 1fr; }
+    .dash-list--compact li { grid-template-columns: minmax(0, 1fr) auto; }
+  }
+</style>

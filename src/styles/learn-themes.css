@@ -1,0 +1,115 @@
+/*
+ * Themes for the /learn/ pages. The choice is stored per device and set on <html data-theme>.
+ * --ink is the foreground color for headings and links; --surface is the card background.
+ * --color-navy stays a background color (header, active menu item) with light text on it.
+ */
+body.learn-body {
+  --ink: var(--color-navy);
+  --surface: var(--color-white);
+}
+
+html[data-theme='dark'] body.learn-body {
+  color-scheme: dark;
+  --ink: #eef1f7;
+  --surface: #1a2030;
+  --color-cream: #10141d;
+  --color-sand: #252d40;
+  --color-border: #343d53;
+  --color-divider: #46506a;
+  --color-text: #d3d9e6;
+  --color-text-muted: #a9b3c6;
+  --color-gold-dark: #e3c98a;
+  --color-gold-badge: #e3c98a;
+  --color-success: #5fd383;
+  --color-error: #ff9a8c;
+}
+
+html[data-theme='sepia'] body.learn-body {
+  --ink: #3f2d18;
+  --surface: #fbf3e1;
+  --color-navy: #4a3520;
+  --color-navy-elevated: #5e4529;
+  --color-navy-card-border: #8a6c47;
+  --color-cream: #f1e5cc;
+  --color-sand: #eadbbb;
+  --color-border: #d6c29b;
+  --color-divider: #c5ac7d;
+  --color-text: #4b3a26;
+  --color-text-muted: #665239;
+  --color-gold-dark: #6e4f12;
+  --color-gold-badge: #6e4f12;
+  --color-success: #2c6a2e;
+  --color-error: #9d2f1f;
+}
+
+html[data-theme='forest'] body.learn-body {
+  --ink: #14392b;
+  --surface: #ffffff;
+  --color-navy: #17402f;
+  --color-navy-elevated: #225740;
+  --color-navy-card-border: #3f7a60;
+  --color-cream: #f2f7f3;
+  --color-sand: #e3eee6;
+  --color-border: #cfe0d4;
+  --color-divider: #b6cfbd;
+  --color-text: #33473d;
+  --color-text-muted: #4f6459;
+}
+
+html[data-theme='ocean'] body.learn-body {
+  --ink: #0b3a53;
+  --surface: #ffffff;
+  --color-navy: #0b4462;
+  --color-navy-elevated: #11597e;
+  --color-navy-card-border: #3883a8;
+  --color-cream: #f1f8fb;
+  --color-sand: #e0eff6;
+  --color-border: #cbe2ed;
+  --color-divider: #aed0e0;
+  --color-text: #2f4756;
+  --color-text-muted: #4b6373;
+}
+
+html[data-theme='contrast'] body.learn-body {
+  --ink: #000000;
+  --surface: #ffffff;
+  --color-navy: #000000;
+  --color-navy-elevated: #1c1c1c;
+  --color-navy-card-border: #ffffff;
+  --color-cream: #ffffff;
+  --color-sand: #f0f0f0;
+  --color-border: #333333;
+  --color-divider: #333333;
+  --color-text: #000000;
+  --color-text-muted: #222222;
+  --color-on-dark: #ffffff;
+  --color-gold-dark: #5c4300;
+  --color-gold-badge: #5c4300;
+  --color-success: #0b5d1e;
+  --color-error: #9b0000;
+}
+
+/* Shared website classes that hard-code navy or white. */
+body.learn-body a:not(.btn, .nav__link, .learn-header a),
+body.learn-body :is(h1, h2, h3, .section-heading) {
+  color: var(--ink);
+}
+
+body.learn-body .editorial-card {
+  background: var(--surface);
+}
+
+body.learn-body .btn--outline-navy {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+body.learn-body .btn--outline-navy:hover {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+body.learn-body input:not([type='radio'], [type='checkbox']) {
+  background: var(--surface);
+  color: var(--ink);
+}

@@ -1,0 +1,270 @@
+---
+import Icon from './Icon.astro';
+import LearnThemePicker from './LearnThemePicker.astro';
+import { BRAND } from '../content/site.mjs';
+import { PLATFORM_NAME, WEBSITE } from '../scripts/learn-brand.mjs';
+
+interface Props {
+  signedIn?: boolean;
+}
+
+const { signedIn = false } = Astro.props;
+---
+
+<header class="learn-header">
+  <div class="container learn-header__inner">
+    {signedIn && (
+      <button type="button" id="drawer-open" class="learn-header__burger" aria-controls="sidebar" aria-label="Open menu">
+        <Icon name="menu" />
+      </button>
+    )}
+    <div class="learn-header__brand">
+      <a href="/learn/" class="learn-header__name">{PLATFORM_NAME}</a>
+      <a href={WEBSITE} class="learn-header__powered">
+        <img src={BRAND.logoSrc} alt="" width="20" height="20" />
+        <span>Powered by {BRAND.shortName}</span>
+      </a>
+    </div>
+
+    <div class="learn-header__account">
+      <LearnThemePicker />
+      {signedIn && (
+        <details class="learn-profile">
+          <summary aria-label="Profile menu">
+            <Icon name="user" class="learn-profile__icon" />
+          </summary>
+          <div class="learn-profile__menu">
+            <p class="learn-profile__who">
+              Signed in as <strong id="learn-user-email"></strong>
+            </p>
+            <a href="/learn/settings/" class="learn-profile__item">
+              <Icon name="settings" />
+              Settings
+            </a>
+            <a href={`mailto:${BRAND.contactEmail}`} class="learn-profile__item">
+              <Icon name="mail" />
+              Get help
+            </a>
+            <button type="button" class="learn-profile__item" data-logout>
+              <Icon name="logout" />
+              Sign out
+            </button>
+          </div>
+        </details>
+      )}
+    </div>
+  </div>
+</header>
+
+<script>
+  // <details> opens and closes by itself; this only closes it on an outside click or Escape.
+  const menu = document.querySelector<HTMLDetailsElement>('.learn-profile');
+  if (menu) {
+    document.addEventListener('click', (event) => {
+      if (!menu.contains(event.target as Node)) menu.open = false;
+    });
+    menu.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || !menu.open) return;
+      menu.open = false;
+      menu.querySelector('summary')?.focus();
+    });
+  }
+</script>
+
+<style>
+  .learn-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--color-navy);
+    border-bottom: 3px solid var(--color-gold);
+    color: var(--color-on-dark);
+  }
+
+  .learn-header__inner {
+    min-height: 69px; /* plus 3px border = 72px, see .learn-side */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-block: 8px;
+  }
+
+  .learn-header__brand {
+    display: grid;
+    justify-items: start;
+    min-width: 0;
+  }
+
+  .learn-header__account {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    position: relative; /* anchor for the theme menu */
+  }
+
+  .learn-header a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .learn-header a.learn-header__name {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-white);
+  }
+
+  .learn-header__powered {
+    min-height: 24px;
+    font-size: 12.5px;
+  }
+
+  .learn-header__powered img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+  }
+
+  .learn-header__burger {
+    display: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--color-navy-card-border);
+    border-radius: 6px;
+    color: var(--color-white);
+    cursor: pointer;
+  }
+
+  .learn-header__burger :global(svg) {
+    width: 22px;
+    height: 22px;
+  }
+
+  .learn-header__brand {
+    margin-right: auto;
+  }
+
+  @media (max-width: 420px) {
+    .learn-header a.learn-header__name {
+      font-size: 20px;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .learn-header__burger {
+      display: grid;
+    }
+  }
+
+  .learn-header a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .learn-profile {
+    position: relative;
+  }
+
+  .learn-profile summary {
+    display: flex;
+    align-items: center;
+    width: 44px;
+    height: 44px;
+    justify-content: center;
+    border: 1px solid var(--color-navy-card-border);
+    border-radius: 999px;
+    color: var(--color-white);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .learn-profile summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .learn-profile[open] summary {
+    border-color: var(--color-gold);
+  }
+
+  .learn-profile summary :global(.learn-profile__icon) {
+    width: 22px;
+    height: 22px;
+  }
+
+
+  .learn-profile__menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 20;
+    width: min(260px, 80vw);
+    padding: 6px 0;
+    background: var(--surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    box-shadow: 0 14px 30px -14px rgb(0 0 0 / 0.35);
+    color: var(--ink);
+  }
+
+  .learn-profile__who {
+    margin: 0 0 6px;
+    padding: 8px 16px 12px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 13px;
+    color: var(--color-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .learn-profile__who strong {
+    display: block;
+    color: var(--ink);
+    font-size: 14px;
+  }
+
+  .learn-header .learn-profile__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 16px;
+    background: none;
+    border: 0;
+    color: var(--ink);
+    font: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .learn-header .learn-profile__item:hover {
+    background: var(--color-cream);
+  }
+
+  .learn-profile__item :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .learn-header a:focus-visible,
+  .learn-header summary:focus-visible {
+    outline: 2px solid var(--color-gold-light);
+    outline-offset: 2px;
+  }
+
+  .learn-profile__item:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: -2px;
+  }
+</style>

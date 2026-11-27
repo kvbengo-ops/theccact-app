@@ -115,6 +115,7 @@ export function setupAdmin(root, client) {
     renderApps();
     renderInvites();
     renderContent();
+    await loadCourses();
     shell.route();
     setView('app');
     say('Signed in.');
@@ -541,6 +542,142 @@ export function setupAdmin(root, client) {
         h('div', {}, h('label', { class: 'sr-only', for: area.id, text: field.label }), area, h('div', { class: 'cms__row' }, count, save)),
       ));
     }
+  }
+
+  /* ---------- Courses ---------- */
+  const courseSelect = $('#course-select');
+  const courseEditor = $('#course-editor');
+  const courseError = $('#courses-error');
+  let courses = [];
+  const field = (form, name, label, type = 'text', value = '', attrs = {}) => {
+    const id = `learn-${name}-${Math.random().toString(36).slice(2)}`;
+    const input = h(type === 'textarea' ? 'textarea' : 'input', { id, name, ...(type === 'textarea' ? {} : { type }), ...attrs });
+    if (type === 'checkbox') input.checked = Boolean(value); else input.value = value ?? '';
+    form.append(h('div', { class: 'field' }, h('label', { for: id, text: label }), input));
+    return input;
+  };
+  const button = (text) => h('button', { type: 'submit', class: 'btn btn--gold-compact', text });
+  async function loadCourses(selected = courseSelect.value) {
+    const { data, error } = await client.from('courses').select('*').order('created_at');
+    if (error) { showError(courseError, 'Could not load courses. Check that the learning schema is installed.'); return; }
+    showError(courseError, '');
+    courses = data;
+    courseSelect.replaceChildren(h('option', { value: '', text: 'New course' }), ...courses.map((c) => h('option', { value: c.id, text: `${c.title} (${c.brand.toUpperCase()}, ${c.status})` })));
+    courseSelect.value = selected;
+    await renderCourse();
+  }
+  async function saveRow(table, values, id) {
+    const result = id ? await client.from(table).update(values).eq('id', id) : await client.from(table).insert(values).select().single();
+    if (result.error) { showError(courseError, 'Could not save. Check the values and try again.'); return null; }
+    showError(courseError, '');
+    return result.data || { id };
+  }
+  async function enrollRequest(body) {
+    const { data } = await client.auth.getSession();
+    const res = await fetch('/.netlify/functions/learn-enroll', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token || ''}` }, body: JSON.stringify(body) });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Request failed');
+    return result;
+  }
+  courseSelect.addEventListener('change', renderCourse);
+  async function renderCourse() {
+    const course = courses.find((item) => item.id === courseSelect.value);
+    courseEditor.replaceChildren();
+    const form = h('form', { class: 'invite-form' });
+    field(form, 'title', 'Course title', 'text', course?.title, { required: true, maxlength: 200 });
+    field(form, 'description', 'Description', 'textarea', course?.description);
+    const brandId = 'learn-brand';
+    const brand = h('select', { id: brandId, name: 'brand' }, ...['ccact', 'cces'].map((value) => h('option', { value, text: value.toUpperCase() })));
+    brand.value = course?.brand || 'ccact';
+    form.append(h('div', { class: 'field' }, h('label', { for: brandId, text: 'Brand' }), brand));
+    field(form, 'image', 'Course image URL (HTTPS)', 'url', course?.image);
+    field(form, 'ce_hours', 'CE hours (optional)', 'number', course?.ce_hours, { min: '0.1', step: '0.1' });
+    field(form, 'pass_mark', 'Pass mark (%)', 'number', course?.pass_mark ?? 66, { required: true, min: '1', max: '100' });
+    field(form, 'lessons_in_order', 'Require lessons in order', 'checkbox', course?.lessons_in_order ?? true);
+    const status = h('select', { id: 'learn-status', name: 'status' }, ...['draft', 'published', 'archived'].map((v) => h('option', { value: v, text: v })));
+    status.value = course?.status || 'draft';
+    if (!course) status.disabled = true;
+    form.append(h('div', { class: 'field' }, h('label', { for: 'learn-status', text: 'Status' }), status), button(course ? 'Save course' : 'Create draft'));
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const f = form.elements;
+      const saved = await saveRow('courses', { title: f.title.value.trim(), description: f.description.value.trim(), brand: brand.value, image: f.image.value.trim() || null, ce_hours: f.ce_hours.value ? Number(f.ce_hours.value) : null, pass_mark: Number(f.pass_mark.value), lessons_in_order: f.lessons_in_order.checked, status: course ? status.value : 'draft' }, course?.id);
+      if (saved) { await loadCourses(saved.id); toast('Course saved.'); }
+    });
+    courseEditor.append(form);
+    if (!course) return;
+    const modulesResult = await client.from('modules').select('*').eq('course_id', course.id).order('position').order('id');
+    if (modulesResult.error) return showError(courseError, 'Could not load modules.');
+    const lessonsResult = await client.from('lessons').select('*').in('module_id', modulesResult.data.map((m) => m.id)).order('position').order('id');
+    if (lessonsResult.error) return showError(courseError, 'Could not load lessons.');
+    const editor = (table, item, parent, position) => {
+      const f = h('form', { class: 'invite-form' });
+      field(f, 'title', `${table === 'modules' ? 'Module' : 'Lesson'} title`, 'text', item?.title, { required: true, maxlength: 200 });
+      field(f, 'position', 'Order', 'number', item?.position ?? position, { required: true, step: '1' });
+      if (table === 'lessons') {
+        field(f, 'length_minutes', 'Length (minutes)', 'number', item?.length_minutes ?? 5, { min: '1', required: true });
+        field(f, 'reading', 'Reading text', 'textarea', item?.reading);
+      }
+      f.append(button(item ? 'Save' : `Add ${table === 'modules' ? 'module' : 'lesson'}`));
+      f.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const v = { title: f.elements.title.value.trim(), position: Number(f.elements.position.value), ...(table === 'modules' ? { course_id: parent } : { module_id: parent, length_minutes: Number(f.elements.length_minutes.value), reading: f.elements.reading.value.trim() || null }) };
+        if (await saveRow(table, v, item?.id)) { await renderCourse(); toast('Saved.'); }
+      });
+      return f;
+    };
+    courseEditor.append(h('h2', { text: 'Modules and lessons' }));
+    for (const module of modulesResult.data) {
+      courseEditor.append(editor('modules', module, course.id, 0));
+      const lessons = lessonsResult.data.filter((lesson) => lesson.module_id === module.id);
+      for (const lesson of lessons) courseEditor.append(editor('lessons', lesson, module.id, 0));
+      courseEditor.append(editor('lessons', null, module.id, lessons.length ? Math.max(...lessons.map((l) => l.position)) + 1 : 0));
+    }
+    courseEditor.append(editor('modules', null, course.id, modulesResult.data.length ? Math.max(...modulesResult.data.map((m) => m.position)) + 1 : 0));
+    courseEditor.append(h('h2', { text: 'Students' }));
+    const enrollForm = h('form', { class: 'invite-form' });
+    field(enrollForm, 'students', 'Email addresses (one per line; optionally add a comma and student name)', 'textarea', '', { required: true, rows: 5 });
+    enrollForm.append(button('Enroll and send sign-in links'));
+    const results = h('p', { role: 'status' });
+    enrollForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const students = enrollForm.elements.students.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => { const [email, ...name] = line.split(','); return { email: email.trim(), name: name.join(',').trim() }; });
+      const submit = enrollForm.querySelector('button'); submit.disabled = true;
+      try {
+        const data = await enrollRequest({ action: 'enroll', courseId: course.id, students });
+        results.textContent = data.results.map((r) => `${r.email}: ${r.ok ? 'enrolled and email sent' : r.error}`).join(' | ');
+        if (data.results.every((r) => r.ok)) enrollForm.reset();
+        await loadStudents();
+      } catch (error) { results.textContent = error.message; } finally { submit.disabled = false; }
+    });
+    const list = h('div');
+    courseEditor.append(enrollForm, results, list);
+    async function loadStudents() {
+      list.replaceChildren();
+      try {
+        const data = await enrollRequest({ action: 'list', courseId: course.id });
+        if (!data.students.length) list.append(h('p', { text: 'No students enrolled.' }));
+        for (const student of data.students) {
+          const row = h('form', { class: 'invite-form' });
+          row.append(h('p', { text: student.student_name || 'Name not supplied' }));
+          field(row, 'email', 'Student email (changes their shared sign-in)', 'email', student.email, { required: true });
+          const save = button('Correct email');
+          const remove = h('button', { type: 'button', class: 'btn btn--danger', text: 'Remove enrollment' });
+          row.append(save, remove);
+          row.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!confirm('Change this student?s sign-in email for all courses and other accounts?')) return;
+            try { await enrollRequest({ action: 'correct', courseId: course.id, userId: student.user_id, email: row.elements.email.value }); toast('Email updated.'); await loadStudents(); } catch (error) { showError(courseError, error.message); }
+          });
+          remove.addEventListener('click', async () => {
+            if (!confirm(`Remove ${student.email} from this course?`)) return;
+            try { await enrollRequest({ action: 'remove', courseId: course.id, userId: student.user_id }); toast('Enrollment removed.'); await loadStudents(); } catch (error) { showError(courseError, error.message); }
+          });
+          list.append(row);
+        }
+      } catch (error) { list.append(h('p', { role: 'alert', text: `Could not load students: ${error.message}` })); }
+    }
+    await loadStudents();
   }
 
   function paintProfile() {

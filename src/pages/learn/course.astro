@@ -1,0 +1,79 @@
+---
+import LearnLayout from '../../layouts/LearnLayout.astro';
+import { BRAND } from '../../content/site.mjs';
+import { PLATFORM_NAME, WEBSITE } from '../../scripts/learn-brand.mjs';
+
+const contactPhoneDisplay = BRAND.contactPhone.replace(/^WhatsApp\s*\/\s*Text:\s*/i, '');
+---
+
+<LearnLayout
+  page="course"
+  requiresAuth={true}
+  title={`Course Overview — ${PLATFORM_NAME}`}
+  description={`View course modules, lesson lengths, and your completion progress with ${BRAND.shortName}.`}
+>
+  <div id="course-not-found" class="band band--cream" hidden>
+    <div class="container">
+      <div class="editorial-card learn-empty">
+        <p class="section-eyebrow">Course overview</p>
+        <h1 class="section-heading">Course not available</h1>
+        <p class="section-lead">
+          We could not find this course in your enrollments on this site. Check your dashboard or contact us if you think this is a mistake.
+        </p>
+        <div class="learn-empty__contact">
+          <div class="learn-empty__detail">
+            <h3>Email</h3>
+            <p><a href={`mailto:${BRAND.contactEmail}`} class="text-link">{BRAND.contactEmail}</a></p>
+          </div>
+          <div class="learn-empty__detail">
+            <h3>WhatsApp / Text</h3>
+            <p>{contactPhoneDisplay}</p>
+          </div>
+        </div>
+        <div class="learn-empty__actions">
+          <a href="/learn/" class="btn btn--gold">Back to my courses</a>
+          <a href={`${WEBSITE}/contact/`} class="btn btn--outline-navy">Contact us</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="course-content" hidden>
+    <section class="learn-course-hero" aria-labelledby="course-title">
+      <div class="container learn-course-hero__grid">
+        <div>
+          <h1 id="course-title" class="learn-course-hero__title">Course overview</h1>
+          <p id="course-description" class="learn-course-hero__desc" hidden></p>
+          <div id="course-meta" class="learn-course-hero__stats"></div>
+          <div id="course-hero-actions" class="learn-course-hero__actions"></div>
+        </div>
+
+        <div class="learn-course-hero__panel">
+          <div class="learn-course-hero__panel-head">
+            <strong id="course-progress-text">0 of 0 lessons complete</strong>
+            <span id="course-progress-pct">0%</span>
+          </div>
+          <div
+            id="course-progress-bar"
+            class="learn-progress"
+            role="progressbar"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+            aria-label="Course progress"
+          >
+            <span id="course-progress-fill" class="learn-progress__fill" style="width: 0%"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band--cream" aria-label="Course modules and lessons">
+      <div class="container">
+        <p id="learn-course-status" class="learn-alert" role="alert" tabindex="-1" hidden></p>
+        <div id="course-modules" class="learn-modules"></div>
+      </div>
+    </section>
+  </div>
+</LearnLayout>
+<script>import '../../scripts/learn-portal.mjs';</script>

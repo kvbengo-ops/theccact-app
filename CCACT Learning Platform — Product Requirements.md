@@ -4,7 +4,7 @@ Nov 27, 2026 · @Kyle Engo
 
 ## Overview
 
-CCACT and CCES will host their own courses inside their websites, at `/learn/`, instead of sending students to a separate course platform.
+CCACT and CCES will host their own courses on their own learning sites, `learn.theccact.com` and `learn.thecces.com`, instead of sending students to a third-party course platform.
 
 A student signs in, sees the courses they are enrolled in, and works through each course in short lessons with a quick check after each one. At the end they take a practice exam (exam-prep courses only) and download a certificate. Reminder emails bring back students who stop.
 
@@ -23,7 +23,7 @@ The build succeeds when a student can finish a course without help, and when the
 | Students actually learn | Average quick-check and practice-exam scores, and how they improve on retakes |
 | Owners can fix weak lessons | The console shows, per lesson, where students stop and which questions they fail most |
 | Adding a course is an admin task | A course with 10 lessons can be entered in the console in under an hour, with no code changes |
-| It matches the websites | The learning area uses the same CCACT and CCES design, header and sign-in as the sites |
+| It stands on its own | Each learning site has the platform's own name, header and footer, with "Powered by CCACT" or "Powered by CCES", and shows only that brand's courses |
 
 ## Out of scope for version one
 
@@ -162,7 +162,7 @@ Row-level security is set so students can only read their own enrollments, progr
 
 ## Technical approach
 
-- **Same repository and deploy as the websites.** The learning area is new pages under `/learn/`, built like `/admin/` and `/affiliate/` are today. They are static pages that load data from Supabase after sign-in. Both brands get it from the same build.
+- **Same repository, separate sites.** One learning site per brand, built from the same repository and served on its `learn.` subdomain. Pages stay under `/learn/` (the root address opens them). They are static pages that load data from Supabase after sign-in. The owner console stays at `/admin/` on the main websites. The platform name is "Learning Portal" until one is chosen.
 - **Netlify Functions** handle the work that must not run in the browser:
   - marking quick checks;
   - signing video links;

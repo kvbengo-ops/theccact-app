@@ -1,0 +1,196 @@
+---
+import LearnLayout from '../../layouts/LearnLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { BRAND } from '../../content/site.mjs';
+import { PLATFORM_NAME, WEBSITE } from '../../scripts/learn-brand.mjs';
+
+const phone = BRAND.contactPhone.replace(/^WhatsApp\s*\/\s*Text:\s*/i, '');
+---
+
+<LearnLayout page="settings" requiresAuth={true} title={`Settings — ${PLATFORM_NAME}`}>
+  <div class="container learn-page set">
+    <h1 class="learn-page__title">Settings</h1>
+
+    <nav class="set-jump" aria-label="Settings sections">
+      <a href="#profile">Profile</a>
+      <a href="#security">Password &amp; security</a>
+      <a href="#notifications">Notifications</a>
+      <a href="#appearance">Appearance</a>
+      <a href="#help">Help &amp; privacy</a>
+    </nav>
+
+    <!-- Profile -->
+    <section id="profile" class="set-card" aria-labelledby="profile-title">
+      <h2 id="profile-title" class="set-card__title"><Icon name="user" />Profile</h2>
+      <div class="set-profile">
+        <span id="set-avatar" class="set-avatar" aria-hidden="true"></span>
+        <div class="set-profile__text">
+          <p id="set-name" class="set-profile__name">Name not set</p>
+          <p id="set-email" class="set-profile__email"></p>
+        </div>
+      </div>
+      <dl class="set-facts">
+        <div><dt>Member since</dt><dd id="set-since">—</dd></div>
+        <div><dt>Last sign-in</dt><dd id="set-last">—</dd></div>
+        <div><dt>Courses</dt><dd id="set-courses">0</dd></div>
+        <div><dt>Certificates</dt><dd id="set-certs">0</dd></div>
+      </dl>
+      <div class="set-actions">
+        <button type="button" id="set-preview" class="btn btn--gold set-btn"><Icon name="eye" />Preview my information</button>
+      </div>
+      <p class="set-note">
+        The name on your certificates and your email are set by {BRAND.shortName}. To change them, email
+        <a href={`mailto:${BRAND.contactEmail}`} class="text-link">{BRAND.contactEmail}</a>.
+      </p>
+    </section>
+
+    <!-- Password & security -->
+    <section id="security" class="set-card" aria-labelledby="security-title">
+      <h2 id="security-title" class="set-card__title"><Icon name="shield" />Password &amp; security</h2>
+      <h3 class="set-card__sub">Create a new password</h3>
+      <p class="set-note">Set a password to sign in without waiting for an email link. Email links keep working.</p>
+      <form id="set-password-form" class="set-form" novalidate>
+        <div class="learn-field">
+          <label for="set-password">New password</label>
+          <div class="set-pw">
+            <input id="set-password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required aria-describedby="set-password-hint" />
+            <button type="button" class="set-pw__toggle" data-reveal="set-password" aria-label="Show password" aria-pressed="false"><Icon name="eye" /></button>
+          </div>
+          <small id="set-password-hint">At least 8 characters, with a letter and a number.</small>
+        </div>
+        <div class="learn-field">
+          <label for="set-password-confirm">Confirm new password</label>
+          <input id="set-password-confirm" type="password" autocomplete="new-password" maxlength="72" required />
+        </div>
+        <p id="set-password-msg" class="set-msg" role="status" hidden></p>
+        <button type="submit" class="btn btn--gold set-btn">Save password</button>
+      </form>
+
+      <hr class="set-rule" />
+      <div class="set-row">
+        <div>
+          <h3 class="set-card__sub">Sign out everywhere</h3>
+          <p class="set-note">Signs you out on every phone and computer, including this one.</p>
+        </div>
+        <button type="button" id="set-signout-all" class="btn btn--outline-navy set-btn"><Icon name="logout" />Sign out everywhere</button>
+      </div>
+    </section>
+
+    <!-- Notifications -->
+    <section id="notifications" class="set-card" aria-labelledby="notifications-title">
+      <h2 id="notifications-title" class="set-card__title"><Icon name="bell" />Notifications</h2>
+      <div class="set-row">
+        <label for="set-reminders" class="set-switch-label">
+          <span class="set-card__sub">Reminder emails</span>
+          <span class="set-note">Nudges when you have not studied for a week, are halfway, or are almost finished. Welcome and certificate emails are always sent.</span>
+        </label>
+        <input id="set-reminders" type="checkbox" role="switch" class="set-switch" />
+      </div>
+      <p id="set-reminders-msg" class="set-msg" role="status" hidden></p>
+    </section>
+
+    <!-- Appearance -->
+    <section id="appearance" class="set-card" aria-labelledby="appearance-title">
+      <h2 id="appearance-title" class="set-card__title"><Icon name="palette" />Appearance</h2>
+      <div class="set-row">
+        <div>
+          <h3 class="set-card__sub">Theme: <span id="set-theme-name">Light</span></h3>
+          <p class="set-note">Saved on this device. Open it anytime with Ctrl + K.</p>
+        </div>
+        <button type="button" id="set-theme" class="btn btn--outline-navy set-btn"><Icon name="palette" />Change theme</button>
+      </div>
+    </section>
+
+    <!-- Help & privacy -->
+    <section id="help" class="set-card" aria-labelledby="help-title">
+      <h2 id="help-title" class="set-card__title"><Icon name="message" />Help &amp; privacy</h2>
+      <ul class="set-links">
+        <li><Icon name="mail" /><a href={`mailto:${BRAND.contactEmail}`} class="text-link">{BRAND.contactEmail}</a></li>
+        <li><Icon name="phone" /><span>WhatsApp / Text: {phone}</span></li>
+        <li><Icon name="lock" /><a href={`${WEBSITE}/privacy/`} class="text-link">Privacy Notice</a></li>
+      </ul>
+    </section>
+
+    <dialog id="set-info-dialog" class="set-dialog" aria-labelledby="set-info-title">
+      <div class="set-dialog__head">
+        <h2 id="set-info-title" class="set-card__title"><Icon name="file" />Your information</h2>
+        <button type="button" class="set-dialog__close" data-close aria-label="Close"><Icon name="x" /></button>
+      </div>
+      <p class="set-note">Everything {PLATFORM_NAME} stores about you.</p>
+      <div id="set-info"></div>
+      <div class="set-actions">
+        <button type="button" id="set-download" class="btn btn--gold set-btn"><Icon name="download" />Download as a file</button>
+        <button type="button" class="btn btn--outline-navy set-btn" data-close>Close</button>
+      </div>
+    </dialog>
+  </div>
+</LearnLayout>
+<script>import '../../scripts/learn-portal.mjs';</script>
+
+<style is:global>
+  .set { max-width: 860px; margin-inline: 0; }
+  .set-jump { display: flex; flex-wrap: wrap; gap: 8px; margin: -6px 0 22px; }
+  .set-jump a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 700; text-decoration: none; }
+  .set-jump a:hover { border-color: var(--ink); }
+
+  .set-card { margin-bottom: 18px; padding: 22px 24px; background: var(--surface); border: 1px solid var(--color-border); border-radius: 8px; scroll-margin-top: 90px; overflow-wrap: anywhere; }
+  .set-card__title { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; font-family: var(--font-serif); font-size: 24px; font-weight: 700; color: var(--ink); }
+  .set-card__title svg { width: 22px; height: 22px; color: var(--color-gold-dark); flex-shrink: 0; }
+  .set-card__sub { display: block; margin: 0 0 4px; font-family: var(--font-sans); font-size: 16px; font-weight: 700; color: var(--ink); }
+  .set-note { display: block; margin: 0 0 12px; font-size: 14.5px; color: var(--color-text-muted); }
+  .set-rule { margin: 22px 0; border: 0; border-top: 1px solid var(--color-border); }
+
+  .set-profile { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+  .set-avatar { display: grid; place-items: center; width: 60px; height: 60px; flex-shrink: 0; border-radius: 50%; background: var(--color-navy); box-shadow: 0 0 0 3px var(--color-gold); color: var(--color-white); font-family: var(--font-serif); font-size: 28px; font-weight: 700; }
+  .set-profile__text { min-width: 0; }
+  .set-profile__name { margin: 0; font-size: 19px; font-weight: 700; color: var(--ink); }
+  .set-profile__email { margin: 2px 0 0; color: var(--color-text-muted); }
+  .set-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0 0 18px; }
+  .set-facts div { padding: 12px 14px; border-radius: 6px; background: var(--color-sand); }
+  .set-facts dt { font-size: 13px; color: var(--color-text-muted); }
+  .set-facts dd { margin: 2px 0 0; font-weight: 700; color: var(--ink); }
+
+  .set-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .set-btn { gap: 8px; min-height: 44px; padding: 0 18px; font-size: 14.5px; }
+  .set-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .set-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+  .set-row > :first-child { flex: 1 1 280px; min-width: 0; }
+  .set-row .set-note { margin: 0; }
+
+  .set-form { display: grid; gap: 14px; max-width: 420px; }
+  .set-pw { position: relative; }
+  .set-pw input { padding-right: 52px; }
+  .set-pw__toggle { position: absolute; top: 2px; right: 2px; display: grid; place-items: center; width: 44px; height: 44px; background: none; border: 0; color: var(--ink); cursor: pointer; }
+  .set-pw__toggle svg { width: 20px; height: 20px; }
+  .set-msg { margin: 0; padding: 10px 14px; border-left: 3px solid var(--color-success); background: var(--color-sand); font-size: 14.5px; font-weight: 700; color: var(--ink); }
+  .set-msg[data-kind='error'] { border-left-color: var(--color-error); }
+
+  .set-switch-label { cursor: pointer; }
+  .set-switch { appearance: none; position: relative; flex-shrink: 0; width: 52px; height: 30px; margin: 0; border-radius: 999px; background: var(--color-divider); cursor: pointer; transition: background 0.2s ease; }
+  .set-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); transition: transform 0.2s ease; }
+  .set-switch:checked { background: var(--color-success); }
+  .set-switch:checked::after { transform: translateX(22px); }
+  .set-switch:disabled { opacity: 0.6; cursor: wait; }
+
+  .set-links { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+  .set-links li { display: flex; align-items: center; gap: 12px; }
+  .set-links svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--color-gold-dark); }
+
+  .set-dialog { width: min(640px, calc(100vw - 24px)); max-height: calc(100dvh - 48px); padding: 22px 24px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--surface); color: var(--color-text); overflow-wrap: anywhere; }
+  .set-dialog::backdrop { background: rgb(10 14 24 / 0.6); }
+  .set-dialog__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .set-dialog__close { display: grid; place-items: center; width: 44px; height: 44px; margin: -8px -10px 0 0; background: none; border: 0; color: var(--ink); cursor: pointer; }
+  .set-dialog__close svg { width: 22px; height: 22px; }
+  .set-info-group { margin: 0 0 16px; }
+  .set-info-group h3 { margin: 0 0 8px; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-gold-dark); }
+  .set-info-group dl { margin: 0; display: grid; grid-template-columns: minmax(120px, auto) 1fr; gap: 6px 16px; font-size: 14.5px; }
+  .set-info-group dt { color: var(--color-text-muted); }
+  .set-info-group dd { margin: 0; font-weight: 700; color: var(--ink); }
+  .set-info-course { padding: 10px 0; border-top: 1px solid var(--color-border); }
+
+  @media (max-width: 520px) {
+    .set-card { padding: 18px; }
+    .set-info-group dl { grid-template-columns: 1fr; gap: 0; }
+    .set-info-group dd { margin-bottom: 8px; }
+  }
+</style>

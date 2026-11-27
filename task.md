@@ -1,235 +1,255 @@
-﻿# CCACT implementation — Agy + Codex
+# CCACT Learning Platform — Claude + Codex + Gemini
 
-Status: T01, T03, and main-site T04 UI (10 static pages) are implemented and awaiting review; Supabase migration applied to Ccact_project, while T05 partner routes, verified Teachable referrals, form/intake backends, and launch approvals remain incomplete.
-
-## Owner direction update — affiliate portal (2026-11-20)
-
-The owner now requests affiliate applications and approval, individual affiliate logins and dashboards, self-service editing of partner page details, student application attribution, and an owner dashboard showing affiliates and student application counts and sources. This replaces the earlier version-one exclusion of partner self-service editing. The static-site plan and T07–T09 need revision to cover the expanded scope.
-
-Open decisions: where student applications are submitted; whether profile edits require owner approval; application fields and what student information affiliates may see; and how Teachable enrolments can be reconciled with website applications. A website application count must not be presented as a confirmed Teachable enrolment or sale. Access controls must prevent affiliates from seeing another affiliate's data, and public partner pages must not expose private records. Existing launch blockers, including verified Teachable links, still apply.
-
-### Portal implementation board
-
-- [ ] P00 — Owner admin account and application review dashboard. **IN PROGRESS (Codex, 2026-11-20)**. Owned: `supabase/migrations/202611200005_admin_review.sql`, `tests/admin-review.sql`, `src/pages/admin.astro`, `src/scripts/admin.mjs`, `supabase/config.toml`, `public/_headers`, `README.md`. The owner account and review screen exist; authorization uses account ID. Email confirmation is disabled by owner request. Decisions record approval or rejection; affiliate access and student analytics remain P03/P04. Browser-level end-to-end testing and owner password change remain outstanding.
-- [ ] P01 — Account and application foundation. **IN PROGRESS (Codex, 2026-11-20)**. Owned: `supabase/migrations/202611200002_affiliate_applications.sql`, `tests/affiliate-applications.sql`. The application table is deployed and its row-level access checks passed in a rolled-back transaction. Signup, login, application UI and trusted approval are not implemented.
-- [ ] P02 — Application signup, login and owner review screens; approved applicants get affiliate access and a unique stable partner URL. **IN PROGRESS (Codex, 2026-11-20)**. Owned: `src/pages/affiliate-apply.astro`, `src/scripts/affiliate-apply.mjs`, `src/components/AffiliatesPage.astro`, `supabase/migrations/202611200003_application_details.sql`, `supabase/migrations/202611200004_optional_application_type.sql`, `package.json`, `package-lock.json`, `README.md`, `tests/affiliate-apply.test.mjs`, `tests/affiliate-applications.sql`. Collect application details before account creation without asking application type; create a pending applicant account, not an approved affiliate. Owner review and provisioned URLs remain separate work.
-- [ ] P03 — Affiliate dashboard and profile editing, with publishing and review rules agreed before implementation. **IN PROGRESS (Codex, 2026-11-20)**. Owned: `src/pages/affiliate/login.astro`, `src/pages/affiliate/dashboard.astro`, `src/scripts/affiliate-portal.mjs`, `src/layouts/AffiliatePortalLayout.astro`, `src/pages/affiliate-apply.astro`, `src/scripts/affiliate-apply.mjs`, `tests/affiliate-portal.test.mjs`, `public/_headers`. First deliver approved-account login and a private status dashboard; profile editing, website publishing and tracking remain outstanding.
-- [ ] P03 header entry — **REVIEW (Codex, 2026-11-20)**. Owned: `src/components/SiteHeader.astro`. Added an accessible main-site profile icon linking to affiliate sign-in, with a mobile layout; browser visual review remains pending.
-- [ ] P04 — Student applications and attribution; affiliate and owner dashboards show permitted counts and sources, separately from Teachable sales.
-- [ ] P05 — End-to-end access, privacy, abuse, deployment and acceptance checks.
-
-P02–P05 require a runtime/backend and must not expose service credentials. Until the owner decides otherwise, profile edits must not publish automatically and no student information is shown to affiliates. Website-application tracking and Teachable enrolment tracking must remain separate.
+Status: Phase 1 in progress (2026-11-27): L01, L02, L03, and L04.
 
 ## Source of truth
 
-- Requirements: `CCACT Affiliate Websites — Product Requirements.md`.
-- Homepage design: `UI design/Main.dc.html`; follow `UI design/README.md`. Recreate the design in production components, not the exported runtime.
-- Logo: `Ccact_logo.png` (the supplied file); replace the mockup shield with this asset.
-- Owner direction: “you can just change the purple for blue and use the colors that are on our current website including the gold.” Verify the current website palette before finalising tokens. The mockup already contains navy and gold; do not assume these exactly match the live brand.
-- Current site to inspect: `https://theccact.com`.
-- The design governs homepage presentation; the PRD governs functionality. Include PRD navigation items even where the mockup omits them, including Study in Canada.
+- Requirements: `CCACT Learning Platform — Product Requirements.md` (the PRD). The PRD governs scope; this file governs who does what.
+- Previous affiliate-site board: `task-affiliate-websites.md` (history only).
+- Copy rules: North American spelling. Never the word "partner" in site copy (use "affiliate").
+- Brand: one repo builds two sites. `SITE_BRAND=ccact` builds theccact.netlify.app, `SITE_BRAND=cces` builds thecces.netlify.app (`src/lib/links.mjs`, `astro.config.mjs`). Each course belongs to one brand and shows only on its own site.
+- Deploy: Netlify builds from remote `web` (`kvbengo-ops/theccact-web`), branch `main`. Do not hard-code theccact.com or thecces.com in links; they do not point at Netlify yet.
+- Follow existing patterns: static Astro pages that load data from Supabase after sign-in, like `src/pages/admin.astro` + `src/scripts/admin.mjs` and `src/pages/affiliate/` + `src/scripts/affiliate-portal.mjs`. Owner check reuses `private.admin_users` (`supabase/migrations/202611200005_admin_review.sql`).
+
+## Agents
+
+| Agent | Implements | Reviews |
+| --- | --- | --- |
+| Claude | Data model, migrations, row-level security, server functions that mark answers and issue certificates, integration and release checks | Gemini's work |
+| Codex | Owner console (courses, students, reports), video host, email sending and reminders, Netlify Functions setup and deploy config | Claude's work |
+| Gemini | Student UI: sign-in, dashboard, course overview, lesson page, quick-check UI, certificate design, verify page; visual and accessibility review | Codex's work |
 
 ## Shared working rules
 
-1. Agy and Codex both read this file and the PRD before working. Change a task to `IN PROGRESS` with agent name and date before editing.
-2. Each task has one implementation owner and the other agent reviews it. Do not edit another agent's active files without a recorded handoff.
-3. Record actual files owned when claiming a task. Suggested boundaries below become concrete during foundation setup.
-4. Keep this board current: `TODO`, `IN PROGRESS`, `BLOCKED`, `REVIEW`, `DONE`. Check a box only after its acceptance checks pass; record evidence in the handoff log.
-5. Changes to shared interfaces must be agreed in this file before either agent changes callers. Never overwrite the other agent's work.
-6. Use one source for shared content, Supabase as the partner record source, and one referral-link implementation. No copied per-partner websites.
-7. Missing real content, credentials, approvals, or records must be marked as launch blockers. Fixtures must be clearly identified and never published as approved partners.
-8. No task is complete solely because the UI renders. Check the behavior and failure states relevant to that task.
+1. Read the PRD and this file before working. Set the task to `IN PROGRESS (<agent>, <date>)` and list the files you own before editing.
+2. One implementation owner per task; the named reviewer reviews it. Do not edit another agent's claimed files without a handoff recorded in the log.
+3. Statuses: `TODO`, `IN PROGRESS`, `BLOCKED`, `REVIEW`, `DONE`. Tick a box only after its check passes. Record the evidence (commands, results) in the handoff log.
+4. Shared interfaces (table and column names, RPC and function names, request and response shapes) are agreed in the Interfaces section below before callers change.
+5. No service-role keys, video-host secrets or email-provider keys in browser bundles. Secrets live in Netlify environment variables only.
+6. Correct answers never reach the browser before the student submits. Marking happens in a server function.
+7. A task is not done because the UI renders. Check behavior, failure states and access control.
+8. Missing content, credentials or owner decisions are marked `BLOCKED` with the decision number from the table below. Never fill them with invented content.
+9. Run `npm test` and `npm run build` (both brands: `SITE_BRAND=cces npm run build` too) before moving a task to `REVIEW`.
 
-## Ownership and interfaces
+## Ownership of paths
 
-| Area | Implementation owner | Reviewer |
-| --- | --- | --- |
-| Design, brand tokens, logo, responsive shell and homepage | Agy | Codex |
-| Shared content presentation, course cards, FAQ and partner layouts | Agy | Codex |
-| Foundation, partner schema, routes, lifecycle and referral links | Codex | Agy |
-| Form handling, intake workflow, indexing and deployment configuration | Codex | Agy |
-| Integration and release checks | Codex | Agy |
-| Visual and accessibility review | Agy | Codex |
+| Path | Owner |
+| --- | --- |
+| `supabase/migrations/2026112*_learn_*.sql`, `tests/learn-*.sql` | Claude |
+| `netlify/functions/learn-certificate.mjs` | Claude |
+| `netlify.toml`, `netlify/functions/learn-video-url.mjs`, `netlify/functions/learn-email*.mjs`, `netlify/functions/learn-enroll.mjs` | Codex |
+| `src/pages/admin.astro`, `src/scripts/admin.mjs` (Courses section) | Codex |
+| `src/pages/learn/**`, `src/scripts/learn*.mjs`, `src/layouts/LearnLayout.astro`, `src/components/Learn*.astro` | Gemini |
+| `package.json`, `package-lock.json`, `README.md`, `task.md` | Shared; record changes in the log |
 
-Foundation: Astro static generation and Cloudflare Pages. Partner URL: `/partners/{slug}/`. Codex owns `package.json`, `package-lock.json`, `astro.config.mjs`, `src/lib/`, `supabase/`, `tests/`, `public/_headers`, `public/_redirects`, and `README.md`. Agy owns presentation files under `src/components/`, `src/layouts/`, `src/styles/`, `src/content/`, and main-page routes; coordinate partner route integration before editing shared routes.
+## Interfaces (agree in L01 before dependent work)
 
-Backend: Supabase is the selected source of truth for partner records and planned backend for intake and form submissions. Codex owns migrations, server-side integration, storage policies and access controls; Agy integrates agreed form and display interfaces. Static builds must consume only approved live records; record changes require a rebuild until an alternative is designed. Private previews and intake require server-side access control. Keep privileged credentials server-side, enable and test row-level security, and restrict personal data and uploads. The migration is applied to Ccact_project; the build-time reader still needs an end-to-end test with server-side credentials.
+- Tables (PRD "Data"): `courses`, `modules`, `lessons`, `questions`, `enrollments`, `lesson_progress`, `quiz_attempts`, `certificates`, `email_log`. `courses.brand` is `ccact` or `cces`.
+- Columns: see `supabase/migrations/202611270001_learn_schema.sql`. `correct_answers` is zero-based indexes into the `options` array. `type` is `single`, `multiple` or `true_false`. `files` is a JSON array.
+- `enrollments.student_name` is printed on the certificate: the console and `learn-enroll` should collect it. `enrollments.status` is `active` or `removed` (set `removed`, do not delete). `enrollments.reminders_off` is the unsubscribe flag.
+- Owner console reads and writes the tables directly (RLS allows `is_admin()`). Course images go in the public `course-images` bucket.
+- Learning origins are configured once per environment as `LEARN_CCACT_ORIGIN` and `LEARN_CCES_ORIGIN` (HTTPS origins; set on main builds and functions). `SITE_APP=learn` selects the learning-site build. Temporary URLs are pending site creation.
+- `POST /.netlify/functions/learn-enroll` with owner JWT: `{ action: "list"|"enroll"|"remove"|"correct", courseId, ... }`. Enroll accepts `students: [{ email, name }]`; remove accepts `userId`; correct accepts `userId, email`. List and enroll return per-student results. The function checks `is_admin()` before using the service role; email corrections affect the shared sign-in account.
+- Students never read content tables. They use these RPCs: `learn_my_courses()` (both brands, so filter on `brand`), `learn_course_outline(p_course)`, `learn_lesson(p_lesson)`, `learn_questions(p_lesson)` (no answers or explanations), `learn_save_position(p_lesson, p_seconds)`, `learn_mark_done(p_lesson)`. Locked or unenrolled calls fail with code `42501` (message `Lesson locked` or `Not authorized`).
+- Archived courses stay open to students already enrolled; draft courses are hidden.
+- Quick checks: RPC `learn_submit_check(p_lesson, p_answers)` (replaces the planned `learn-mark-check` Netlify Function; no service key, attempt and unlock saved together). `p_answers` is `{ "<question_id>": [option indexes] }` with every question answered. Returns `{ score, passed, results: [{ question_id, correct, explanation, review_at }] }`. Code `42501`: locked or not enrolled. Code `22023`: unanswered question or no quick check.
+- `POST /.netlify/functions/learn-video-url` — body `{ lessonId }`, JWT. Returns a short-lived signed playback URL only if the caller is enrolled and the lesson is unlocked.
+- `GET /.netlify/functions/learn-certificate?course=<id>` — JWT. Returns the PDF for the caller's own certificate.
+- Verify page: public RPC `learn_verify_certificate(p_number)` returns one row `{ valid, course_title, brand, issued_at }`.
+- Certificates are issued by a database trigger when the last lesson is done; the number is in `learn_my_courses().certificate_number`.
+- Owner reports (L10, owner only, empty for others): `learn_report_courses()` → `course_id, brand, title, status, enrolled, active_week, completed, completion_rate`; `learn_report_lessons(p_course)` → `lesson_id, module_title, lesson_title, reached, done, stopped_here`; `learn_report_questions(p_course)` → `question_id, lesson_id, lesson_title, question, attempts, wrong, wrong_share`; `learn_report_students(p_course)` → `user_id, email, student_name, done_lessons, total_lessons, attempts, average_score, last_active, completed_at`.
 
-Interface contract to establish in T02:
+## Phase 1 — Foundations (1–2 weeks)
 
-- Shared layout receives page identity and optional validated partner context.
-- Navigation and internal page URLs preserve that partner context.
-- Every Teachable browse/enrol link uses the shared referral helper/component; presentation code must not construct these URLs directly.
-- Forms derive attribution from trusted route/record context, with hidden partner fields for submission; do not trust user-submitted identity alone.
-- Template-owned disclaimers and verification links cannot be overridden by partner data.
+### L01 — Schema and row-level security
+Owner: Claude. Reviewer: Codex. Status: REVIEW (Claude, 2026-11-27; Codex review pending). Owned: `supabase/migrations/202611270001_learn_schema.sql`, `tests/learn-rls.sql`. Applied to Supabase 2026-11-27.
 
-UI handoff (Codex, 2026-11-20): T03 may begin now; T02's Supabase, lifecycle confirmation and launch work do not block building the main-site UI. Import `pageUrl(page, partner)` and `enrolmentUrl(destination, partner)` from `src/lib/links.mjs`. Page keys are `''`, `about`, `courses`, `registration`, `study-in-canada`, `faq`, `about-partner`, `contact`, and `privacy`. Use `null` for main-site context. `enrolmentUrl` accepts only the CCACT Teachable school and intentionally throws for partner context until real referral links are verified; do not bypass it or publish unattributed partner buttons. Main-site course links can use the inventory's real URLs. Present partner UI with clearly marked local fixtures only, and do not ship fixtures as approved partners. The logo is available at `/ccact-logo.png`. Agy owns `src/pages/`, `src/components/`, `src/layouts/`, `src/styles/`, and content presentation; Codex will coordinate the partner routes with Agy before editing them.
+- [x] Migration with the nine PRD tables, brand column, course status (draft, published, archived), lessons-in-order flag, pass mark (percent, default 66 so that 2 of 3 passes; 70 would fail it).
+- [x] RLS: students read only their own enrollments, progress, attempts and certificates, and only published lessons of courses they are enrolled in.
+- [x] Owner (`private.admin_users`) has full access; affiliates get nothing new.
+- [x] Students cannot read correct answers or explanations; cannot write `done_at`, scores or certificates directly.
+- [x] `tests/learn-rls.sql` run in a rolled-back transaction: student A cannot see student B, unenrolled student cannot see lessons, student cannot read answers or self-certify.
 
-## Task board
+Acceptance: migration applied to the Supabase project; RLS test passes; interface names above confirmed or updated in this file.
 
-### T01 — Inspect source content and resolve external dependencies
-Owner: Agy. Reviewer: Codex. Status: REVIEW (Agy, 2026-11-20; Codex review pending). Depends on: none. Owned files: `src/content/t01-content-and-brand-inventory.md`.
+### L02 — Student sign-in
+Owner: Gemini (page), Claude (Auth settings). Reviewer: Codex. Status: REVIEW (Gemini & Claude, 2026-11-27; Codex review pending). Depends on: L01. Owned (Gemini): `src/layouts/LearnLayout.astro`, `src/pages/learn/login.astro`, `src/scripts/learn-helpers.mjs`, `src/scripts/learn-portal.mjs`, `src/components/LearnStudentBar.astro`, `tests/learn-portal.test.mjs`.
 
-- [x] Inspect the full homepage reference and inventory its sections, typography, spacing and responsive needs.
-- [x] Inspect the current website; record its actual blue/navy and gold colors and source evidence.
-- [x] Inventory all shared page copy, course destinations, policy notices and existing Affiliates content.
-- [x] Confirm destinations of the individual and organisation Apply buttons. Preserve existing external forms if present; otherwise include both forms in T07.
-- [x] Record missing approved copy and imagery without inventing claims, credentials, course details or testimonials.
+- [x] `/learn/login/` with email sign-in link (no password), in the site's design and header.
+- [x] Supabase Auth redirect URLs added for both Netlify origins. (Claude, 2026-11-27)
+- [x] Signed-out visitors to any `/learn/` page go to `/learn/login/`; owner and affiliate sign-ins keep working.
+- [x] `public/_headers`: `/learn/*` gets `noindex` except `/learn/verify/*`. (Claude, 2026-11-27)
 
-Acceptance: content and brand inventory with source URLs, missing inputs and application-form decision is available to both agents.
+### L03 — Dashboard and course overview
+Owner: Gemini. Reviewer: Claude. Status: DONE (Claude reviewed 2026-11-27: code, and live data as a test student; visual check not repeated). Depends on: L01, L02. Owned: `src/layouts/LearnLayout.astro`, `src/pages/learn/index.astro`, `src/pages/learn/course.astro`, `src/components/LearnStudentBar.astro`, `src/scripts/learn-helpers.mjs`, `src/scripts/learn-portal.mjs`, `tests/learn-portal.test.mjs`.
 
-### T02 — Foundation and shared contracts
-Owner: Codex. Reviewer: Agy. Status: IN PROGRESS (Codex, 2026-11-20). UI dependencies are ready; production completion depends on Supabase access and lifecycle confirmation.
+- [x] `/learn/`: one card per enrolled course with image, "6 of 14 lessons" and a bar, **Continue** (next unfinished lesson), **Download certificate** when complete. Completed courses below in-progress ones. Empty state with contact details.
+- [x] `/learn/course/?id=<id>`: title, description, total time, modules and lessons in order with length and done state, **Resume** button, locked lessons shown as locked when the course has lessons-in-order on.
+- [x] Works on a phone browser; keyboard access and visible focus.
 
-- [ ] Set up the smallest Astro project, scripts, static assets and Cloudflare Pages configuration.
-- [ ] Define shared content structure and partner schema; document exact file ownership for both agents. Partner schema and ownership are documented; shared content structure awaits T01.
-- [ ] Include name, immutable unique slug, individual/organisation type, referral code, bio, optional image, role/category, location, optional languages/services, email, optional organisation website, approval date and status.
-- [ ] Validate required fields, valid dates/email/URLs, allowed states, slug safety/uniqueness and referral requirements; fail builds with actionable errors.
-- [ ] Confirm the six lifecycle state names and allowed transitions. The PRD names suspended and retired but does not expose its embedded six-state diagram; a provisional interpretation is documented in README.md.
-- [ ] Define separate CCACT content review and partner preview-approval gates before live publication.
-- [ ] Use Supabase as the single production record source, with a secure build-time read of eligible records. Local migration and reader exist; verify against a real project and connect generated routes.
-- [ ] Add isolated fixtures and focused schema/transition checks.
+### L04 — Owner console: courses and enrollment
+Owner: Codex. Reviewer: Gemini. Status: IN PROGRESS (Codex, 2026-11-27). Depends on: L01.
 
-Acceptance: clean build works; invalid records fail; contracts and lifecycle assumptions are documented before dependent work.
+- [ ] New **Courses** section in `/admin/`: create and edit courses, modules and lessons; reorder; draft then publish; brand per course.
+- [ ] Enroll by email, one or a pasted list, through `learn-enroll` (creates the student's account if needed, sends sign-in link). Remove an enrollment. Correct a student's email.
+- [ ] Netlify Functions set up (`netlify.toml`, functions directory) with env var list documented in `README.md`.
 
-### T03 — Homepage, brand and shared shell
-Owner: Agy. Reviewer: Codex. Status: REVIEW (Agy, 2026-11-20; Codex review pending). UI work unblocked by the T02 handoff above; partner referral integration remains blocked until T05. Owned files: `src/styles/tokens.css`, `src/styles/global.css`, `src/content/site.mjs`, `src/content/fixtures/partner-preview.mjs`, `src/layouts/BaseLayout.astro`, `src/components/SiteHeader.astro`, `src/components/PartnerStrip.astro`, `src/components/SiteFooter.astro`, `src/components/EnrolLink.astro`, `src/components/ContinuingEducationNotice.astro`, `src/components/HomePage.astro`, `src/pages/index.astro`.
+Acceptance (phase 1): owner creates a course and enrolls a test student; student signs in on the right brand's site and sees the course on the dashboard and overview; a second student sees nothing of the first.
 
-- [x] Recreate the supplied homepage layout faithfully with production components.
-- [x] Apply verified blue/navy, gold and supporting site colors; replace purple throughout.
-- [x] Use `Ccact_logo.png` with suitable alternative text and preserved proportions.
-- [x] Build responsive header, navigation, footer, mobile menu and shared typography.
-- [x] Include Home, About, Online Courses, Registration, Study in Canada, FAQ, About [Partner], Contact and Enrol Now on partner sites.
-- [x] Show partner identity, authorised status and directory verification link; handle main-site context separately.
-- [x] Wire homepage CTAs to real destinations through the shared referral component.
+### L13 — Separate learning sites and branding
+Owner: Gemini (branding), Codex (sites and links), Claude (Auth URLs, release check). Reviewer: Codex reviews Gemini, Claude reviews Codex. Status: IN PROGRESS (Codex, Gemini, 2026-11-27). Depends on: L02, L03. Owned (Gemini): `src/scripts/learn-brand.mjs`, `src/components/LearnHeader.astro`, `src/components/LearnFooter.astro`, `src/components/LearnStudentBar.astro`, `src/layouts/LearnLayout.astro`, `src/pages/learn/login.astro`, `src/pages/learn/index.astro`, `src/pages/learn/course.astro`, `src/scripts/learn-portal.mjs`, `tests/learn-portal.test.mjs`.
 
-Acceptance: desktop and mobile match the reference structure and requested brand; keyboard navigation works; no mockup placeholder links remain. (Visual browser confirmation in live Chromium queued with T04/T09; built CSS, DOM structure, and drawer keyboard behavior verified.)
+Decided 2026-11-27: `learn.theccact.com` and `learn.thecces.com`, each showing only its brand's courses. Name placeholder: "Learning Portal".
 
-### T04 — Shared pages and partner presentation
-Owner: Agy. Reviewer: Codex. Status: REVIEW (Agy, 2026-11-20; Codex review pending — T05 route wiring & gated Affiliates copy pending). Depends on: T02, T03; integrates T05. Owned files: `src/content/site.mjs`, `src/content/pages.mjs`, `src/components/PageHero.astro`, `src/components/AboutPage.astro`, `src/components/CoursesPage.astro`, `src/components/RegistrationPage.astro`, `src/components/StudyInCanadaPage.astro`, `src/components/FaqPage.astro`, `src/components/ContactPage.astro`, `src/components/PrivacyPage.astro`, `src/components/PartnerAboutPage.astro`, `src/components/PartnersDirectoryPage.astro`, `src/components/AffiliatesPage.astro`, `src/pages/about.astro`, `src/pages/courses.astro`, `src/pages/registration.astro`, `src/pages/study-in-canada.astro`, `src/pages/faq.astro`, `src/pages/contact.astro`, `src/pages/privacy.astro`, `src/pages/partners/index.astro`, `src/pages/affiliates.astro`, `public/images/*.jpg` (plus notice integration in `ContinuingEducationNotice.astro` and `BaseLayout.astro`).
+- [x] Gemini (done by Claude on the owner's instruction, 2026-11-27): `/learn/` pages get their own header and footer (no website menus), the platform name from one constant, and "Powered by CCACT" or "Powered by CCES" linking to that website. Both brand builds.
+- [ ] Codex: two Netlify sites from this repo with `SITE_APP=learn` and `SITE_BRAND`; on them the root and every non-learn page go to `/learn/`; `/admin/` stays on the main websites only; main websites send `/learn/*` to the learning site. Functions and env vars work on both.
+- [ ] Codex: `learn-enroll` sign-in links point at the learning sites. Keep the temporary `.netlify.app` addresses in one place until DNS is connected.
+- [ ] Claude: add the learning-site addresses (temporary, then `learn.` subdomains) to Auth redirect URLs; remove the main-website `/learn/` ones. (`learn.` subdomains added 2026-11-27; temporary addresses wait for the Netlify sites.)
+- [ ] Owner: create the two Netlify sites (or give access) and add the DNS records for the `learn.` subdomains.
 
-- [x] Implement shared About, Online Courses, Registration, Study in Canada, FAQ, Contact and Privacy Notice pages.
-- [x] Implement individual and organisation About [Partner] layouts, optional-image fallback, optional languages/services and organisation website.
-- [x] Preserve approved course and policy content in a single source for all sites.
-- [x] Put required continuing-education, qualification, licensing, employment and immigration notices in the shared template using approved wording.
-- [x] Build the main-site approved-partner directory with name, type, location, approval date and verification destinations.
-- [x] Include directory notices that partners never collect tuition, payment occurs through Teachable, and outcomes are not guaranteed.
-- [ ] Rebuild the main-site Affiliates page with existing approved content and application destinations; no recruitment CTA on partner pages. *(Scaffold built at `/affiliates/` with Individual/Organisation sections and zero recruitment on partner pages; live `partners.html` / form HTML returned HTTP `401` and awaits CCACT supply + T07 wiring.)*
+Acceptance: each learning site opens to its own branded sign-in, a student signs in and sees only that brand's courses, and no website menu appears.
 
-Acceptance: all nine partner page components exist and reuse single-source copy (`src/content/pages.mjs` / `site.mjs`); 10 main-site routes build (`dist/`); dynamic partner route generation across `/partners/[slug]/...` integrates with T05 (`Codex`).
+## Phase 2 — Learning (1–2 weeks)
 
-### T05 — Routing, lifecycle and referral integrity
-Owner: Codex. Reviewer: Agy. Status: IN PROGRESS (Codex, 2026-11-20). Owned files: `src/pages/partners/[slug]/[...page].astro`, `src/components/EnrolLink.astro` (local fixture preview integration); shared route integration follows the T04 handoff. Depends on: T02.
+### L05 — Video host and lesson files
+Owner: Codex. Reviewer: Claude. Status: BLOCKED on decision 5.
 
-- [ ] Generate all nine page types for every eligible live partner from records.
-- [ ] Preserve partner context across internal navigation and all shared CTAs.
-- [ ] Verify Teachable's real referral URL format against a supplied example; preserve existing query parameters and encode values safely.
-- [ ] Implement one shared browse/enrol link component; reject missing or malformed live-partner referral data.
-- [ ] Check every generated Teachable link, including header, homepage, course and registration CTAs, for the correct partner attribution.
-- [ ] Provide private previews for review; noindex alone is not access control. Do not expose draft records on public routes or directories.
-- [ ] Require recorded CCACT review and partner approval before publication.
-- [ ] Suspended partners are offline and absent from the directory; retain their records and codes for restoration.
-- [ ] Retired partners redirect to the main site and immediately leave the directory; support direct live-to-retired transitions.
-- [ ] Redirect the Affiliates address on partner sites to the main-site Affiliates page, including direct/stale links.
-- [ ] Handle unknown partner slugs and unavailable pages without displaying another partner's identity or referral code.
+- [ ] Upload video from the console to the chosen host (Bunny Stream or Mux); store the video id on the lesson.
+- [ ] `learn-video-url` returns expiring signed links; refuses unenrolled or locked requests.
+- [ ] Lesson files (cheat sheets, charts) in a private Supabase Storage bucket, downloadable only by enrolled students.
 
-Acceptance: automated checks cover multiple partners, every page/CTA, invalid records, lifecycle visibility, preview protection and redirects. Missing attribution fails the build.
+### L06 — Lesson page
+Owner: Gemini. Reviewer: Claude. Status: IN PROGRESS (Claude, for Gemini, 2026-11-27): reading lessons, Mark as done, locked state and next lesson done; video and file downloads wait for L05.
 
-### T06 — Contact and mailing-list submissions
-Owner: Codex. Reviewer: Agy. Status: TODO. Depends on: T02, T04, T05.
+- [ ] `/learn/lesson/?id=<id>`: video, reading, or both, plus file downloads.
+- [ ] Saves video position to `lesson_progress` (throttled) and resumes on any device.
+- [x] **Mark as done** for lessons with no quick check. Next-lesson navigation.
+- [x] Locked lesson opened by URL shows a locked message, not content.
 
-- [ ] Select and configure the submission service using actual CCACT destination details.
-- [ ] Implement contact and mailing-list UI with accessible labels, validation, consent where required, and clear success/error states.
-- [ ] Include partner attribution in both forms; validate it against a trusted record at the receiving boundary.
-- [ ] Route tagged enquiries to the agreed CCACT/partner recipients; confirm delivery behavior with CCACT.
-- [ ] Add appropriate spam protection, input limits and safe handling of submitted text; keep secrets out of client bundles and records.
-- [ ] Test successful submission, validation rejection, service failure and attribution tampering.
+### L07 — Quick checks
+Owner: Claude (marking function), Gemini (UI), Codex (question editor). Reviewer: each reviews another's part. Status: IN PROGRESS (Claude, 2026-11-27: `supabase/migrations/202611270002_learn_mark_check.sql`, `tests/learn-check.sql`; applied to Supabase 2026-11-27; UI and question editor pending). Depends on: L01, L06.
 
-Acceptance: test submissions arrive at the configured destination with correct attribution. A local success message alone does not count as delivery.
+- [ ] Console: write 2–3 questions per lesson (single choice, multiple choice, true/false), explanation, and optional "review this part" pointer (video time or reading anchor).
+- [x] `learn_submit_check` marks server-side, saves every attempt, applies the course pass mark, unlocks the next lesson on pass. Rejects locked or unenrolled lessons.
+- [x] (Claude, for Gemini, 2026-11-27) UI shows right/wrong with explanation instantly, links wrong answers to the review point, allows unlimited retakes.
+- [ ] Tests: correct, incorrect, tampered lesson id, unenrolled caller, answers never in the page source or network before submit.
 
-### T07 — Partner intake and onboarding
-Owner: Codex. Reviewer: Agy. Status: TODO. Depends on: T01, T02, T05.
+Acceptance (phase 2): a test student completes a 3-lesson course end to end on a phone, fails and retakes one check, and resumes a video on a second device.
 
-- [ ] Build private-link intake for approved partners, collecting the partner-record materials and optional photo/logo.
-- [ ] Protect intake access and validate uploads, text and URLs at the receiving boundary.
-- [ ] Save submissions to the chosen single record source as pending review, never automatically live.
-- [ ] Keep referral codes, slug assignment, approval and publication under CCACT/developer control.
-- [ ] Connect record creation, CCACT bio review, private preview, partner approval and publication into one documented workflow.
-- [ ] If T01 finds no external application forms, implement individual and organisation applications on the main site only.
-- [ ] Document suspension, restoration, retirement and the developer-run record update/deployment process.
-- [ ] Time a complete sample onboarding from supplied materials to preview; target under 10 minutes.
+## Phase 3 — Completion (1 week)
 
-Acceptance: an intake submission creates a usable pending record; no development edits are needed to add the next partner; approval gates are enforced.
+### L08 — Certificates and verify page
+Owner: Claude (issuing + PDF function), Gemini (design + verify page). Reviewer: Codex. Status: PDF and design BLOCKED on decision 2 (wording, CE hours). Issuing and verify lookup done (Claude, 2026-11-27).
 
-### T08 — Search controls and deployment
-Owner: Codex. Reviewer: Agy. Status: TODO. Depends on: T04–T07.
+- [x] Issue automatically when every lesson is done (and practice exam passed, once phase 5 exists). Unique certificate number.
+- [ ] Branded PDF (CCACT or CCES crest and colors): name, course, completion date, CE hours where set, number.
+- [x] (Claude, for Gemini, 2026-11-27) `/learn/verify/?n=<number>` public page; confirms genuine without private data.
+- [ ] Download from the dashboard at any time.
 
-- [ ] Add noindex instructions to every partner page, with appropriate response/header coverage.
-- [ ] Keep partner pages out of the main sitemap; do not rely on robots.txt alone to prevent indexing.
-- [ ] Preserve main-site public URLs and appropriate metadata/canonicals; map any changed legacy URLs to redirects.
-- [ ] Configure Cloudflare build/deploy settings, form services, preview protection and environment-variable documentation.
-- [ ] Verify generated redirect behavior on the target hosting platform.
-- [ ] Document deployment, rollback and how shared copy and partner records update in one deploy.
+### L09 — Reminder emails
+Owner: Codex. Reviewer: Claude. Status: BLOCKED on decision 6 (sender) and provider choice (Resend or Postmark).
 
-Acceptance: deployable build and setup guide exist; actual hosting behavior is verified before marking release ready. Domain/DNS changes require the appropriate account access.
+- [ ] Welcome (on enrollment, with sign-in link), Halfway (passes 50%), We miss you (7 days inactive, max once a week, max 3 per course), Almost there (one lesson or exam left), Certificate ready.
+- [ ] Daily scheduled Netlify Function for time-based emails; `email_log` prevents duplicates.
+- [ ] Unsubscribe link stops reminder emails only; Welcome and Certificate ready always send.
+- [ ] Sends from the course's brand domain.
 
-### T09 — Joint acceptance and release
-Owner: Codex (functional), Agy (visual). Status: TODO. Depends on: T03–T08.
+### L10 — Owner reports
+Owner: Codex (console), Claude (SQL views or RPCs). Reviewer: Gemini. Status: IN PROGRESS. Claude's report functions done (2026-11-27, `supabase/migrations/202611270003_learn_certificates_reports.sql`, `tests/learn-reports.sql`); Codex console view pending. Depends on: L07.
 
-- [ ] Agy checks desktop/mobile reference fidelity, actual logo, blue/gold brand, long names, organisation layout and absent images.
-- [ ] Agy checks keyboard access, focus visibility, labels, contrast, readable text and overflow.
-- [ ] Codex checks all nine pages, directory, main-site recruitment, forms, private intake, approval workflow, redirects and lifecycle transitions.
-- [ ] Codex audits generated referral links for representative individual and organisation records and an approximately 30-partner fixture build.
-- [ ] Verify no unapproved partner records, test identities, placeholder destinations, secrets or fabricated content enter production output.
-- [ ] Verify notices and noindex across every generated partner page.
-- [ ] Record commands, test results, browser checks, deployment evidence and any remaining blockers.
-- [ ] Both agents review the completed work and mark release ready only after required content, records and services are supplied and verified.
+- [ ] Per course: enrolled, active this week, completed, completion rate.
+- [ ] Per lesson: students who reached it, drop-off point.
+- [ ] Per question: share answered wrongly.
+- [ ] Per student: progress and scores.
 
-Acceptance: all version-one requirements pass or are explicitly documented as externally blocked; never describe a blocked integration as complete.
+## Phase 4 — Pilot (1–2 weeks)
 
-## Inputs and decisions to track
+### L11 — Launch checks and pilot
+Owner: Claude (functional), Gemini (visual and accessibility). Reviewer: Codex. Status: BLOCKED on decisions 1 and 7.
 
-These do not block independent design/foundation work, but must be resolved before dependent release tasks.
+- [ ] Supabase on the paid plan (daily backups, no pausing). Owner action.
+- [ ] Privacy Notice updated for names, emails and scores. Owner approves wording.
+- [ ] All env vars set on both Netlify sites; secrets absent from `dist/`.
+- [ ] Both brands built and deployed; a CCES course never shows on CCACT and the reverse.
+- [ ] Gemini: phone and desktop check of every `/learn/` page, contrast, labels, focus, long course names, missing images.
+- [ ] Enter the pilot course from the console (time it: 10 lessons in under an hour).
+- [ ] Run the pilot with a small group; log issues below and fix them.
 
-| Input/decision | Default or action | Status |
-| --- | --- | --- |
-| Exact live-site brand colors | Inspected live site & logos (`t01-content-and-brand-inventory.md`); replaced purple with verified navy/gold tokens in `tokens.css` | Verified & implemented (`T01`/`T03`; Codex/owner sign-off pending) |
-| Approved shared content and legal wording | Live shared copy preserved in `site.mjs`/`pages.mjs`; CCACT sign-off on partner-site disclaimer wording and gated `partners.html` copy pending | Extracted & implemented; CCACT sign-off pending |
-| Real Teachable referral format and launch codes | Verify against supplied working link; preserve existing query params (`?sortKey=...&courseCategory=...`) | Pending real link supply |
-| Approved launch partners | Launch only ready/approved records; fixture data stays isolated in `src/content/fixtures/partner-preview.mjs` | Pending real records |
-| URL structure | Main-domain `/partners/{slug}/` paths | Proposed |
-| Partner record source | Supabase; static build reads eligible records securely | Selected by owner; migration applied, end-to-end test pending |
-| Six-state lifecycle and review owner | Confirm missing diagram/state names and named CCACT reviewer | Pending |
-| Application destinations | Inspected `scripts/script.js` + live URLs: first-party AWS Lambda forms (`partner-application.html`, `individual-affiliate-application.html`), not an external SaaS (live URLs return HTTP `401`) | Confirmed → forms enter T07 scope; source HTML requested |
-| Form provider, recipients and mailing-list consent | Confirm actual integrations (`FORMS_API` vs new backend) and delivery | Pending |
-| Domain email | Observed `theccact@gmail.com` across site and `info@theccact.online` in `faq.html`; domain `@theccact.com` recommended by PRD | Pending CCACT choice |
-| Hosting, DNS and private preview access | Cloudflare Pages proposed; obtain required access | Pending |
+Acceptance (version one): every PRD phase 1–4 requirement passes or is listed as blocked by a named decision.
 
-## Explicitly outside version one
+## Phase 5 — Practice exams (2–3 weeks, after version one)
 
-Sponsors, social post library, ad approval portal, custom partner domains, additional languages and payment processing. Teachable controls attribution after the outbound click; the website must not promise commissions beyond that boundary. Partner self-service editing and affiliate dashboards are now in scope under the owner direction update above.
+### L12 — Practice exams
+Owner: TBD. Status: TODO (not started until L11 is done).
+
+- [ ] Exam question bank with topics, entered in the console.
+- [ ] Timed exam drawn at random; pass mark and time limit per exam; marked server-side.
+- [ ] Score history and results by topic with "review your weak topics" links to lessons.
+- [ ] Certificate issuing requires a passed exam for exam-prep courses. Classmarker retired.
+
+## Owner decisions (from PRD)
+
+| # | Decision | Blocks | Status |
+| --- | --- | --- | --- |
+| 1 | First pilot course and who supplies its videos, text and questions | L11 | Pending |
+| 2 | Certificate wording and any accredited CE hours | L08 | Pending |
+| 3 | Pass mark: default ~70% or per course | L01 (default 66% = 2 of 3, per-course field built either way) | Pending |
+| 4 | Lessons unlock in order for every course? | L01 (per-course flag built, default on) | Pending |
+| 5 | Video host: Bunny Stream or Mux | L05 | Pending |
+| 6 | Email sender address per brand, and provider (Resend or Postmark) | L09 | Pending |
+| 7 | Enrollment lasts forever or expires (e.g. 12 months) | L11 | Pending |
+
+## Out of scope for version one
+
+Payments, checkout and automatic enrollment; affiliate commissions on courses; moving Teachable students; forums, live classes, study groups; streaks, badges, leaderboards; flashcards; a mobile app; proctored exams.
+
+## Pilot issues
+
+| Date | Reported by | Issue | Task | Status |
+| --- | --- | --- | --- | --- |
 
 ## Handoff log
 
 | Date | Agent | Task | Files / outcome / checks / next action |
 | --- | --- | --- | --- |
-| 2026-11-20 | Codex | P03 affiliate login | Added a separate affiliate login and a minimal approved-account dashboard. Pending and rejected applicants see their status; unauthenticated and unapproved visitors cannot see approved dashboard content. The application page sends approved users to the dashboard. `npm test` passed 9 tests and the build produced 14 pages. Real-account browser verification, profile editing, partner URLs and student tracking remain outstanding. |
-| 2026-11-20 | Codex | P00 owner dashboard | Created the owner account for `kyleengo469@gmail.com` with a locally stored temporary password; owner must change it and delete the temporary file. Deployed admin review RPCs guarded by a private account-ID allowlist. A rolled-back database test verified applicant denial and owner review, and an actual owner sign-in plus authorized API read succeeded. Disabled email confirmation at the owner's request; no email ownership is verified for new signups. `npm test` passed 8 tests; build produced 12 pages. Browser review and real end-to-end approval remain outstanding; approval alone does not provision an affiliate page. |
-| 2026-11-20 | Codex | P02 signup simplification | Removed the application-type question; migration `202611200004` makes the existing column optional while preserving existing values. Verified a type-free application and applicant isolation in a rolled-back database test, applied the migration, and passed 8 unit tests. |
-| 2026-11-20 | Codex | P02 multi-step application | Moved application details before account creation. Added optional location, role and introduction fields and migration `202611200003`; pending details persist in the applicant's Auth metadata through email confirmation. Applied the migration after a rolled-back RLS test. Eight unit tests and the 11-page build pass. Exact application fields await owner confirmation; real email confirmation and complete signup still need end-to-end testing. |
-| 2026-11-20 | Codex | P02 application UI | Updated the application page with the existing branded hero, a responsive two-column layout and clear account, application and review steps. `npm test` passed 8 tests and `npm run build` generated 11 pages. Visual browser review and a real signup remain outstanding. |
-| 2026-11-20 | Codex | P02 partial | Added `/affiliate-apply/` with account creation, email confirmation guidance, sign-in, application submission, status and sign-out using Supabase Auth and the RLS-protected application table. Affiliate page links to it. Configured the linked project's public key locally in ignored `.env.local`; production configuration and Auth redirect settings remain necessary. `npm test` passed 8 tests; build passed with 11 pages; configured local page returned HTTP 200. A real email/signup and application submission have not been tested. Owner review and affiliate dashboards remain unimplemented. |
-| 2026-11-20 | Codex | P01 partial | Applied `202611200002_affiliate_applications.sql` to Ccact_project. A rolled-back PostgreSQL test verified pending-only insertion, no self-approval privilege, rejection of cross-user submissions, isolation between applicants and no anonymous SELECT. No signup, login, owner approval, dashboard or student tracking interface exists yet. |
-| 2026-11-20 | Codex | T05 local preview | Added a development-only fictional partner at `/partners/maria-santos/`; its nine routes returned HTTP 200, show a test notice and disable enrolment links. `npm test` passed 6 tests; production build passed and contains no fixture identity. This preview is not a published partner or working referral. |
-| 2026-11-20 | Codex | T05 partial routing | Added the nine partner route mappings using validated live records and the shared page components. A mocked live-record build reached `/partners/sample/` and correctly failed because referral links are unverified; no partner page can be published without attribution. Full route rendering and tests remain blocked on the real referral format. Retirement redirects, protected preview and forms remain outstanding. |
-| 2026-11-20 | Codex | T02 Supabase verification | Applied migration `202611200001` to linked production project Ccact_project and verified local and remote migration versions match. Read-only database inspection confirms row-level security is enabled, anon and authenticated lack SELECT, service_role has SELECT, and the table contains zero records. `npm test` passed 6 tests and `npm run build` generated 10 main-site pages without credentials. End-to-end REST/build access, policy behavior, partner routing and referral attribution remain unverified. |
-| 2026-11-19 | Codex | Planning | Created this shared task board from the PRD and local design instructions. No implementation tasks claimed. Agy starts T01; Codex starts T02 after the relevant findings/contracts are available. |
-| 2026-11-19 | Codex | T02 partial | Added Astro configuration, empty partner data, validator, provisional lifecycle helper, noindex header, documentation and tests. `node --test tests/*.test.mjs` passed (2 tests). Dependency installation failed: network install stalled; offline cache lacks Vite. No build or lockfile verified. Lifecycle enforcement, routes and content contract remain incomplete. T01, real referral examples, review/preview access, and form service details remain necessary. Teachable's documentation shows generated links can contain destination-specific paths; do not assume a bare query code. Agy review pending. |
-| 2026-11-20 | Agy | T01 ready for review & T02 review | Created `src/content/t01-content-and-brand-inventory.md` from `UI design/Main.dc.html`, `Ccact_logo.png`, and live `https://theccact.com` HTML/CSS/JS/assets. Recorded purple vs navy/gold hex evidence (`style.css` `#5B2D8E`/`#3E1D7A` + `#C8A96E`/`#DBC48E`; live `images/logo.png` `#012B66`; `Ccact_logo.png` `#2A3958`/`#D7AF6A`; mockup `#15233E`/`#1E3357` + `#C9A14A`/`#E3C98A`), WCAG AA checks, Teachable query-string category URLs (requiring `URL` query-safe handling in T05), and proof from `scripts/script.js` that `partner-application.html` and `individual-affiliate-application.html` were first-party AWS Lambda forms (`FORMS_API`), not an external SaaS (both forms + `partners.html` currently return HTTP `401` redirect stubs -> forms stay in scope for T07; source HTML requested). Completed T02 review (no Codex files modified): verified `node --test tests\partners.test.mjs` passed (2/2 via `C:\Program Files\nodejs\node.exe`), confirmed `node_modules` empty (`0` items) and no `package-lock.json`, and logged schema/routing notes (org `contactName`/nav label, server-only `email`, `_headers` + HTML `<meta noindex>` + `_redirects`, empty-string intake cleanup). Codex review on T01 pending; T03 stays queued behind T02 dependency installation. |
-| 2026-11-19 | Codex | Backend decision | Owner selected Supabase as the production partner source and planned backend for intake/forms. The empty JSON file is temporary scaffolding until integration replaces it. Project access and delivery/access design are pending. |
-| 2026-11-20 | Codex | T02 UI handoff | `npm install` succeeded and generated the lockfile; logo copied to `public/ccact-logo.png`. Added `src/lib/links.mjs` and link tests; `npm test` passes 4 tests and `npm run build` succeeds with 0 pages, as UI pages do not exist yet. T03 can start now using the interface above. Initial install reported 3 vulnerabilities (1 low, 1 high, 1 critical); a subsequent `npm audit` could not reach the audit endpoint, so details remain unverified and must be resolved before release. Supabase integration, production referral links, lifecycle confirmation and hosting verification remain open. |
-| 2026-11-20 | Codex | Supabase foundation | Added `supabase/migrations/202611200001_create_partners.sql` and server-only `src/lib/partner-source.mjs`, replaced the empty JSON build source, and documented secret configuration. Local tests pass (6); build succeeds with no pages. Cloudflare builds require both Supabase credentials. Migration, RLS, live data access, generated routes and delivery remain unverified against a real Supabase project; forms and protected intake are not implemented. |
-| 2026-11-20 | Codex | Supabase access | MCP login retry failed during OAuth discovery; `codex mcp list` reports authentication unknown and this session has no Supabase MCP tools or configured Supabase environment variables. No migration was applied. Local tests pass (6), and the homepage builds. The build-time reader validates records but its results are not yet connected to partner routes. Authenticate the MCP server and restart/reconnect the session before verifying project access and applying the migration. |
-| 2026-11-20 | Agy | T03 ready for review | Implemented verified navy/gold token system (`src/styles/tokens.css`, `global.css`), single-source copy/nav/programmes (`src/content/site.mjs`), isolated local partner fixtures (`src/content/fixtures/partner-preview.mjs`), shared shell (`BaseLayout.astro`, `SiteHeader.astro`, `PartnerStrip.astro`, `ContinuingEducationNotice.astro`, `SiteFooter.astro`, `EnrolLink.astro`), and homepage (`HomePage.astro`, `src/pages/index.astro`) replacing all purple and placeholder `#`/`.dc.html` links while preserving `enrolmentUrl` fail-closed behavior for partner contexts. `npm run build` passed (1 page built in 1.37s); `npm test` passes 6/6 tests; automated scratch verification checked CSS/HTML tokens, `/ccact-logo.png`, partner nav/footer fixtures (individual + long-name org), non-leakage of fixtures into `dist/`, and built mobile drawer `aria-expanded` / `Escape` focus-return behavior. Note: ESL card routes to `/contact/` pending a live Teachable URL; headless Edge renderer was blocked inside the sandbox AppContainer, so live browser pixel inspection should be verified in preview / T09. Next: Codex review of T01 & T03, and shared route/inner-page handoff readiness for T04 (`Depends on: T02, T03`). |
-| 2026-11-20 | Agy | T04 ready for review | Implemented single-source copy (`src/content/pages.mjs`), shared template compliance notice upgrade (`ContinuingEducationNotice.astro` adds non-overridable partner outcome/licensing/immigration/tuition safeguard when `partner` is present), inner page components (`PageHero`, `AboutPage`, `CoursesPage`, `RegistrationPage`, `StudyInCanadaPage`, `FaqPage`, `ContactPage`, `PrivacyPage`), individual/organisation profile (`PartnerAboutPage.astro` with monogram fallback, optional `languages`/`services` capped at 4, `https:` website guard, zero `email` PII exposure), Approved Partners directory (`PartnersDirectoryPage.astro` + `src/pages/partners/index.astro` calling `loadLivePartners`), Affiliates scaffold (`AffiliatesPage.astro` + `src/pages/affiliates.astro` without unapproved commission numbers), all 9 main-site `.astro` routes, and downloaded 6 verified CCACT JPG assets into `public/images/`. `npm run build` built all 10 pages in 1.64s; `npm test` passes 6/6; verification checks passed across all 10 built HTML pages, internal links, CSS tokens, images, non-leakage of fixtures/secrets, partner component contracts, and mobile nav JS. Next: Codex reviews T01/T03/T04 and coordinates T05 dynamic `/partners/[slug]/...` route wiring onto the nine `*Page.astro` components, T06 form backend (`ContactPage` supports optional `formAction`), and T07 Affiliates copy/forms once CCACT supplies gated HTML, Teachable links, and Supabase credentials. |
-
+| 2026-11-27 | Codex | L13 branding review | Reviewed learning header, footer, identity constant, layout and page callers. Both `SITE_APP=learn` brand builds passed; generated login, course, lesson and verify pages have the expected Learning Portal name, brand-specific Powered by link and no website navigation. No code findings. Visual phone/signed-in review and live-site acceptance remain outstanding. |
+| 2026-11-27 | Gemini | L13 | Claimed Gemini branding part of L13. Owned: `src/scripts/learn-brand.mjs`, `src/components/LearnHeader.astro`, `src/components/LearnFooter.astro`, `src/components/LearnStudentBar.astro`, `src/layouts/LearnLayout.astro`, `src/pages/learn/login.astro`, `src/pages/learn/index.astro`, `src/pages/learn/course.astro`, `src/scripts/learn-portal.mjs`, `tests/learn-portal.test.mjs`. |
+| 2026-11-27 | Codex | L13 | Added build-specific Netlify redirects and shared `LEARN_CCACT_ORIGIN` / `LEARN_CCES_ORIGIN` configuration for main-site redirects and enrollment links; documented four-site setup. `npm test`: 41 passed. All four `SITE_APP` / `SITE_BRAND` combinations built with test origins; missing-origin Netlify main build failed as intended. Actual learning site URLs, site creation, DNS and Auth redirect changes remain pending; Netlify redirect/function behavior and live sign-in have not been verified. Claude review requested via this handoff. |
+| 2026-11-27 | Codex | L13 | Owns `astro.config.mjs`, `netlify.toml`, `netlify/functions/learn-enroll.mjs`, shared learning-site origin configuration, L13 tests, `README.md`, and `task.md`. |
+| 2026-11-27 | Gemini | L02, L03 | Fixed account-creation hole on `/learn/login/`: `sendStudentSignInLink` (`src/scripts/learn-helpers.mjs`) now sends `shouldCreateUser: false` and treats `otp_disabled` as success so unknown emails see the same neutral "Check your email" panel (`src/pages/learn/login.astro`) without creating accounts, sending emails, or revealing enrollment. Updated `tests/learn-portal.test.mjs`. Checks: `npm test` (37 passed), `SITE_BRAND=cces npm run build` (35 pages), `npm run build` (26 pages), live Supabase `signInWithOtp` check against `Ccact_project` (confirmed 422 `otp_disabled` returned for unknown email and masked cleanly), and headless Chrome verification (`create_user: false` + 422 `otp_disabled` shows "Check your email" panel). Next: Codex reviews L02; Claude re-checks L03; live end-to-end student sign-in once deployed with an enrolled test student. |
+| 2026-11-27 | Codex | L04 | Confirmed local `/admin/` and `/learn/` return HTTP 200, with Courses panel present; `npm test`: 37 passed. Computer-use browser initialization failed, so no interactive owner check was completed. Auth redirect URLs are now recorded as configured; live acceptance awaits deployment and two controlled test email addresses. |
+| 2026-11-27 | Codex | L04 | Re-ran `npm test` with Gemini?s student-flow work present: 37 passed. L03 is now in review; L02 Auth redirects remain pending. Full live L04 acceptance still requires configured redirects, a deployment and test email accounts. |
+| 2026-11-27 | Gemini | L02, L03 | Implemented `/learn/login/` (passwordless OTP link, site header/footer/design, `noindex` meta), `/learn/` dashboard (brand-filtered via `data-site-brand` + `learn_my_courses()`, active above completed, `"6 of 14 lessons"` + progress bar, Continue, JWT-authenticated Download certificate, contact-details empty state), and `/learn/course/?id=<id>` overview (`learn_course_outline()`, total time, Resume, ordered modules, locked lessons). Checks: `npm test` (37 passed including 7 new tests in `tests/learn-portal.test.mjs`), `npm run build` (26 pages), `SITE_BRAND=cces npm run build` (35 pages, `CCES` rewrites verified, 0 secret leaks in `dist/`), and headless Chrome verification at 1280px and 375px with mocked Supabase Auth/RPCs (0 console errors, 0 overflow). Remaining on L02: Claude Auth redirect URLs + `public/_headers` (`/learn/*` noindex except `/learn/verify/*`, outside Gemini paths). |
+| 2026-11-27 | Codex | L04 | Fixed course brand labels under the CCES build rewrite. Confirmed the built admin script derives both labels from their values; `npm test`: 30 passed, both brand builds passed. L01 is now applied; L02/L03 and Auth redirect configuration remain in progress, so live acceptance is still pending. |
+| 2026-11-27 | Codex | L04 | Bulk enrollment now lists existing accounts once per request. Added local tests for account creation, branded redirect, removal, correction and invalid batches; `npm test`: 30 passed. Live acceptance remains blocked by L01 deployment and unfinished L02/L03. |
+| 2026-11-27 | Gemini | L02, L03 | Claimed L02 (UI/auth guard) and L03. Owned: `src/layouts/LearnLayout.astro`, `src/components/LearnStudentBar.astro`, `src/pages/learn/login.astro`, `src/pages/learn/index.astro`, `src/pages/learn/course.astro`, `src/scripts/learn-helpers.mjs`, `src/scripts/learn-portal.mjs`, `tests/learn-portal.test.mjs`. |
+| 2026-11-27 | Codex | L04 | Implemented course/module/lesson editing and ordering, draft/publish, brand selection, and owner-authorized enrollment function with account creation, sign-in email, removal and email correction. Added `tests/learn-enroll.test.mjs`. `npm test`: 27 passed; both brand builds passed. L01 is not yet applied, and L02/L03 are not built: live course/enrollment, redirect, email delivery, cross-student access and phase 1 acceptance remain unverified. Keep L04 in progress until those checks pass. |
+| 2026-11-27 | Codex | L04 | Netlify configuration and environment variable documentation added. `npm test` passed (25 tests); both brand builds passed when run separately. Course and enrollment implementation waits for L01 schema, RLS and agreed interfaces; no learning migration exists in the checkout. |
+| 2026-11-27 | Codex | L04 | Owns `netlify.toml`, `netlify/functions/learn-enroll.mjs`, `src/pages/admin.astro`, `src/scripts/admin.mjs`, `README.md`, L04 tests, and shared `task.md` for this task. |
+| 2026-11-27 | Claude | L01 | Migration and `tests/learn-rls.sql` written. Test passes on a throwaway PGlite database with Supabase stubs, and fails when the lock rule is broken. Not yet run against or applied to the Supabase project. Interfaces updated (L04, L03: read them). Phase 5 columns (exam bank, topic) deferred. Next: owner approves applying; then Codex reviews. |
+| 2026-11-27 | Claude | L01 | Applied to Ccact_project after a rolled-back run of migration plus `tests/learn-rls.sql` passed there. Verified: 9 tables with RLS, 13 policies, 6 student RPCs (none callable by anon), `course-images` bucket; migration history recorded. `npm test` and builds not run: no JavaScript changed. Note: `202611250001` and `202611260001` exist in production but are missing from migration history, so do not run `supabase db push` before repairing them. Next: Codex reviews L01; L02/L03/L04 can use real tables. |
+| 2026-11-27 | Claude | L02, L07 | Added `/learn/` noindex rules to `public/_headers`. Wrote `learn_submit_check` and `tests/learn-check.sql`; passes with `learn-rls.sql` on local PGlite. `npm test` 37 passed; both brand builds pass. Not applied to Supabase (owner approval). Redirect URLs still need the Supabase dashboard (owner). |
+| 2026-11-27 | Claude | L02, L03 review | ~~**Gemini, fix:**~~ *(Fixed by Gemini, 2026-11-27; confirmed in L03 review below.)* `sendStudentSignInLink` (`src/scripts/learn-helpers.mjs`) omits `shouldCreateUser: false`, so anyone can create accounts and trigger email from `/learn/login/`. Add it, and show the same "Check your email" panel when the address is unknown (error code `otp_disabled`) so enrollment is not revealed; update the test. No other issues found by reading the code; live and browser checks not done by Claude. |
+| 2026-11-27 | Claude | L02, L07 | Added `https://theccact.netlify.app/learn/` and `https://thecces.netlify.app/learn/` to Auth redirect URLs (verified with `config diff`). Applied `202611270002` after a rolled-back run of it plus `tests/learn-check.sql` passed there; history recorded; signed-out users cannot call it. Auth `site_url` is still `http://localhost:3000` (unchanged). Next: Gemini tries a live sign-in. |
+| 2026-11-27 | Claude | L13 | Owner decision: learning platform becomes separate sites on `learn.theccact.com` / `learn.thecces.com` with its own branding. PRD updated; L13 added. Gemini and Codex: read L13 before more `/learn/` or link work. |
+| 2026-11-27 | Claude | L08, L10, L13, L03 review | Applied `202611270003` (certificate trigger, verify RPC, 4 report RPCs) after a rolled-back run with all learn SQL tests passed on Ccact_project. Added `learn.theccact.com` and `learn.thecces.com` `/learn/` redirect URLs (also `http://localhost:4321/learn/` earlier). Live check as `learn-sample@example.com` with Gemini's helpers: right course and progress, no CCES courses, lesson locks correct, content tables hidden, self-issued certificate refused. Gemini's sign-up fix confirmed in code; `npm test` 41 passed. Sample data (TEST course, sample user) and localhost redirect to be removed before the pilot. Codex: build L10 console view on the report RPCs. |
+| 2026-11-27 | Claude | L13 branding | **Gemini: stop L13, it is done; do not overwrite.** Taken over on the owner's instruction (none of the claimed new files existed). Added `LearnHeader.astro`, `LearnFooter.astro`, `learn-brand.mjs`; rewired `LearnLayout.astro`, the three `/learn/` pages and the course title in `learn-portal.mjs`; website links now go to the main website. `npm test` 41 passed, both brands build; login page checked by screenshot at 1280px only (phone width and signed-in pages not checked). Codex reviews. |
+| 2026-11-27 | Claude | L06, L07, L08 | **Gemini: these are done; do not overwrite.** Taken over on the owner's instruction. Added `/learn/lesson/` (reading, quick check, Mark as done, locked/missing states, next lesson) and public `/learn/verify/?n=`; fixed an empty gap on a dashboard with only completed courses. `npm test` 42 passed; both brands build. Headless Chrome run as the sample student at 375px and 1280px passed: lock, failed check, retake, mark done, certificate issued, verify good and bad number, no sideways scroll. Two sample questions added to the TEST course; sample progress reset. Not checked: keyboard-only use, screen reader, CCES in a browser. Codex reviews. |
+| 2026-11-27 | Claude | L04 review (for Gemini) | **Codex, fix:** (1) `src/scripts/admin.mjs:669` shows "student?s" (broken apostrophe). (2) No way to upload a course image, only paste a URL; the `course-images` bucket exists. (3) No way to delete a module or lesson. Question editor (L07) and reports view (L10) are still to build. Read from code only; console not exercised in a browser. |
+| 2026-11-27 | Claude | L13 review | **Codex / owner, before any deploy:** with `NETLIFY=true` the main-website build now fails unless `LEARN_CCACT_ORIGIN` (or `LEARN_CCES_ORIGIN`) is set (reproduced locally). The learning sites do not exist yet, so pushing now would stop website updates. Set the variables first, or let the build skip the `/learn` redirect with a warning when unset. No other problems found by reading the redirect code; not tested on Netlify. |
+| 2026-11-27 | Claude | Learn UI | **Gemini and Codex: do not restore the old design.** Owner request: no banners on `/learn/` pages. Removed `PageHero` from dashboard and sign-in, made the course header compact and light, merged sign-out and "My courses" into `LearnHeader` (email hidden on phones) and deleted `LearnStudentBar.astro`. `npm test` 42 passed, both brands build; screenshots at 375px and 1280px checked, sign-out works. |
+| 2026-11-27 | Claude | Learn UI | Owner request: header sign-out replaced with a profile menu (user icon; signed-in email, Get help, Sign out) in `LearnHeader.astro`. `npm test` 42 passed, both brands build; keyboard open, Escape, outside click and sign-out checked in headless Chrome at 375px and 1280px. |
+| 2026-11-27 | Claude | Learn UI | Owner request: collapsible sidebar (`LearnSidebar.astro`, reuses `setupShell`) with Dashboard, Courses, and Settings plus Sign out at the bottom. New pages `/learn/courses/` and `/learn/settings/` (noindex); `/learn/` is now a summary with in-progress courses, completed courses moved to Courses (changes the PRD dashboard layout). `npm test` 42 passed; collapse, phone drawer, menu highlighting and sign-out checked in headless Chrome. |
+| 2026-11-27 | Claude | Learn UI | Owner request: removed the footer from `/learn/` pages (`LearnFooter.astro` deleted); "Powered by" stays in the header and a Privacy Notice link was added to the sign-in page. `npm test` 42 passed, both brands build. |
+| 2026-11-27 | Claude | Learn UI | Header and sidebar now stay in place while the page scrolls; checked in headless Chrome (sidebar top and Sign out position unchanged after scrolling). `npm test` 42 passed, both brands build. |
+| 2026-11-27 | Claude | Learn UI | Owner request: six themes (Light, Dark, Sepia, Forest, Ocean, High contrast) picked in Settings, stored per device (`src/styles/learn-themes.css`; use `--ink` and `--surface` for new learn styles), and a gear icon for Settings. `tests/learn-themes.test.mjs` checks AA text contrast; `npm test` 43 passed, both brands build; themes switched and screenshots checked in headless Chrome (CCACT only). |
+| 2026-11-27 | Claude | Learn UI | Owner request: theme choice moved from Settings to a searchable command menu in the header (`LearnThemePicker.astro`; Ctrl+K, three color dots, check on the active theme, arrows preview, Escape restores). `npm test` 44 passed, both brands build; behavior checked in headless Chrome at 375px and 1280px (CCACT only). |
+| 2026-11-27 | Claude | Learn UI, settings | Owner request: Settings redesigned (profile with "Preview my information" and JSON download, create new password, sign out everywhere, reminder-email switch, theme shortcut, help and privacy). Login page gained password sign-in (same error for unknown email and wrong password). Applied `202611270004_learn_reminders.sql` (`learn_set_reminders(p_on)`, own active enrollments only) after a rolled-back run of it plus `tests/learn-settings.sql` passed on Ccact_project. Account button lost its chevron; profile menu gained Settings. Theme picker redesigned: mini window previews, three dots, check badge, color orb button. `npm test` 45 passed, both brands build; settings, password set and sign-in, reminders and picker checked in headless Chrome at 375px and 1280px. Sample student now has a password (in Claude scratchpad only). Supabase server minimum password length is still 6; the 8-character rule is client-side. |
+| 2026-11-27 | Claude | Learn UI | Owner request: Dashboard redesigned (greeting, continue card with next lesson, time left and progress ring, icon stats incl. certificates, in-progress list, certificates panel) and Courses page (All / In progress / Completed tabs with counts, search, cards with status badge, next lesson and time left). `loadLearningOverview` calls `learn_course_outline` once per course in progress. Added two more TEST courses for the sample student (one finished with a certificate, one not started). `npm test` 46 passed, both brands build; both pages checked in headless Chrome at 375px and 1280px, light and dark. |
+| 2026-11-27 | Claude | Learn UI | Owner feedback "too AI slop, too text heavy": Dashboard and Courses simplified. Cards show image, title, thin progress bar with "1 of 3 lessons" and percent, and one action; no descriptions, badges or fact rows. Dashboard: greeting, continue card (image, title, next lesson, progress, Resume), in-progress list, and a side column with a three-number summary and certificates; full width in two columns, one column below 1080px. `npm test` 46 passed, both brands build; checked at 375px, 900px and 1280px, light and dark. |
+| 2026-11-27 | Claude | Learn UI | Owner request: access to other courses. Courses page header has one "Marketplace" button (bag icon, "Browse more courses", opens the brand website's /courses/ page in a new tab; owner chose the website over Teachable). No catalog section and no sidebar item (owner rejected both). `npm test` 46 passed, both brands build; checked at 375px and 1280px. |
+| 2026-11-27 | Claude | Domains | thecces.com now serves the new CCES site from Netlify (checked with curl); theccact.com still serves the old AWS site. `/learn/` links to the CCES website now use https://thecces.com (`learn-brand.mjs`). **Codex:** `BRAND_SITES` in `src/scripts/admin.mjs` and the origins in `learn-enroll.mjs` can switch CCES to thecces.com too. |
+| 2026-11-27 | Claude | Test checkout | Owner request (beyond the PRD, which leaves selling to Teachable): free test checkout, local first. Applied `202611270005_learn_checkout.sql` (`courses.self_enroll`, public `learn_checkout_course`, `learn_self_enroll` for the signed-in buyer) after a rolled-back run with `tests/learn-checkout.sql` passed on Ccact_project. Added "Sample Course (TEST)" per brand (self_enroll, 3 lessons, quick check), `/learn/checkout/?course=` page (name + email, email link back with `confirm=1` enrolls), and a card on the website `/courses/` page (main site only; Teachable links unchanged). Auth redirect `http://localhost:4321/learn/checkout/**` added; live learning-site checkout URLs still to add before deploy. Not deployed. `npm test` 47 passed, both brands build; website card, checkout validation, link return, enrollment and brand refusal checked in headless Chrome. |
+| 2026-11-27 | Claude | Google sign-in | Owner request: "Continue with Google" on `/learn/login/` and `/learn/checkout/` (`LearnGoogleButton.astro`). Shown only when Supabase reports the Google provider enabled (`/auth/v1/settings`); now disabled, so hidden. Checkout returns with `confirm=1` and uses the Google name. Enabled in Supabase 2026-11-27 from the owner's client file (secret file kept local, now in `.gitignore`). Clicking the button reaches Google with the right client and Supabase callback (headless check); completing a real Google sign-in is for the owner to test. Live origins must be added to the Google client before deploy. `npm test` 48 passed. |
+| 2026-11-27 | Claude | Login, deploy prep | Owner request: `/learn/login/` redesigned as frosted glass over soft theme-colored lights (solid card in High contrast); checked light, dark, sepia, contrast at 1280px and light at 375px. Deploy prep: `astro.config.mjs` now warns instead of failing when `LEARN_<BRAND>_ORIGIN` is unset (Netlify builds of both brands pass; `/learn/` stays on the main sites). Live Auth return URLs added: `theccact.netlify.app`, `thecces.com`, `www.thecces.com`, `thecces.netlify.app` `/learn/**`. **Deploy on hold (owner):** uncommitted Teachable changes from 09:56 in `links.mjs`, `site.mjs`, `pages.mjs`, `tests/links.test.mjs` (CCACT to its own Teachable school, no main affcode) are unlogged; whoever owns them, finish and log them, then deploy. `npm test` 48 passed. |
+| 2026-11-27 | Claude | Planning | Created this board from the PRD. Old affiliate board moved to `task-affiliate-websites.md`. Next: Claude claims L01. |

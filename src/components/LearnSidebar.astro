@@ -1,0 +1,214 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  active: string;
+}
+
+const { active } = Astro.props;
+// Course and lesson pages belong to "Courses".
+const current = active === 'course' || active === 'lesson' ? 'courses' : active;
+const link = (name: string) => (current === name ? 'page' : undefined);
+---
+
+<aside id="sidebar" class="learn-side" data-collapsed="false">
+  <button type="button" id="side-toggle" class="learn-side__toggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse sidebar">
+    <Icon name="panel" />
+  </button>
+  <nav class="learn-side__nav" aria-label="Learning menu">
+    <ul>
+      <li>
+        <a href="/learn/" class="nav__link" aria-current={link('dashboard')} title="Dashboard">
+          <Icon name="activity" /><span class="nav__label">Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a href="/learn/courses/" class="nav__link" aria-current={link('courses')} title="Courses">
+          <Icon name="cap" /><span class="nav__label">Courses</span>
+        </a>
+      </li>
+    </ul>
+    <ul class="learn-side__bottom">
+      <li>
+        <a href="/learn/settings/" class="nav__link" aria-current={link('settings')} title="Settings">
+          <Icon name="settings" /><span class="nav__label">Settings</span>
+        </a>
+      </li>
+      <li>
+        <button type="button" class="nav__link" data-logout title="Sign out">
+          <Icon name="logout" /><span class="nav__label">Sign out</span>
+        </button>
+      </li>
+    </ul>
+  </nav>
+</aside>
+<div id="side-scrim" class="learn-scrim"></div>
+
+<script>
+  // Same collapse / phone drawer behavior as the owner console.
+  import { setupShell } from '../scripts/console-shell.mjs';
+  setupShell(document.body);
+</script>
+
+<style is:global>
+  .learn-shell {
+    display: flex;
+    align-items: stretch;
+    background: var(--color-cream);
+  }
+
+  .learn-shell > main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .learn-shell .learn-app {
+    min-height: calc(100dvh - 72px);
+  }
+
+  .learn-side {
+    position: sticky;
+    top: 72px; /* header height */
+    align-self: flex-start;
+    height: calc(100dvh - 72px);
+    overflow-y: auto;
+    flex: 0 0 auto;
+    width: 232px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: var(--surface);
+    border-right: 1px solid var(--color-border);
+    transition: width 0.2s ease;
+  }
+
+  .learn-side__nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .learn-side ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 4px;
+  }
+
+  .learn-side__bottom {
+    padding-top: 12px !important;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .learn-side .nav__link,
+  .learn-side__toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .learn-side .nav__link {
+    width: 100%;
+    padding: 0 12px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+    text-decoration: none;
+  }
+
+  .learn-side__toggle {
+    align-self: flex-end;
+    justify-content: center;
+    width: 44px;
+  }
+
+  .learn-side svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .learn-side .nav__link:hover,
+  .learn-side__toggle:hover {
+    background: var(--color-sand);
+  }
+
+  .learn-side .nav__link[aria-current='page'] {
+    background: var(--color-navy);
+    color: var(--color-white);
+    /* Gold bar keeps the current page visible when navy is close to the sidebar color (dark theme). */
+    box-shadow: inset 4px 0 0 var(--color-gold);
+  }
+
+  .learn-side :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+
+  .learn-scrim {
+    display: none;
+  }
+
+  @media (min-width: 861px) {
+    .learn-side[data-collapsed='true'] {
+      width: 68px;
+    }
+
+    .learn-side[data-collapsed='true'] .learn-side__toggle {
+      align-self: center;
+    }
+
+    .learn-side[data-collapsed='true'] .nav__link {
+      justify-content: center;
+      padding: 0;
+    }
+
+    .learn-side[data-collapsed='true'] .nav__label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .learn-side {
+      position: fixed;
+      inset: 0 auto 0 0;
+      height: auto;
+      z-index: 40;
+      width: min(280px, 84vw);
+      overflow-y: auto;
+      transform: translateX(-100%);
+      visibility: hidden;
+      transition: transform 0.2s ease, visibility 0s linear 0.2s;
+    }
+
+    body[data-drawer='open'] .learn-side {
+      transform: none;
+      visibility: visible;
+      transition: transform 0.2s ease;
+    }
+
+    body[data-drawer='open'] .learn-scrim {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 35;
+      background: rgb(21 35 62 / 0.6);
+    }
+  }
+</style>

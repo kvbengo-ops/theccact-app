@@ -92,6 +92,11 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             </a>
           </li>
           <li>
+            <a href="#courses" data-tab="courses" class="nav__link" data-tip="Courses">
+              <Icon name="file" /><span class="nav__label">Courses</span>
+            </a>
+          </li>
+          <li>
             <a href="#content" data-tab="content" class="nav__link" data-tip="Content">
               <Icon name="pencil" />
               <span class="nav__label">Content</span>
@@ -233,6 +238,13 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
         <h2 class="invites__heading">Sent invites</h2>
         <div id="invites" class="apps"></div>
+      </section>
+
+      <section id="panel-courses" class="panel" aria-labelledby="courses-title" hidden>
+        <div class="panel__head"><div><h1 id="courses-title" class="panel__title">Courses</h1><p class="muted">Create courses and manage students.</p></div></div>
+        <p id="courses-error" class="form-error" role="alert" hidden></p>
+        <div class="field"><label for="course-select">Course</label><select id="course-select"><option value="">New course</option></select></div>
+        <div id="course-editor"></div>
       </section>
 
       <!-- Content -->

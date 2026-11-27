@@ -1,0 +1,90 @@
+---
+import LearnLayout from '../../layouts/LearnLayout.astro';
+import Icon from '../../components/Icon.astro';
+import LearnGoogleButton from '../../components/LearnGoogleButton.astro';
+import { BRAND } from '../../content/site.mjs';
+import { PLATFORM_NAME, WEBSITE } from '../../scripts/learn-brand.mjs';
+---
+
+<LearnLayout page="checkout" title={`Checkout — ${PLATFORM_NAME}`} description={`Enroll in a ${BRAND.shortName} course.`}>
+  <div class="container learn-page co">
+    <h1 class="learn-page__title">Checkout</h1>
+
+    <div id="co-missing" class="co-card" hidden>
+      <p>This course is not available for checkout.</p>
+      <a href={`${WEBSITE}/courses/`} class="btn btn--gold">See all courses</a>
+    </div>
+
+    <div id="co-main" class="co-grid" hidden>
+      <section class="co-card co-summary" aria-labelledby="co-title">
+        <div class="co-summary__media" aria-hidden="true"><Icon name="cap" /></div>
+        <h2 id="co-title" class="co-summary__title"></h2>
+        <p id="co-meta" class="co-muted"></p>
+        <dl class="co-total">
+          <dt>Price</dt><dd>Free</dd>
+        </dl>
+        <p class="co-test"><Icon name="lock" />Test checkout. No payment is taken.</p>
+      </section>
+
+      <section class="co-card" aria-labelledby="co-form-title">
+        <h2 id="co-form-title" class="co-card__title">Your details</h2>
+        <p id="co-error" class="learn-alert" role="alert" tabindex="-1" hidden></p>
+
+        <LearnGoogleButton />
+        <form id="co-form" class="co-form" novalidate>
+          <div class="learn-field">
+            <label for="co-name">Full name</label>
+            <input id="co-name" name="name" autocomplete="name" maxlength="120" required aria-describedby="co-name-hint" />
+            <small id="co-name-hint">As it should appear on your certificate.</small>
+          </div>
+          <div class="learn-field">
+            <label for="co-email">Email address</label>
+            <input id="co-email" name="email" type="email" autocomplete="email" inputmode="email" required />
+          </div>
+          <button type="submit" class="btn btn--gold">Complete purchase</button>
+          <p class="co-muted co-small">We email you a link to confirm. Opening it enrolls you and signs you in.</p>
+        </form>
+
+        <div id="co-sent" class="co-done" role="status" tabindex="-1" hidden>
+          <span class="co-done__icon"><Icon name="mail" /></span>
+          <p><strong>Check your email</strong></p>
+          <p class="co-muted">Open the link we sent to <strong id="co-sent-email"></strong> to finish enrolling.</p>
+        </div>
+
+        <div id="co-signed" hidden>
+          <p class="co-muted">Signed in as <strong id="co-user"></strong></p>
+          <button type="button" id="co-enroll" class="btn btn--gold">Complete enrollment</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</LearnLayout>
+<script>import '../../scripts/learn-portal.mjs';</script>
+
+<style is:global>
+  .co-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 20px; align-items: start; max-width: 960px; }
+  .co-card { padding: 24px; background: var(--surface); border: 1px solid var(--color-border); border-radius: 12px; overflow-wrap: anywhere; }
+  .co-card > p:first-child { margin-top: 0; }
+  .learn-body .co-card__title { margin: 0 0 16px; font-family: var(--font-sans); font-size: 17px; font-weight: 700; }
+  .co-summary__media { display: grid; place-items: center; aspect-ratio: 5 / 2; margin-bottom: 16px; border-radius: 10px; background: var(--color-sand); color: var(--color-gold-dark); }
+  .co-summary__media svg { width: 36px; height: 36px; opacity: 0.6; }
+  .learn-body .co-summary__title { margin: 0 0 4px; font-family: var(--font-sans); font-size: 20px; font-weight: 700; }
+  .co-muted { margin: 0; color: var(--color-text-muted); }
+  .co-small { font-size: 13.5px; }
+  .co-total { display: flex; justify-content: space-between; margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--color-border); font-weight: 700; color: var(--ink); }
+  .co-total dd { margin: 0; font-size: 20px; }
+  .co-test { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; font-size: 13.5px; color: var(--color-text-muted); }
+  .co-test svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .co-form { display: grid; gap: 16px; }
+  .co-done { display: grid; justify-items: start; gap: 6px; }
+  .co-done p { margin: 0; }
+  .co-done__icon { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 6px; border-radius: 50%; background: var(--color-sand); color: var(--color-gold-dark); }
+  .co-done__icon svg { width: 22px; height: 22px; }
+  #co-signed { display: grid; justify-items: start; gap: 14px; }
+  #co-signed[hidden] { display: none; }
+
+  @media (max-width: 760px) {
+    .co-grid { grid-template-columns: 1fr; }
+    .co-card { padding: 18px; }
+  }
+</style>

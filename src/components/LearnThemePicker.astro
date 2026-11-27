@@ -1,0 +1,448 @@
+---
+import Icon from './Icon.astro';
+import { SITE_BRAND } from '../lib/links.mjs';
+
+// value, label, then preview colors: page, header, card, accent, text (see styles/learn-themes.css).
+// The first, third... the dots in each row are page, accent and text.
+const brand = SITE_BRAND === 'cces' ? ['#f8f4ee', '#3e1d7a', '#ffffff', '#c8a96e', '#3e1d7a'] : ['#fbf9f4', '#15233e', '#ffffff', '#c9a14a', '#15233e'];
+const THEMES = [
+  ['light', 'Light', ...brand],
+  ['dark', 'Dark', '#10141d', '#15233e', '#1a2030', '#e3c98a', '#eef1f7'],
+  ['sepia', 'Sepia', '#f1e5cc', '#4a3520', '#fbf3e1', '#8a6c47', '#3f2d18'],
+  ['forest', 'Forest', '#f2f7f3', '#17402f', '#ffffff', '#3f7a60', '#14392b'],
+  ['ocean', 'Ocean', '#f1f8fb', '#0b4462', '#ffffff', '#3883a8', '#0b3a53'],
+  ['contrast', 'High contrast', '#ffffff', '#000000', '#ffffff', '#5c4300', '#000000'],
+];
+const vars = ([page, header, card, accent, text]: string[]) =>
+  `--tp-page:${page};--tp-header:${header};--tp-card:${card};--tp-accent:${accent};--tp-text:${text}`;
+---
+
+<div class="theme-picker">
+  <button type="button" class="theme-picker__open" aria-haspopup="dialog" aria-expanded="false" aria-label="Choose theme" title="Theme (Ctrl+K)">
+    <span class="theme-picker__orb" aria-hidden="true"></span>
+  </button>
+  <div class="theme-picker__panel" role="dialog" aria-label="Choose theme" hidden>
+    <div class="theme-picker__head">
+      <span class="theme-picker__title"><Icon name="palette" />Theme</span>
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="theme-picker__searchbox">
+      <Icon name="search" />
+      <input
+        type="text"
+        class="theme-picker__search"
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="theme-list"
+        aria-autocomplete="list"
+        aria-label="Search themes"
+        placeholder="Search themes…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+    <ul id="theme-list" role="listbox" aria-label="Themes">
+      {THEMES.map(([value, label, ...colors]) => (
+        <li id={`theme-${value}`} role="option" aria-selected="false" data-value={value} data-label={label} style={vars(colors)}>
+          <span class="theme-picker__mini" aria-hidden="true">
+            <span class="mini__bar"></span>
+            <span class="mini__body"><span class="mini__card"><i></i><i></i><b></b></span></span>
+          </span>
+          <span class="theme-picker__meta">
+            <span class="theme-picker__name">{label}</span>
+            <span class="theme-picker__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+          </span>
+          <span class="theme-picker__check" aria-hidden="true"><Icon name="check" /></span>
+        </li>
+      ))}
+    </ul>
+    <p class="theme-picker__none" role="status" hidden>No themes match.</p>
+    <p class="theme-picker__keys" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> preview <kbd>Enter</kbd> keep <kbd>Esc</kbd> cancel</p>
+  </div>
+</div>
+
+<script>
+  // Command menu: type to filter, arrows preview, Enter keeps, Escape or clicking away restores.
+  const root = document.querySelector<HTMLElement>('.theme-picker');
+  if (root) {
+    const button = root.querySelector<HTMLButtonElement>('.theme-picker__open')!;
+    const orb = root.querySelector<HTMLElement>('.theme-picker__orb')!;
+    const panel = root.querySelector<HTMLElement>('.theme-picker__panel')!;
+    const search = root.querySelector<HTMLInputElement>('.theme-picker__search')!;
+    const none = root.querySelector<HTMLElement>('.theme-picker__none')!;
+    const options = [...root.querySelectorAll<HTMLElement>('[role="option"]')];
+    const html = document.documentElement;
+    let saved = html.dataset.theme || 'light';
+    let active: HTMLElement | undefined;
+
+    const shown = () => options.filter((option) => !option.hidden);
+    const find = (value: string) => options.find((option) => option.dataset.value === value);
+    // The button shows the current theme's colors.
+    const paintOrb = () => orb.setAttribute('style', find(html.dataset.theme || 'light')?.getAttribute('style') ?? '');
+    paintOrb();
+
+    // aria-selected follows the highlight (the combobox pattern); data-current marks the saved theme (check mark).
+    function highlight(option: HTMLElement | undefined) {
+      active = option;
+      for (const item of options) item.setAttribute('aria-selected', String(item === option));
+      if (option) {
+        search.setAttribute('aria-activedescendant', option.id);
+        html.dataset.theme = option.dataset.value;
+        option.scrollIntoView({ block: 'nearest' });
+      } else {
+        search.removeAttribute('aria-activedescendant');
+        html.dataset.theme = saved;
+      }
+      paintOrb();
+    }
+
+    function open() {
+      saved = html.dataset.theme || 'light';
+      panel.hidden = false;
+      button.setAttribute('aria-expanded', 'true');
+      search.value = '';
+      none.hidden = true;
+      for (const option of options) {
+        option.hidden = false;
+        option.toggleAttribute('data-current', option.dataset.value === saved);
+      }
+      highlight(find(saved));
+      search.focus();
+    }
+
+    function close(restoreFocus: boolean) {
+      if (panel.hidden) return;
+      panel.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+      html.dataset.theme = saved;
+      paintOrb();
+      if (restoreFocus) button.focus();
+    }
+
+    function choose(option: HTMLElement | undefined) {
+      if (!option) return;
+      saved = option.dataset.value!;
+      try { localStorage.setItem('learn-theme', saved); } catch { /* private mode: this visit only */ }
+      close(true);
+    }
+
+    button.addEventListener('click', () => (panel.hidden ? open() : close(true)));
+    search.addEventListener('input', () => {
+      const query = search.value.trim().toLowerCase();
+      for (const option of options) option.hidden = !option.dataset.label!.toLowerCase().includes(query);
+      none.hidden = shown().length > 0;
+      highlight(shown()[0]);
+    });
+    search.addEventListener('keydown', (event) => {
+      const list = shown();
+      const at = active ? list.indexOf(active) : -1;
+      if (event.key === 'ArrowDown') highlight(list[(at + 1) % list.length]);
+      else if (event.key === 'ArrowUp') highlight(list[(at - 1 + list.length) % list.length]);
+      else if (event.key === 'Enter') choose(active);
+      else if (event.key === 'Escape') close(true);
+      else if (event.key === 'Tab') return close(false);
+      else return;
+      event.preventDefault();
+    });
+    for (const option of options) {
+      option.addEventListener('mousemove', () => { if (active !== option) highlight(option); });
+      option.addEventListener('click', () => choose(option));
+    }
+    document.addEventListener('click', (event) => { if (!root.contains(event.target as Node)) close(false); });
+    document.addEventListener('keydown', (event) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'k') return;
+      event.preventDefault();
+      if (panel.hidden) open(); else close(true);
+    });
+  }
+</script>
+
+<style>
+  .theme-picker__open {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--color-navy-card-border);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .theme-picker__open[aria-expanded='true'] {
+    border-color: var(--color-gold);
+  }
+
+  .theme-picker__open:focus-visible {
+    outline: 2px solid var(--color-gold-light);
+    outline-offset: 2px;
+  }
+
+  /* A small three-color orb of the current theme: page, accent, text. */
+  .theme-picker__orb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: conic-gradient(var(--tp-page, #fbf9f4) 0 120deg, var(--tp-accent, #c9a14a) 0 240deg, var(--tp-text, #15233e) 0);
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.85);
+    transition: transform 0.3s ease;
+  }
+
+  .theme-picker__open:hover .theme-picker__orb,
+  .theme-picker__open[aria-expanded='true'] .theme-picker__orb {
+    transform: rotate(120deg);
+  }
+
+  .theme-picker__panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    z-index: 25;
+    width: min(340px, calc(100vw - 36px));
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    box-shadow: 0 24px 48px -20px rgb(0 0 0 / 0.5);
+    color: var(--ink);
+    transform-origin: top right;
+    animation: tp-in 0.16s ease-out;
+  }
+
+  @keyframes tp-in {
+    from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-picker__panel { animation: none; }
+    .theme-picker__orb { transition: none; }
+  }
+
+  .theme-picker__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 4px 10px;
+  }
+
+  .theme-picker__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .theme-picker__title :global(svg) {
+    width: 18px;
+    height: 18px;
+    color: var(--color-gold-dark);
+  }
+
+  .theme-picker__panel kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid var(--color-border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background: var(--color-sand);
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+  }
+
+  .theme-picker__searchbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-cream);
+  }
+
+  .theme-picker__searchbox:focus-within {
+    border-color: var(--color-gold);
+  }
+
+  .theme-picker__searchbox :global(svg) {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+  }
+
+  .theme-picker__searchbox input.theme-picker__search {
+    flex: 1;
+    min-width: 0;
+    min-height: 42px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 16px;
+    outline: none;
+  }
+
+  .theme-picker__panel ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .theme-picker__panel li {
+    position: relative;
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .theme-picker__panel li[hidden] {
+    display: none;
+  }
+
+  .theme-picker__panel li[aria-selected='true'] {
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 1px var(--color-gold);
+    transform: translateY(-1px);
+  }
+
+  /* Mini window drawn in the theme's own colors. */
+  .theme-picker__mini {
+    display: grid;
+    grid-template-rows: 10px 1fr;
+    height: 58px;
+    overflow: hidden;
+    border-radius: 6px;
+    background: var(--tp-page);
+    box-shadow: inset 0 0 0 1px rgb(128 128 128 / 0.35);
+  }
+
+  .mini__bar {
+    background: var(--tp-header);
+    border-bottom: 2px solid var(--tp-accent);
+  }
+
+  .mini__body {
+    padding: 7px 8px;
+  }
+
+  .mini__card {
+    display: grid;
+    gap: 4px;
+    height: 100%;
+    padding: 6px;
+    border-radius: 3px;
+    background: var(--tp-card);
+    box-shadow: inset 0 0 0 1px rgb(128 128 128 / 0.25);
+  }
+
+  .mini__card i,
+  .mini__card b {
+    display: block;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--tp-text);
+  }
+
+  .mini__card i:nth-child(2) {
+    width: 60%;
+    opacity: 0.55;
+  }
+
+  .mini__card b {
+    width: 40%;
+    background: var(--tp-accent);
+  }
+
+  .theme-picker__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding-right: 2px;
+  }
+
+  .theme-picker__name {
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .theme-picker__dots {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .theme-picker__dots span {
+    width: 12px;
+    height: 12px;
+    margin-left: -3px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px rgb(128 128 128 / 0.4);
+  }
+
+  .theme-picker__dots span:nth-child(1) { background: var(--tp-page); }
+  .theme-picker__dots span:nth-child(2) { background: var(--tp-accent); }
+  .theme-picker__dots span:nth-child(3) { background: var(--tp-text); }
+
+  .theme-picker__check {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: none;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--color-gold);
+    color: #15233e;
+    box-shadow: 0 0 0 2px var(--surface);
+  }
+
+  .theme-picker__check :global(svg) {
+    width: 14px;
+    height: 14px;
+    stroke-width: 3;
+  }
+
+  .theme-picker__panel li[data-current] .theme-picker__check {
+    display: grid;
+  }
+
+  .theme-picker__none {
+    margin: 12px 4px 4px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+  }
+
+  .theme-picker__keys {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin: 10px 4px 0;
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+
+  .theme-picker__keys kbd:not(:first-child) {
+    margin-left: 6px;
+  }
+
+  .theme-picker__keys kbd:nth-child(2) {
+    margin-left: 0;
+  }
+</style>

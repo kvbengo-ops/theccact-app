@@ -1,0 +1,38 @@
+---
+import Icon from './Icon.astro';
+import { BRAND } from '../content/site.mjs';
+import { CONTACT_PAGE } from '../content/pages.mjs';
+import { WEBSITE } from '../scripts/learn-brand.mjs';
+
+const contactPhoneDisplay = BRAND.contactPhone.replace(/^WhatsApp\s*\/\s*Text:\s*/i, '');
+---
+
+<div id="learn-empty" class="editorial-card learn-empty" hidden>
+  <div class="learn-empty__icon" aria-hidden="true">
+    <Icon name="cap" />
+  </div>
+  <h2 class="section-heading">You are not enrolled in any courses yet</h2>
+  <p class="section-lead">
+    If you recently enrolled or signed in with a different email address, please get in touch with our team and we will be glad to help.
+  </p>
+
+  <div class="learn-empty__contact">
+    <div class="learn-empty__detail">
+      <h3>Email</h3>
+      <p><a href={`mailto:${BRAND.contactEmail}`} class="text-link">{BRAND.contactEmail}</a></p>
+    </div>
+    <div class="learn-empty__detail">
+      <h3>WhatsApp / Text</h3>
+      <p>{contactPhoneDisplay}</p>
+    </div>
+    <div class="learn-empty__detail">
+      <h3>Office hours</h3>
+      <p>{CONTACT_PAGE.officeHours}</p>
+    </div>
+  </div>
+
+  <div class="learn-empty__actions">
+    <a href={`${WEBSITE}/contact/`} class="btn btn--gold">Contact us</a>
+    <a href={`${WEBSITE}/courses/`} class="btn btn--outline-navy">Browse online courses</a>
+  </div>
+</div>

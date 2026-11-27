@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { loadLivePartners } from './src/lib/partner-source.mjs';
 import { SITE_BRAND } from './src/lib/links.mjs';
 import { CCES_REWRITES } from './src/content/site.mjs';
+import { learningOrigin, learningRedirects } from './src/lib/learning-sites.mjs';
 
 export default defineConfig({
   output: 'static',
@@ -25,6 +26,23 @@ export default defineConfig({
           const after = CCES_REWRITES.reduce((text, [from, to]) => text.replaceAll(from, to), before);
           if (after !== before) writeFileSync(path, after);
         }
+      },
+    },
+  }, {
+    name: 'learning-site-routing',
+    hooks: {
+      'astro:build:done': ({ dir }) => {
+        const root = fileURLToPath(dir);
+        const app = process.env.SITE_APP;
+        const origin = learningOrigin(SITE_BRAND);
+        // ponytail: until the learning sites exist, /learn/ stays on the main site; set LEARN_<BRAND>_ORIGIN to move it.
+        if (app !== 'learn' && process.env.NETLIFY === 'true' && !origin) {
+          console.warn(`LEARN_${SITE_BRAND.toUpperCase()}_ORIGIN is not set: /learn/ is served by this site.`);
+        }
+        const path = join(root, '_redirects');
+        const existing = readFileSync(path, 'utf8');
+        const pages = readdirSync(root, { recursive: true }).map((file) => file.replaceAll('\\', '/'));
+        writeFileSync(path, learningRedirects({ app, origin, pages, existing }));
       },
     },
   }],

@@ -6,3 +6,25 @@
 
 /affiliate/*
   X-Robots-Tag: noindex, nofollow
+
+# Student pages. Listed one by one so /learn/verify/ stays indexable.
+/learn/
+  X-Robots-Tag: noindex, nofollow
+
+/learn/login/*
+  X-Robots-Tag: noindex, nofollow
+
+/learn/course/*
+  X-Robots-Tag: noindex, nofollow
+
+/learn/courses/*
+  X-Robots-Tag: noindex, nofollow
+
+/learn/settings/*
+  X-Robots-Tag: noindex, nofollow
+
+/learn/checkout/*
+  X-Robots-Tag: noindex, nofollow
+
+/learn/lesson/*
+  X-Robots-Tag: noindex, nofollow
