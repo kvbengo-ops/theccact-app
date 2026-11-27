@@ -490,7 +490,34 @@ export async function startCheckout(client, { name, email }, emailRedirectTo) {
 
 export async function selfEnroll(client, courseId, name) {
   const { error } = await client.rpc('learn_self_enroll', { p_course: courseId, p_name: name ?? '' });
+  if (error?.hint === 'profile_required') throw new Error('Add your details below to finish enrolling.');
   if (error) throw new Error('Could not complete your enrollment. Please contact us.');
+}
+
+// Details a student must give before they can enroll themselves (stored in student_profiles).
+export function checkStudentDetails({ name, phone, city, province, country } = {}) {
+  const t = (value) => String(value ?? '').trim();
+  if (!t(name)) return 'Enter your full name.';
+  if (t(name).length > 120) return 'Use 120 characters or fewer for your name.';
+  if (!/^\+?[\d\s().-]{7,30}$/.test(t(phone)) || t(phone).replace(/\D/g, '').length < 7) return 'Enter a valid contact number.';
+  if (!t(city)) return 'Enter your city.';
+  if (!t(country)) return 'Enter your country.';
+  if ([city, province, country].some((value) => t(value).length > 120)) return 'Use 120 characters or fewer for your location.';
+  return '';
+}
+
+export async function loadStudentProfile(client) {
+  const { data, error } = await client.from('student_profiles').select('full_name').maybeSingle();
+  if (error) throw new Error('Could not load your details. Please try again.');
+  return data;
+}
+
+export async function saveStudentProfile(client, { name, phone, city, province, country }) {
+  const t = (value) => String(value ?? '').trim();
+  const { error } = await client.rpc('learn_save_profile', {
+    p_full_name: t(name), p_phone: t(phone), p_city: t(city), p_province: t(province), p_country: t(country),
+  });
+  if (error) throw new Error('Could not save your details. Please check them and try again.');
 }
 
 // Google sign-in shows only when it is switched on in Supabase (Authentication → Providers → Google).

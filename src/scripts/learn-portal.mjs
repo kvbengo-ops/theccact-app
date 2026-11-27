@@ -7,6 +7,9 @@ import {
   googleSignInEnabled,
   signInWithGoogle,
   checkCheckoutDetails,
+  checkStudentDetails,
+  loadStudentProfile,
+  saveStudentProfile,
   loadCheckoutCourse,
   selfEnroll,
   startCheckout,
@@ -864,15 +867,19 @@ export function setupLearnPortal(root, client) {
     $('#co-meta').textContent = `${lessons} ${lessons === 1 ? 'lesson' : 'lessons'} · ${formatDuration(course.total_minutes)}`;
 
     const errorEl = $('#co-error');
-    const NAME_KEY = 'learn-checkout-name';
-    const enroll = async (user, button) => {
+    const form = $('#co-form');
+    // Details typed before the email link are kept in this browser so the return trip can enroll without retyping.
+    const DETAILS_KEY = 'learn-checkout-details';
+    const FIELDS = ['name', 'phone', 'city', 'province', 'country'];
+    const readForm = () => Object.fromEntries(FIELDS.map((key) => [key, $(`#co-${key}`).value]));
+    const fillForm = (details) => FIELDS.forEach((key) => { if (details?.[key]) $(`#co-${key}`).value = details[key]; });
+    const readStash = () => { try { return JSON.parse(localStorage.getItem(DETAILS_KEY) || 'null'); } catch { return null; } };
+    const enroll = async (button) => {
       if (button) button.disabled = true;
       showMessage(errorEl, '');
-      let name = user.user_metadata?.full_name || '';
-      try { name = name || localStorage.getItem(NAME_KEY) || ''; } catch { /* storage blocked */ }
       try {
-        await selfEnroll(client, courseId, name);
-        try { localStorage.removeItem(NAME_KEY); } catch { /* storage blocked */ }
+        await selfEnroll(client, courseId, '');
+        try { localStorage.removeItem(DETAILS_KEY); } catch { /* storage blocked */ }
         location.replace(courseOverviewUrl(courseId));
       } catch (error) {
         showMessage(errorEl, error.message);
@@ -881,27 +888,50 @@ export function setupLearnPortal(root, client) {
     };
 
     const user = await loadStudentUser(client);
-    if (user) {
-      $('#co-form').hidden = true;
+    // Signed in with saved details: enroll as before.
+    if (user && await loadStudentProfile(client)) {
+      form.hidden = true;
       $('#co-signed').hidden = false;
       $('#co-user').textContent = user.email ?? '';
-      $('#co-enroll').addEventListener('click', (event) => enroll(user, event.currentTarget));
+      $('#co-enroll').addEventListener('click', (event) => enroll(event.currentTarget));
       if (params.get('confirm')) {
-        await enroll(user, $('#co-enroll'));
+        await enroll($('#co-enroll'));
         return;
       }
       setState('app');
       return;
     }
 
+    // Signed in (e.g. Google) without details: nobody is enrolled until the details are saved.
+    if (user) {
+      const email = $('#co-email');
+      email.value = user.email ?? '';
+      email.readOnly = true;
+      fillForm({ name: user.user_metadata?.full_name, ...readStash() });
+      form.querySelector('button[type="submit"]').textContent = 'Complete enrollment';
+      $('#co-form-note').hidden = true;
+      const finish = async (button) => {
+        const details = readForm();
+        const problem = checkStudentDetails(details);
+        if (problem) return showMessage(errorEl, problem);
+        button.disabled = true;
+        try { await saveStudentProfile(client, details); } catch (error) { showMessage(errorEl, error.message); button.disabled = false; return; }
+        await enroll(button);
+      };
+      form.addEventListener('submit', (event) => { event.preventDefault(); finish(form.querySelector('button[type="submit"]')); });
+      const stash = readStash();
+      setState('app');
+      if (params.get('confirm') && stash && !checkStudentDetails(stash)) await finish(form.querySelector('button[type="submit"]'));
+      return;
+    }
+
     await setupGoogle(`${location.origin}/learn/checkout/?course=${encodeURIComponent(courseId)}&confirm=1`, errorEl);
 
-    const form = $('#co-form');
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const name = $('#co-name').value;
+      const details = readForm();
       const email = $('#co-email').value;
-      const problem = checkCheckoutDetails(name, email);
+      const problem = checkStudentDetails(details) || checkCheckoutDetails(details.name, email);
       if (problem) {
         showMessage(errorEl, problem);
         return;
@@ -910,9 +940,9 @@ export function setupLearnPortal(root, client) {
       button.disabled = true;
       showMessage(errorEl, '');
       try {
-        try { localStorage.setItem(NAME_KEY, name.trim()); } catch { /* storage blocked */ }
+        try { localStorage.setItem(DETAILS_KEY, JSON.stringify(details)); } catch { /* storage blocked */ }
         const back = `${location.origin}/learn/checkout/?course=${encodeURIComponent(courseId)}&confirm=1`;
-        await startCheckout(client, { name, email }, back);
+        await startCheckout(client, { name: details.name, email }, back);
         form.hidden = true;
         $('#co-sent-email').textContent = email.trim();
         $('#co-sent').hidden = false;

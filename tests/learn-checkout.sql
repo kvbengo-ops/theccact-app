@@ -30,6 +30,9 @@ do $$ begin
   exception when insufficient_privilege then null; end;
   begin perform public.learn_self_enroll('1ea44c00-0000-4000-8000-000000000003', 'X'); raise exception 'Enrolled in a draft';
   exception when insufficient_privilege then null; end;
+  begin perform public.learn_self_enroll('1ea44c00-0000-4000-8000-000000000001', 'X'); raise exception 'Enrolled without details';
+  exception when others then if sqlerrm <> 'Profile required' then raise; end if; end;
+  perform public.learn_save_profile('Ana Profile', '+1 416 555 0123', 'Toronto', '', 'Canada');
   perform public.learn_self_enroll('1ea44c00-0000-4000-8000-000000000001', '  Ana Cruz  ');
   perform public.learn_self_enroll('1ea44c00-0000-4000-8000-000000000001', 'Someone Else');
   if (select count(*) from public.learn_my_courses()) <> 1 then raise exception 'Not enrolled once'; end if;

@@ -4,6 +4,9 @@ import {
   authRedirectError,
   googleSignInEnabled,
   checkCheckoutDetails,
+  checkStudentDetails,
+  saveStudentProfile,
+  selfEnroll,
   loadCheckoutCourse,
   startCheckout,
   courseMatches,
@@ -369,4 +372,18 @@ test('googleSignInEnabled reads the Supabase auth settings and fails closed', as
   assert.equal(await googleSignInEnabled('https://x.supabase.co', 'k', { fetchImpl: reply({ external: { google: false } }) }), false);
   assert.equal(await googleSignInEnabled('https://x.supabase.co', 'k', { fetchImpl: reply({}, false) }), false);
   assert.equal(await googleSignInEnabled('https://x.supabase.co', 'k', { fetchImpl: async () => { throw new Error('offline'); } }), false);
+});
+
+test('students must give a name, contact number and location before enrolling themselves', async () => {
+  const ok = { name: 'Ana Cruz', phone: '+1 (416) 555-0123', city: 'Toronto', province: '', country: 'Canada' };
+  assert.equal(checkStudentDetails(ok), '');
+  assert.match(checkStudentDetails({ ...ok, name: ' ' }), /full name/);
+  assert.match(checkStudentDetails({ ...ok, phone: '12' }), /contact number/);
+  assert.match(checkStudentDetails({ ...ok, phone: 'call me' }), /contact number/);
+  assert.match(checkStudentDetails({ ...ok, city: '' }), /city/);
+  assert.match(checkStudentDetails({ ...ok, country: '' }), /country/);
+  let sent;
+  await saveStudentProfile({ rpc: async (name, args) => { sent = [name, args]; return { error: null }; } }, { ...ok, name: ' Ana Cruz ' });
+  assert.deepEqual(sent, ['learn_save_profile', { p_full_name: 'Ana Cruz', p_phone: '+1 (416) 555-0123', p_city: 'Toronto', p_province: '', p_country: 'Canada' }]);
+  await assert.rejects(selfEnroll({ rpc: async () => ({ error: { hint: 'profile_required' } }) }, 'c', ''), /Add your details/);
 });
