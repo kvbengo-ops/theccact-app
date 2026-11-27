@@ -26,65 +26,126 @@ import { PLATFORM_NAME, WEBSITE } from '../../scripts/learn-brand.mjs';
         <p class="co-test"><Icon name="lock" />Test checkout. No payment is taken.</p>
       </section>
 
-      <section class="co-card" aria-labelledby="co-form-title">
-        <h2 id="co-form-title" class="co-card__title">Your details</h2>
-        <p id="co-error" class="learn-alert" role="alert" tabindex="-1" hidden></p>
+      <!-- Details form: frosted glass like the sign-in page, over soft theme-colored lights. -->
+      <div class="co-glass-wrap">
+        <div class="co-light co-light--a" aria-hidden="true"></div>
+        <div class="co-light co-light--b" aria-hidden="true"></div>
+        <section class="co-glass" aria-labelledby="co-form-title">
+          <h2 id="co-form-title" class="co-glass__title">Your details</h2>
+          <p class="co-glass__lead">Enroll in seconds</p>
+          <p id="co-error" class="learn-alert" role="alert" tabindex="-1" hidden></p>
 
-        <LearnGoogleButton />
-        <form id="co-form" class="co-form" novalidate>
-          <div class="learn-field">
-            <label for="co-name">Full name</label>
-            <input id="co-name" name="name" autocomplete="name" maxlength="120" required aria-describedby="co-name-hint" />
-            <small id="co-name-hint">As it should appear on your certificate.</small>
+          <LearnGoogleButton />
+
+          <form id="co-form" class="co-form" novalidate>
+            <div class="learn-field">
+              <label for="co-name">Full name</label>
+              <input id="co-name" name="name" autocomplete="name" maxlength="120" required aria-describedby="co-name-hint" />
+              <small id="co-name-hint">As it should appear on your certificate.</small>
+            </div>
+            <div class="learn-field">
+              <label for="co-email">Email address</label>
+              <input id="co-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required />
+            </div>
+            <button type="submit" class="btn btn--gold co-submit">Complete purchase</button>
+            <p class="co-muted co-small">We email you a link to confirm. Opening it enrolls you and signs you in.</p>
+          </form>
+
+          <div id="co-sent" class="co-done" role="status" tabindex="-1" hidden>
+            <span class="co-done__icon"><Icon name="mail" /></span>
+            <p><strong>Check your email</strong></p>
+            <p class="co-muted">Open the link we sent to <strong id="co-sent-email"></strong> to finish enrolling.</p>
           </div>
-          <div class="learn-field">
-            <label for="co-email">Email address</label>
-            <input id="co-email" name="email" type="email" autocomplete="email" inputmode="email" required />
+
+          <div id="co-signed" hidden>
+            <p class="co-muted">Signed in as <strong id="co-user"></strong></p>
+            <button type="button" id="co-enroll" class="btn btn--gold co-submit">Complete enrollment</button>
           </div>
-          <button type="submit" class="btn btn--gold">Complete purchase</button>
-          <p class="co-muted co-small">We email you a link to confirm. Opening it enrolls you and signs you in.</p>
-        </form>
-
-        <div id="co-sent" class="co-done" role="status" tabindex="-1" hidden>
-          <span class="co-done__icon"><Icon name="mail" /></span>
-          <p><strong>Check your email</strong></p>
-          <p class="co-muted">Open the link we sent to <strong id="co-sent-email"></strong> to finish enrolling.</p>
-        </div>
-
-        <div id="co-signed" hidden>
-          <p class="co-muted">Signed in as <strong id="co-user"></strong></p>
-          <button type="button" id="co-enroll" class="btn btn--gold">Complete enrollment</button>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   </div>
 </LearnLayout>
 <script>import '../../scripts/learn-portal.mjs';</script>
 
 <style is:global>
+  .co { overflow-x: clip; } /* the glass lights spill past the edge on phones */
   .co-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 20px; align-items: start; max-width: 960px; }
   .co-card { padding: 24px; background: var(--surface); border: 1px solid var(--color-border); border-radius: 12px; overflow-wrap: anywhere; }
   .co-card > p:first-child { margin-top: 0; }
-  .learn-body .co-card__title { margin: 0 0 16px; font-family: var(--font-sans); font-size: 17px; font-weight: 700; }
   .co-summary__media { display: grid; place-items: center; aspect-ratio: 5 / 2; margin-bottom: 16px; border-radius: 10px; background: var(--color-sand); color: var(--color-gold-dark); }
   .co-summary__media svg { width: 36px; height: 36px; opacity: 0.6; }
   .learn-body .co-summary__title { margin: 0 0 4px; font-family: var(--font-sans); font-size: 20px; font-weight: 700; }
   .co-muted { margin: 0; color: var(--color-text-muted); }
-  .co-small { font-size: 13.5px; }
+  .co-small { font-size: 13.5px; text-align: center; }
   .co-total { display: flex; justify-content: space-between; margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--color-border); font-weight: 700; color: var(--ink); }
   .co-total dd { margin: 0; font-size: 20px; }
   .co-test { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; font-size: 13.5px; color: var(--color-text-muted); }
   .co-test svg { width: 16px; height: 16px; flex-shrink: 0; }
-  .co-form { display: grid; gap: 16px; }
-  .co-done { display: grid; justify-items: start; gap: 6px; }
+
+  /* Glass details form */
+  .co-glass-wrap {
+    --glass: color-mix(in srgb, var(--surface) 58%, transparent);
+    --glass-edge: rgb(255 255 255 / 0.65);
+    --glass-shine: rgb(255 255 255 / 0.7);
+    position: relative;
+    isolation: isolate;
+  }
+
+  html[data-theme='dark'] .co-glass-wrap {
+    --glass: color-mix(in srgb, var(--surface) 55%, transparent);
+    --glass-edge: rgb(255 255 255 / 0.12);
+    --glass-shine: rgb(255 255 255 / 0.08);
+  }
+
+  .co-light {
+    position: absolute;
+    z-index: -1;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+  }
+
+  .co-light--a { width: 260px; height: 260px; top: -40px; left: -50px; background: var(--color-gold); opacity: 0.45; }
+  .co-light--b { width: 300px; height: 300px; bottom: -60px; right: -60px; background: var(--color-navy-elevated); opacity: 0.45; }
+
+  .co-glass {
+    padding: 30px 28px 26px;
+    border: 1px solid var(--glass-edge);
+    border-radius: 22px;
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    backdrop-filter: blur(22px) saturate(160%);
+    box-shadow:
+      inset 0 1px 0 var(--glass-shine),
+      0 2px 6px -2px rgb(10 15 30 / 0.12),
+      0 24px 48px -20px rgb(10 15 30 / 0.35),
+      0 60px 120px -40px rgb(10 15 30 / 0.3);
+    overflow-wrap: anywhere;
+  }
+
+  .learn-body .co-glass__title { margin: 0; font-family: var(--font-serif); font-size: 28px; font-weight: 600; line-height: 1.15; text-align: center; }
+  .co-glass__lead { margin: 4px 0 20px; color: var(--color-text-muted); text-align: center; }
+  .co-glass .learn-alert { margin-bottom: 14px; }
+  .co-form { display: grid; gap: 14px; }
+  .co-glass .learn-field input { min-height: 48px; border: 1px solid var(--color-border); border-radius: 10px; background: color-mix(in srgb, var(--surface) 85%, transparent); }
+  .co-glass .learn-field input:focus-visible { border-color: var(--color-gold); outline: 3px solid color-mix(in srgb, var(--color-gold) 35%, transparent); outline-offset: 0; }
+  .co-glass .learn-google { min-height: 48px; border-radius: 10px; box-shadow: 0 6px 16px -10px rgb(10 15 30 / 0.35); }
+  .co-submit { width: 100%; min-height: 48px; border-radius: 10px; box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--color-gold) 90%, transparent); }
+
+  .co-done { display: grid; justify-items: center; gap: 6px; text-align: center; }
   .co-done p { margin: 0; }
-  .co-done__icon { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 6px; border-radius: 50%; background: var(--color-sand); color: var(--color-gold-dark); }
-  .co-done__icon svg { width: 22px; height: 22px; }
-  #co-signed { display: grid; justify-items: start; gap: 14px; }
-  #co-signed[hidden] { display: none; }
+  .co-done__icon { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 6px; border-radius: 50%; background: color-mix(in srgb, var(--color-gold) 22%, transparent); color: var(--color-gold-dark); }
+  .co-done__icon svg { width: 24px; height: 24px; }
+  #co-signed { display: grid; gap: 14px; text-align: center; }
+  .co-glass [hidden] { display: none !important; }
+
+  html[data-theme='contrast'] .co-glass { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--color-border); }
+  html[data-theme='contrast'] .co-light { display: none; }
 
   @media (max-width: 760px) {
     .co-grid { grid-template-columns: 1fr; }
     .co-card { padding: 18px; }
+    .co-glass { padding: 24px 18px 20px; }
   }
 </style>

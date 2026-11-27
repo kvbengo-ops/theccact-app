@@ -1,0 +1,47 @@
+---
+import LearnLayout from '../../layouts/LearnLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { BRAND } from '../../content/site.mjs';
+import { PLATFORM_NAME, SAMPLE_COURSE_ID, WEBSITE } from '../../scripts/learn-brand.mjs';
+import '../../styles/learn-auth.css';
+---
+
+<LearnLayout page="welcome" requiresAuth={true} chrome={false} title={`Not enrolled yet — ${PLATFORM_NAME}`}>
+  <div class="auth">
+    <div class="auth__light auth__light--a" aria-hidden="true"></div>
+    <div class="auth__light auth__light--b" aria-hidden="true"></div>
+    <div class="auth__light auth__light--c" aria-hidden="true"></div>
+
+    <div class="auth__card">
+      <span class="auth__sent-icon welcome__icon" aria-hidden="true"><Icon name="cap" /></span>
+      <h1 class="auth__title">You're not enrolled yet</h1>
+      <p class="auth__lead">
+        You're signed in as <strong id="welcome-email"></strong>, but this account has no {BRAND.shortName} courses yet.
+      </p>
+
+      <div class="welcome__actions">
+        <a href={`${WEBSITE}/courses/`} class="btn btn--gold auth__submit">Browse courses</a>
+        <a href={`/learn/checkout/?course=${SAMPLE_COURSE_ID}`} class="btn btn--outline-navy welcome__secondary">Try the free sample course</a>
+      </div>
+
+      <p class="welcome__note">Enrolled with a different email?</p>
+      <div class="welcome__links">
+        <button type="button" class="learn-login-swap" data-logout>Use a different account</button>
+        <a href={`mailto:${BRAND.contactEmail}`} class="learn-login-swap">Contact us</a>
+      </div>
+    </div>
+  </div>
+</LearnLayout>
+<script>import '../../scripts/learn-portal.mjs';</script>
+
+<style is:global>
+  .welcome__icon { width: 60px; height: 60px; margin: 0 auto 14px; }
+  .welcome__icon svg { width: 28px; height: 28px; }
+  .welcome__actions { display: grid; gap: 10px; }
+  .welcome__actions .btn { width: 100%; min-height: 48px; }
+  .welcome__secondary { border-radius: 10px; }
+  .welcome__note { margin: 22px 0 2px; font-size: 13.5px; color: var(--color-text-muted); }
+  .welcome__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; }
+  .welcome__links a.learn-login-swap { display: inline-flex; align-items: center; }
+  .auth__lead strong { color: var(--ink); }
+</style>

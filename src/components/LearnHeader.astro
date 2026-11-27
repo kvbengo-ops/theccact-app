@@ -27,7 +27,7 @@ const { signedIn = false } = Astro.props;
     </div>
 
     <div class="learn-header__account">
-      <LearnThemePicker />
+      {signedIn && <LearnThemePicker />}
       {signedIn && (
         <details class="learn-profile">
           <summary aria-label="Profile menu">

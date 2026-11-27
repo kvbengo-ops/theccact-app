@@ -3,6 +3,7 @@ import { COURSES_PAGE } from '../content/pages.mjs';
 import { TEACHABLE_CATALOG_URL } from '../content/site.mjs';
 import { pageUrl, SITE_BRAND } from '../lib/links.mjs';
 import { learningOrigin } from '../lib/learning-sites.mjs';
+import { SAMPLE_COURSE_ID } from '../scripts/learn-brand.mjs';
 import EnrolLink from './EnrolLink.astro';
 import PageHero from './PageHero.astro';
 
@@ -14,8 +15,7 @@ const { partner = null } = Astro.props;
 const contactHref = pageUrl('contact', partner);
 
 // Test checkout on the learning portal (no payment). Main site only: affiliate pages keep Teachable for attribution.
-const SAMPLE_COURSE = { ccact: '5a3b1e00-0000-4000-8000-000000000301', cces: '5a3b1e00-0000-4000-8000-000000000401' }[SITE_BRAND];
-const sampleHref = `${learningOrigin(SITE_BRAND) ?? ''}/learn/checkout/?course=${SAMPLE_COURSE}`;
+const sampleHref = `${learningOrigin(SITE_BRAND) ?? ''}/learn/checkout/?course=${SAMPLE_COURSE_ID}`;
 ---
 
 <PageHero

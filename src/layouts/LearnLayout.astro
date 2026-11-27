@@ -13,8 +13,10 @@ interface Props {
   title?: string;
   description?: string;
   noindex?: boolean;
-  page: 'login' | 'dashboard' | 'courses' | 'course' | 'lesson' | 'settings' | 'verify' | 'checkout';
+  page: 'login' | 'dashboard' | 'courses' | 'course' | 'lesson' | 'settings' | 'verify' | 'checkout' | 'welcome';
   requiresAuth?: boolean;
+  /** Sidebar and profile menu; off for pages a signed-in student sees before enrolling. */
+  chrome?: boolean;
 }
 
 const {
@@ -23,6 +25,7 @@ const {
   noindex = true,
   page,
   requiresAuth = false,
+  chrome = requiresAuth,
 } = Astro.props;
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
@@ -33,9 +36,10 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <script is:inline>
+    <script is:inline define:vars={{ chrome }}>
       // Before first paint, so a chosen theme does not flash.
-      try { document.documentElement.dataset.theme = localStorage.getItem('learn-theme') || 'light'; } catch {}
+      // Themes are for signed-in students; sign-in, checkout and other public pages stay on the brand look.
+      try { document.documentElement.dataset.theme = (chrome && localStorage.getItem('learn-theme')) || 'light'; } catch {}
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
@@ -52,10 +56,10 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <body class="learn-body" data-supabase-url={supabaseUrl} data-supabase-key={supabaseKey}>
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <LearnHeader signedIn={requiresAuth} />
+    <LearnHeader signedIn={chrome} />
 
-    <div class={requiresAuth ? 'learn-shell' : undefined}>
-    {requiresAuth && <LearnSidebar active={page} />}
+    <div class={chrome ? 'learn-shell' : undefined}>
+    {chrome && <LearnSidebar active={page} />}
     <main id="main-content" tabindex="-1">
       <div
         class="learn-app"

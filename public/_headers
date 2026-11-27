@@ -26,5 +26,8 @@
 /learn/checkout/*
   X-Robots-Tag: noindex, nofollow
 
+/learn/welcome/*
+  X-Robots-Tag: noindex, nofollow
+
 /learn/lesson/*
   X-Robots-Tag: noindex, nofollow

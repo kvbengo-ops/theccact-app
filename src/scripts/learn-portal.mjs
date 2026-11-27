@@ -925,6 +925,12 @@ export function setupLearnPortal(root, client) {
     setState('app');
   }
 
+  // Signed in but not enrolled on this site.
+  function renderWelcome(user) {
+    $('#welcome-email').textContent = user.email ?? '';
+    setState('app');
+  }
+
   async function boot() {
     if (page === 'checkout') {
       await renderCheckout();
@@ -958,7 +964,23 @@ export function setupLearnPortal(root, client) {
       }
     }
 
+    // ponytail: one extra learn_my_courses call per portal page; fold into the page loaders if it shows up in timings.
+    const { active, completed } = await loadDashboardData(client, siteBrand);
+    const enrolled = active.length + completed.length > 0;
+    if (page === 'welcome' && enrolled) {
+      location.replace('/learn/');
+      return;
+    }
+    if (page !== 'welcome' && !enrolled) {
+      location.replace('/learn/welcome/');
+      return;
+    }
+
     paintSignedInUser(user);
+    if (page === 'welcome') {
+      renderWelcome(user);
+      return;
+    }
     if (page === 'dashboard' || page === 'courses') await renderDashboard();
     else if (page === 'settings') await renderSettings(user);
     else if (page === 'course') await renderCourseOverview();
