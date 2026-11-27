@@ -1,4 +1,4 @@
-import { pageUrl } from '../lib/links.mjs';
+import { pageUrl, SITE_BRAND, TEACHABLE_HOST } from '../lib/links.mjs';
 
 /**
  * The CCES site (SITE_BRAND=cces) is the same site with CCES's name, logo, colors and facts.
@@ -31,9 +31,12 @@ export const CCES_REWRITES = [
   ['CCACT', 'CCES'],
 ];
 
-/** Canonical external destinations from live CCACT Teachable catalog & corporate details. */
-export const TEACHABLE_CATALOG_URL =
-  'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc';
+/** Each brand's own Teachable school (TEACHABLE_HOST in links.mjs). */
+export const TEACHABLE_CATALOG_URL = `https://${TEACHABLE_HOST}/l/products?sortKey=recommended&sortDirection=asc`;
+// The CCACT school has no Diagnostic Modalities category; its search for "theoretical" returns exactly the 3 DM courses.
+export const DM_TEACHABLE_URL = SITE_BRAND === 'cces'
+  ? `${TEACHABLE_CATALOG_URL}&courseCategory=Diagnostic+Modalities`
+  : `${TEACHABLE_CATALOG_URL}&search=theoretical`;
 
 export const BRAND = {
   shortName: 'CCACT',
@@ -133,7 +136,7 @@ export const HOME_PROGRAMMES = [
     meta: '9 courses · bundle available',
     ctaLabel: 'Browse & enroll',
     teachableUrl:
-      'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Gerontology+Nursing',
+      `${TEACHABLE_CATALOG_URL}&courseCategory=Gerontology+Nursing`,
   },
   {
     id: 'crner',
@@ -144,7 +147,7 @@ export const HOME_PROGRAMMES = [
     meta: '7 courses · practice exams',
     ctaLabel: 'Browse & enroll',
     teachableUrl:
-      'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Nursing+Exam+Review',
+      `${TEACHABLE_CATALOG_URL}&courseCategory=Canadian+Nursing+Exam+Review`,
   },
   {
     id: 'chs',
@@ -155,7 +158,7 @@ export const HOME_PROGRAMMES = [
     meta: '4 courses · bundle CAD $149',
     ctaLabel: 'Browse & enroll',
     teachableUrl:
-      'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Health+Care+System',
+      `${TEACHABLE_CATALOG_URL}&courseCategory=Canadian+Health+Care+System`,
   },
   {
     id: 'hpc',
@@ -167,7 +170,7 @@ export const HOME_PROGRAMMES = [
     ctaLabel: 'Browse & enroll',
     // No Teachable category exists for HPC; the catalog search returns exactly HPC-101, HPC-102 and the bundle.
     teachableUrl:
-      'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&search=hospice',
+      `${TEACHABLE_CATALOG_URL}&search=hospice`,
   },
   {
     id: 'dm',
@@ -178,7 +181,7 @@ export const HOME_PROGRAMMES = [
     meta: '3 courses · theory only',
     ctaLabel: 'Browse & enroll',
     teachableUrl:
-      'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Diagnostic+Modalities',
+      DM_TEACHABLE_URL,
   },
   {
     id: 'esl',

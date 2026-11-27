@@ -1,7 +1,10 @@
 // One codebase builds two sites: SITE_BRAND=cces builds thecces.com, anything else builds theccact.com.
 export const SITE_BRAND = globalThis.process?.env.SITE_BRAND === 'cces' ? 'cces' : 'ccact';
-// CCES owns the Teachable school, so its main site sends no affcode.
-const MAIN_AFFCODE = { ccact: '1360772_ayijgwbz', cces: null }[SITE_BRAND];
+// Each brand owns its Teachable school, so main-site links carry no affcode.
+export const TEACHABLE_HOST = {
+  ccact: 'the-canadian-centre-for-advanced-career-traini.teachable.com',
+  cces: 'thecces.teachable.com',
+}[SITE_BRAND];
 const pages = new Set(['', 'about', 'courses', 'registration', 'study-in-canada', 'faq', 'about-partner', 'contact', 'privacy']);
 
 // Partner routes are generated only for validated, live records.
@@ -16,11 +19,10 @@ export function pageUrl(page, partner) {
 export function enrolmentUrl(destination, partner) {
   let url;
   try { url = new URL(destination); } catch { throw new Error('Invalid enrollment destination'); }
-  if (url.protocol !== 'https:' || url.hostname !== 'thecces.teachable.com') {
-    throw new Error('Enrollment destination must be the CCACT Teachable school');
+  if (url.protocol !== 'https:' || url.hostname !== TEACHABLE_HOST) {
+    throw new Error(`Enrollment destination must be the ${SITE_BRAND.toUpperCase()} Teachable school`);
   }
-  // Main site credits the brand; partner pages credit the partner's own Teachable affcode (referralCode).
-  const affcode = partner ? partner.referralCode : MAIN_AFFCODE;
-  if (affcode) url.searchParams.set('affcode', affcode);
+  // Partner pages credit the partner's own Teachable affcode (referralCode).
+  if (partner?.referralCode) url.searchParams.set('affcode', partner.referralCode);
   return url.href;
 }

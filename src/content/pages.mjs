@@ -1,4 +1,4 @@
-import { BRAND, TEACHABLE_CATALOG_URL } from './site.mjs';
+import { BRAND, DM_TEACHABLE_URL, TEACHABLE_CATALOG_URL } from './site.mjs';
 import { SITE_BRAND } from '../lib/links.mjs';
 
 export const ABOUT_PAGE = {
@@ -152,7 +152,7 @@ export const COURSES_PAGE = {
       primaryCta: {
         label: 'Browse & Enroll on Teachable',
         teachableUrl:
-          'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Gerontology+Nursing',
+          `${TEACHABLE_CATALOG_URL}&courseCategory=Gerontology+Nursing`,
       },
     },
     {
@@ -182,7 +182,7 @@ export const COURSES_PAGE = {
       primaryCta: {
         label: 'Browse & Enroll on Teachable',
         teachableUrl:
-          'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Nursing+Exam+Review',
+          `${TEACHABLE_CATALOG_URL}&courseCategory=Canadian+Nursing+Exam+Review`,
       },
     },
     {
@@ -205,12 +205,12 @@ export const COURSES_PAGE = {
       primaryCta: {
         label: 'Enroll in CHS Bundle — $149',
         teachableUrl:
-          'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Health+Care+System',
+          `${TEACHABLE_CATALOG_URL}&courseCategory=Canadian+Health+Care+System`,
       },
       secondaryTeachableCta: {
         label: 'Browse Individual Courses',
         teachableUrl:
-          'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Canadian+Health+Care+System',
+          `${TEACHABLE_CATALOG_URL}&courseCategory=Canadian+Health+Care+System`,
       },
     },
     {
@@ -256,7 +256,7 @@ export const COURSES_PAGE = {
       primaryCta: {
         label: 'Enroll in DM Bundle',
         teachableUrl:
-          'https://thecces.teachable.com/l/products?sortKey=recommended&sortDirection=asc&courseCategory=Diagnostic+Modalities',
+          DM_TEACHABLE_URL,
       },
       secondaryInternalPage: {
         label: 'Ask an Advisor',
