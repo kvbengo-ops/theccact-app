@@ -1,13 +1,14 @@
 -- SAMPLE COURSE for testing the Learning Portal. Do not run on production.
 -- "Medical Terminology Essentials" (CCACT): 2 modules, 3 lessons, quick checks and a glossary.
 -- Needs migrations up to 202611280001_learn_glossary.sql. Safe to re-run: it replaces the sample.
+-- Free test checkout is on: open /learn/checkout/?course=5a3b1e00-0000-4000-8000-00000000a001 to enroll yourself.
 
 delete from public.courses where id = '5a3b1e00-0000-4000-8000-00000000a001';
 
-insert into public.courses (id, brand, title, description, ce_hours, pass_mark, lessons_in_order, status) values
+insert into public.courses (id, brand, title, description, ce_hours, pass_mark, lessons_in_order, status, self_enroll) values
   ('5a3b1e00-0000-4000-8000-00000000a001', 'ccact', 'Medical Terminology Essentials (Sample)',
    'Learn how medical words are built, say common terms with confidence, and read the abbreviations you will see on shift.',
-   1.5, 66, true, 'published');
+   1.5, 66, true, 'published', true);
 
 insert into public.modules (id, course_id, title, position) values
   ('5a3b1e00-0000-4000-8000-00000000b001', '5a3b1e00-0000-4000-8000-00000000a001', 'Building blocks', 0),
