@@ -229,6 +229,8 @@ export function getPrimaryNavItems(partner = null) {
     { key: 'faq', label: 'FAQ', href: pageUrl('faq', partner) },
     ...(partner ? [] : [{ key: 'affiliates', label: 'Affiliates', href: BRAND.mainAffiliatesHref }]),
     { key: 'contact', label: 'Contact', href: pageUrl('contact', partner) },
+    // Relative on purpose: the main site redirects /learn/* to the learning site when it lives elsewhere.
+    { key: 'student-login', label: 'Student login', href: '/learn/login/' },
   ];
 }
 

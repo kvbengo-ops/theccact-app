@@ -19,10 +19,8 @@ const navItems = getPrimaryNavItems(partner);
 const homeHref = pageUrl('', partner);
 ---
 
-<div class="announcement-bar">
-  <span data-cms="announcement">{BRAND.announcement}</span>
-  <!-- Relative on purpose: the main site redirects /learn/* to the learning site when it lives elsewhere. -->
-  <a class="announcement-bar__login" href="/learn/login/">Student login</a>
+<div class="announcement-bar" data-cms="announcement">
+  {BRAND.announcement}
 </div>
 
 <header class="site-header" data-overlay={overlay ? '' : undefined}>
@@ -132,12 +130,12 @@ const homeHref = pageUrl('', partner);
 
     nav.querySelectorAll('a').forEach((link) => {
       link.addEventListener('click', () => {
-        if (window.innerWidth <= 1080) closeNav(false);
+        if (window.innerWidth <= 1199) closeNav(false);
       });
     });
 
     if (typeof window.matchMedia === 'function') {
-      const desktopQuery = window.matchMedia('(min-width: 1081px)');
+      const desktopQuery = window.matchMedia('(min-width: 1200px)');
       desktopQuery.addEventListener?.('change', (event) => {
         if (event.matches && nav.classList.contains('is-open')) {
           closeNav(false);
@@ -156,21 +154,6 @@ const homeHref = pageUrl('', partner);
     text-align: center;
     padding: 11px 24px;
     line-height: 1.4;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 4px 20px;
-  }
-
-  .announcement-bar__login {
-    color: var(--color-white);
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  .announcement-bar__login:hover {
-    color: var(--color-gold-light);
   }
 
   /* Compact navy header. On the home page it starts transparent over the film (data-overlay)
@@ -241,7 +224,7 @@ const homeHref = pageUrl('', partner);
     color: var(--color-on-dark-muted);
     text-transform: uppercase;
     line-height: 1.25;
-    /* Two short lines keep logo + full nav on one row from 1081px up. */
+    /* Two short lines keep logo + full nav on one row from 1200px up. */
     max-width: 24ch;
   }
 
@@ -275,14 +258,14 @@ const homeHref = pageUrl('', partner);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 18px;
+    gap: 8px 12px;
   }
 
   .primary-nav__link {
     display: inline-flex;
     align-items: center;
     min-height: 36px;
-    font-size: 14.5px;
+    font-size: 14px;
     letter-spacing: 0.01em;
     color: var(--color-on-dark);
     text-decoration: none;
@@ -337,7 +320,7 @@ const homeHref = pageUrl('', partner);
     transform: translateY(-7px) rotate(-45deg);
   }
 
-  @media (max-width: 1080px) {
+  @media (max-width: 1199px) {
     .nav-toggle {
       display: inline-flex;
       order: 2;
