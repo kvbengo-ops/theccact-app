@@ -305,6 +305,10 @@ export async function loadLessonData(client, siteBrand, lessonId) {
     if (result.error) throw new Error('Unable to load the quick check right now. Please try again.');
     questions = result.data;
   }
+  // Mock or final exam settings and attempts. Optional: without the exam migration the lesson is a quick check.
+  const exam = row.has_check
+    ? await client.rpc('learn_exam_status', { p_lesson: lessonId }).then((r) => (r.error ? null : r.data?.[0] ?? null), () => null)
+    : null;
   // Medical terms for the course. Optional: a missing glossary never blocks the lesson.
   const [glossary, recorded] = await Promise.all([
     client.rpc('learn_glossary', { p_course: row.course_id }).then((r) => (r.error ? [] : r.data ?? []), () => []),
@@ -316,6 +320,7 @@ export async function loadLessonData(client, siteBrand, lessonId) {
     questions,
     glossary,
     recorded,
+    exam: exam?.exam ? exam : null,
     course: overview.course,
     number: index + 1,
     total: lessons.length,
@@ -333,8 +338,18 @@ export function collectAnswers(questions, pairs) {
 
 export async function submitQuickCheck(client, lessonId, answers) {
   const { data, error } = await client.rpc('learn_submit_check', { p_lesson: lessonId, p_answers: answers });
+  if (error?.hint === 'no_attempts') throw Object.assign(new Error('You have used all 3 attempts.'), { locked: true });
   if (error) throw new Error('Could not check your answers right now. Please try again.');
   return data;
+}
+
+// Exam countdown: 4:05, or 1:04:05 past an hour.
+export function formatClock(seconds) {
+  const s = Math.max(0, Math.floor(seconds));
+  const pad = (n) => String(n).padStart(2, '0');
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`;
 }
 
 export async function markLessonDone(client, lessonId) {

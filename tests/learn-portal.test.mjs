@@ -407,3 +407,32 @@ test('an open lesson knows the lesson before and after it', async () => {
   const first = await loadLessonData({ ...client, rpc: async (name) => (name === 'learn_lesson' ? { data: [{ lesson_id: id(1), course_id: course, title: 'L1', has_check: false }] } : client.rpc(name)) }, 'ccact', id(1));
   assert.equal(first.previous, null);
 });
+
+test('exam helpers: clock text, a locked final, and exam settings on the lesson', async () => {
+  const { formatClock, submitQuickCheck } = await import('../src/scripts/learn-helpers.mjs');
+  assert.equal(formatClock(0), '0:00');
+  assert.equal(formatClock(245), '4:05');
+  assert.equal(formatClock(3845), '1:04:05');
+  assert.equal(formatClock(-3), '0:00');
+  const locked = { rpc: async () => ({ error: { code: '42501', hint: 'no_attempts' } }) };
+  await assert.rejects(submitQuickCheck(locked, 'l', {}), (error) => error.locked === true);
+  const broken = { rpc: async () => ({ error: { code: 'XX000' } }) };
+  await assert.rejects(submitQuickCheck(broken, 'l', {}), (error) => !error.locked);
+
+  const course = '11111111-1111-4111-8111-111111111111';
+  const lesson = 'aaaaaaa1-1111-4111-8111-111111111111';
+  const status = { exam: 'final', exam_minutes: 30, questions: 3, attempts_used: 1, attempts_left: 2, passed: false };
+  const client = {
+    rpc: async (name) => ({
+      learn_lesson: { data: [{ lesson_id: lesson, course_id: course, title: 'Final', has_check: true }] },
+      learn_my_courses: { data: [{ course_id: course, brand: 'ccact', title: 'C', total_lessons: 1, done_lessons: 0, next_lesson_id: lesson }] },
+      learn_course_outline: { data: [{ module_id: 'm', module_title: 'M', lesson_id: lesson, lesson_title: 'Final', length_minutes: 5, done: false, unlocked: true }] },
+      learn_questions: { data: [{ question_id: 'q', type: 'single', text: 'Q', options: ['a', 'b'] }] },
+      learn_exam_status: { data: [status] },
+      learn_glossary: { data: [] },
+    }[name] ?? { data: null }),
+  };
+  assert.deepEqual((await loadLessonData(client, 'ccact', lesson)).exam, status);
+  const plain = { ...client, rpc: async (name) => (name === 'learn_exam_status' ? { data: [{ ...status, exam: null }] } : client.rpc(name)) };
+  assert.equal((await loadLessonData(plain, 'ccact', lesson)).exam, null);
+});

@@ -623,11 +623,17 @@ export function setupAdmin(root, client) {
       if (table === 'lessons') {
         field(f, 'length_minutes', 'Length (minutes)', 'number', item?.length_minutes ?? 5, { min: '1', required: true });
         field(f, 'reading', 'Reading text', 'textarea', item?.reading);
+        // Exams use this lesson's questions: a mock (unlimited tries, full review) or the final (3 tries).
+        const typeId = `learn-exam-${Math.random().toString(36).slice(2)}`;
+        const type = h('select', { id: typeId, name: 'exam' }, ...[['', 'Lecture'], ['mock', 'Mock exam'], ['final', 'Final exam (3 attempts)']].map(([value, text]) => h('option', { value, text })));
+        type.value = item?.exam ?? '';
+        f.append(h('div', { class: 'field' }, h('label', { for: typeId, text: 'Lesson type' }), type));
+        field(f, 'exam_minutes', 'Exam time limit (minutes, optional)', 'number', item?.exam_minutes ?? '', { min: '1', step: '1' });
       }
       f.append(button(item ? 'Save' : `Add ${table === 'modules' ? 'module' : 'lesson'}`));
       f.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const v = { title: f.elements.title.value.trim(), position: Number(f.elements.position.value), ...(table === 'modules' ? { course_id: parent } : { module_id: parent, length_minutes: Number(f.elements.length_minutes.value), reading: f.elements.reading.value.trim() || null }) };
+        const v = { title: f.elements.title.value.trim(), position: Number(f.elements.position.value), ...(table === 'modules' ? { course_id: parent } : { module_id: parent, length_minutes: Number(f.elements.length_minutes.value), reading: f.elements.reading.value.trim() || null, exam: f.elements.exam.value || null, exam_minutes: f.elements.exam.value && f.elements.exam_minutes.value ? Number(f.elements.exam_minutes.value) : null }) };
         if (await saveRow(table, v, item?.id)) { await renderCourse(); toast('Saved.'); }
       });
       return f;
@@ -730,6 +736,31 @@ export function setupAdmin(root, client) {
       });
       courseEditor.append(glossaryForm);
     }
+    // Students who failed the final 3 times: the owner contacts them, then allows 3 more attempts.
+    courseEditor.append(h('h2', { text: 'Needs support' }));
+    const support = h('div');
+    courseEditor.append(support);
+    async function loadSupport() {
+      const { data, error } = await client.rpc('learn_report_needs_support', { p_course: course.id });
+      if (error) return support.replaceChildren(h('p', { class: 'muted', text: 'Needs support needs a database update first (migration 202611290001_learn_exams).' }));
+      if (!data.length) return support.replaceChildren(h('p', { class: 'muted', text: 'Nobody is locked out of the final exam.' }));
+      support.replaceChildren(...data.map((row) => {
+        const allow = h('button', { type: 'button', class: 'btn btn--gold-compact', text: 'Allow 3 more attempts' });
+        allow.addEventListener('click', async () => {
+          if (!confirm(`Allow ${row.email} 3 more attempts at the final exam?`)) return;
+          const { error: saveError } = await client.from('enrollments').update({ attempts_reset_at: new Date().toISOString() }).eq('user_id', row.user_id).eq('course_id', course.id);
+          if (saveError) return showError(courseError, 'Could not allow more attempts. Try again.');
+          toast('3 more attempts allowed.');
+          await loadSupport();
+        });
+        return h('div', { class: 'invite-form' },
+          h('p', {}, h('strong', { text: row.student_name || row.email }), row.student_name ? ` (${row.email})` : ''),
+          h('p', { class: 'muted', text: `${row.attempts} failed attempts · best score ${row.best_score}% · last attempt ${formatDate(row.last_attempt)}` }),
+          row.weak_areas?.length ? h('p', { text: `Weak areas: ${row.weak_areas.join(', ')}` }) : null,
+          allow);
+      }));
+    }
+    await loadSupport();
     courseEditor.append(h('h2', { text: 'Students' }));
     const enrollForm = h('form', { class: 'invite-form' });
     field(enrollForm, 'students', 'Email addresses (one per line; optionally add a comma and student name)', 'textarea', '', { required: true, rows: 5 });

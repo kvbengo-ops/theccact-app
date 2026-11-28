@@ -53,6 +53,8 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
           </div>
         </div>
 
+        <section id="lesson-exam" class="editorial-card lp-exam" aria-live="polite" hidden></section>
+
         <section id="lesson-check" class="editorial-card" aria-labelledby="lesson-check-title" hidden>
           <h2 id="lesson-check-title" class="lp-subtitle">Quick check</h2>
           <form id="lesson-check-form" novalidate></form>
@@ -109,6 +111,15 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
   .lp-feedback.is-wrong { border-left-color: var(--color-error); }
   .lp-feedback p { margin: 6px 0 0; }
   .lp-result { font-weight: 700; color: var(--ink); }
+
+  /* Exam mode */
+  .lp-exam__meta { font-weight: 700; color: var(--ink); }
+  .lp-exam__bar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border); font-weight: 700; color: var(--color-text-muted); }
+  .lp-exam__clock { font-variant-numeric: tabular-nums; color: var(--ink); }
+  .lp-exam .lp-question legend { font-size: 18px; outline: none; }
+  .lp-exam__review { padding-left: 20px; }
+  .lp-exam__review li { margin-bottom: 18px; }
+  .lp-exam__q { margin: 0 0 6px; font-weight: 700; color: var(--ink); }
   .lp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 28px; }
   .lp-actions .btn { gap: 8px; }
   .lp-actions svg { width: 17px; height: 17px; }

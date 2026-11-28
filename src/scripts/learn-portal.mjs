@@ -25,6 +25,7 @@ import {
   collectAnswers,
   courseOverviewUrl,
   fetchCertificatePdf,
+  formatClock,
   formatDuration,
   lessonUrl,
   loadCourseOverviewData,
@@ -974,6 +975,121 @@ export function setupLearnPortal(root, client) {
       footer.replaceChildren(...items);
     };
     paintFooter();
+
+    // Mock and final exams: timed, one question per screen, no going back.
+    // shortcut: an attempt counts when submitted, so leaving mid-exam does not use one; record a start if that is abused.
+    if (data.exam) {
+      const status = data.exam;
+      const isFinal = status.exam === 'final';
+      const label = isFinal ? 'Final exam' : 'Mock exam';
+      const box = $('#lesson-exam');
+      $('#lesson-listen').hidden = true;
+      $('#lesson-terms').hidden = true;
+      $('#lesson-check').hidden = true;
+      box.hidden = false;
+      const show = (...kids) => {
+        box.replaceChildren(h('h2', { class: 'lp-subtitle', text: label }), ...kids.filter(Boolean));
+        box.querySelector('[data-focus]')?.focus();
+      };
+      const locked = () => show(h('p', { class: 'lp-result', 'data-focus': '', tabindex: '-1', text: "You've used all 3 attempts. Our team will contact you about the parts to review." }));
+      let timer = null;
+
+      const intro = () => {
+        if (isFinal && status.passed) {
+          return show(h('p', { class: 'lp-result', text: 'You passed the final exam.' }));
+        }
+        if (isFinal && status.attempts_left === 0) return locked();
+        const meta = [
+          `${questions.length} ${questions.length === 1 ? 'question' : 'questions'}`,
+          status.exam_minutes ? `${status.exam_minutes} ${status.exam_minutes === 1 ? 'minute' : 'minutes'}` : null,
+          isFinal ? `Attempt ${status.attempts_used + 1} of 3` : 'Unlimited attempts',
+        ].filter(Boolean).join(' · ');
+        show(
+          h('p', { class: 'lp-exam__meta', text: meta }),
+          h('p', { text: `One question at a time. Once you move on, you can't go back.${status.exam_minutes ? ' When time runs out, your answers are submitted.' : ''}` }),
+          h('button', { type: 'button', class: 'btn btn--gold', 'data-focus': '', onclick: start }, 'Start'),
+        );
+      };
+
+      function start() {
+        const picks = {};
+        let index = 0;
+        let finished = false;
+        const deadline = status.exam_minutes ? Date.now() + status.exam_minutes * 60000 : null;
+        const clock = h('span', { class: 'lp-exam__clock', role: 'timer', 'aria-label': 'Time left' });
+        const tick = () => {
+          const left = Math.round((deadline - Date.now()) / 1000);
+          clock.textContent = formatClock(left);
+          if (left <= 0) finish();
+        };
+        const ask = () => {
+          const question = questions[index];
+          const many = question.type === 'multiple';
+          const last = index === questions.length - 1;
+          const next = h('button', { type: 'button', class: 'btn btn--gold', disabled: true, onclick: () => {
+            picks[question.question_id] = [...fieldset.querySelectorAll('input:checked')].map((input) => Number(input.value));
+            index += 1;
+            if (last) finish(); else ask();
+          } }, last ? 'Submit exam' : 'Next');
+          const fieldset = h('fieldset', { class: 'lp-question', onchange: () => { next.disabled = !fieldset.querySelector('input:checked'); } },
+            h('legend', { 'data-focus': '', tabindex: '-1', text: question.text }),
+            many ? h('p', { class: 'lp-hint', text: 'Select all that apply.' }) : null,
+            question.options.map((option, i) => h('label', { class: 'lp-option' },
+              h('input', { type: many ? 'checkbox' : 'radio', name: 'exam-answer', value: String(i) }),
+              h('span', { text: String(option) }))));
+          show(h('div', { class: 'lp-exam__bar' }, h('span', { text: `Question ${index + 1} of ${questions.length}` }), deadline ? clock : null), fieldset, next);
+        };
+        async function finish() {
+          if (finished) return;
+          finished = true;
+          clearInterval(timer);
+          show(h('p', { role: 'status', text: 'Submitting your answers…' }));
+          let outcome;
+          try {
+            outcome = await submitQuickCheck(client, lesson.lesson_id, Object.fromEntries(questions.map((q) => [q.question_id, picks[q.question_id] ?? []])));
+          } catch (error) {
+            if (error.locked) return locked();
+            return show(h('p', { class: 'learn-alert', 'data-focus': '', tabindex: '-1', text: error.message }),
+              h('button', { type: 'button', class: 'btn btn--gold', onclick: intro }, 'Back'));
+          }
+          if (isFinal) {
+            status.attempts_used += outcome.passed ? 0 : 1;
+            status.attempts_left = outcome.attempts_left;
+            status.passed = outcome.passed;
+          }
+          if (outcome.passed && !done) { done = true; paintFooter(); }
+          const verdict = h('p', { class: 'lp-result', 'data-focus': '', tabindex: '-1',
+            text: `You scored ${outcome.score}%. ${outcome.passed ? 'You passed.' : 'Not passed yet.'}` });
+          if (isFinal) {
+            const review = outcome.review ?? [];
+            show(verdict,
+              !outcome.passed && review.length ? h('div', {}, h('p', { text: 'Review these areas:' }), h('ul', {}, review.map((area) => h('li', { text: area })))) : null,
+              outcome.passed ? null : outcome.attempts_left
+                ? h('p', { text: `${outcome.attempts_left} ${outcome.attempts_left === 1 ? 'attempt' : 'attempts'} left.` })
+                : h('p', { text: "You've used all 3 attempts. Our team will contact you about the parts to review." }),
+              !outcome.passed && outcome.attempts_left ? h('button', { type: 'button', class: 'btn btn--gold', onclick: intro }, 'Try again') : null);
+          } else {
+            show(verdict,
+              h('ol', { class: 'lp-exam__review' }, outcome.results.map((result) => {
+                const question = questions.find((q) => q.question_id === result.question_id);
+                return h('li', {},
+                  h('p', { class: 'lp-exam__q', text: question?.text ?? '' }),
+                  h('div', { class: `lp-feedback ${result.correct ? 'is-right' : 'is-wrong'}` },
+                    h('strong', { text: result.correct ? 'Correct' : 'Not quite' }),
+                    result.explanation ? h('p', { text: result.explanation }) : null,
+                    result.review_at ? h('p', { text: `Review: ${result.review_at}` }) : null));
+              })),
+              h('button', { type: 'button', class: 'btn btn--gold', onclick: intro }, 'Take the mock again'));
+          }
+        }
+        if (deadline) { tick(); timer = setInterval(tick, 1000); }
+        ask();
+      }
+
+      intro();
+      setState('app');
+      return;
+    }
 
     const form = $('#lesson-check-form');
     const resultEl = $('#lesson-check-result');
