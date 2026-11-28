@@ -42,6 +42,14 @@ const must = ({ data, error }, what) => {
   if (error) throw new Error(`${what}: ${error.message}`);
   return data;
 };
+// Uploads retry a dropped connection (up to 3 tries) so one network blip does not stop a long run.
+const upload = async (path, body, options, what) => {
+  for (let attempt = 1; ; attempt += 1) {
+    const result = await storage.upload(path, body, options);
+    if (!result.error || attempt === 3) return must(result, what);
+    await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
+  }
+};
 
 console.log('Loading Kokoro…');
 const tts = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', { dtype: 'q8', device: 'cpu' });
@@ -73,11 +81,11 @@ async function syncFolder(folder, entries) {
     if (existing.has(entry.file)) continue;
     process.stdout.write(`  recording: ${entry.text.slice(0, 60)}${entry.text.length > 60 ? '…' : ''}\n`);
     const mp3 = await record(spokenText(entry.text));
-    must(await storage.upload(`${folder}/${entry.file}`, mp3, { contentType: 'audio/mpeg', cacheControl: '31536000', upsert: true }), 'Upload clip');
+    await upload(`${folder}/${entry.file}`, mp3, { contentType: 'audio/mpeg', cacheControl: '31536000', upsert: true }, 'Upload clip');
     made += 1;
   }
   const index = JSON.stringify({ voice: VOICE, clips: entries.map(({ key, text, file }) => ({ key, text, file })) });
-  must(await storage.upload(`${folder}/index.json`, Buffer.from(index), { contentType: 'application/json', cacheControl: '60', upsert: true }), 'Upload index');
+  await upload(`${folder}/index.json`, Buffer.from(index), { contentType: 'application/json', cacheControl: '60', upsert: true }, 'Upload index');
   const stale = [...existing].filter((name) => !keep.has(name)).map((name) => `${folder}/${name}`);
   if (stale.length) must(await storage.remove(stale), 'Remove old clips');
   return { made, reused: entries.length - made, removed: stale.length };
