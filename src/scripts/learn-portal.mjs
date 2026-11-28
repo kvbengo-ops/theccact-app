@@ -39,7 +39,7 @@ import {
   sanitizeLearnNext,
   sendStudentSignInLink,
 } from './learn-helpers.mjs';
-import { markTerms, normalizeSpeech, pickVoice, readingBlocks, recallPrompt, recallSeconds, speechChunks, spokenText } from './learn-reading.mjs';
+import { markTerms, normalizeSpeech, pickVoice, readingBlocks, recallPrompt, recallSeconds, speechChunks, spokenText, stepParts } from './learn-reading.mjs';
 
 const EXTRA_ICONS = {
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
@@ -710,6 +710,7 @@ export function setupLearnPortal(root, client) {
   // Read aloud with the device's own voice (free, no setup), plus medical-term cards.
   // ponytail: browser voices vary by device; swap `say` for pre-made audio files if the client wants one natural voice everywhere.
   let lessonAudio = null;
+  let onReadingMark = null; // set by the lesson page: Listen calls it with the block being read
 
   // The device's own voice. Free and offline; sound varies by device.
   function deviceVoice() {
@@ -826,7 +827,7 @@ export function setupLearnPortal(root, client) {
     $('#lesson-listen').hidden = !speech;
     // A recorded block plays as one clip; anything else is spoken sentence by sentence.
     // A question marker has no text: reaching it pops the question up.
-    const items = elements.flatMap((el) => (el.tagName === 'FIGURE' ? [] // images are shown, not read
+    const items = elements.flatMap((el) => (el.tagName === 'FIGURE' || el.deck ? [] // images and slide decks are shown, not read
       : el.question ? [{ el, text: '' }]
       : speech?.has?.(el.textContent) ? [{ el, text: el.textContent }] : speechChunks(el.textContent).map((text) => ({ el, text }))));
     let index = 0;
@@ -836,6 +837,7 @@ export function setupLearnPortal(root, client) {
       for (const old of root.querySelectorAll('.is-reading')) old.classList.remove('is-reading');
       if (!el) return;
       el.classList.add('is-reading');
+      onReadingMark?.(el);
       let before = el.previousElementSibling;
       while (before?.classList.contains('lp-question-mark')) before = before.previousElementSibling;
       if (before?.reveal) before.reveal();
@@ -987,12 +989,15 @@ export function setupLearnPortal(root, client) {
 
   // An image waits, blurred, until its section is read: when Listen reaches the section, or (reading silently)
   // once it is on screen. Tap a shown image to see it full size.
-  function lessonFigure({ src, alt }) {
+  function lessonFigure({ src, alt, photo }) {
     const img = h('img', { src, alt, loading: 'lazy', decoding: 'async' });
-    const figure = h('figure', { class: 'lp-figure is-waiting' },
+    const figure = h('figure', { class: `lp-figure is-waiting${photo ? ' is-photo' : ''}` },
       h('div', { class: 'lp-figure__frame' }, img, h('span', { class: 'lp-figure__wait', 'aria-hidden': 'true', text: 'Appears when this part is read' })),
       alt ? h('figcaption', { text: alt }) : null);
     figure.reveal = () => figure.classList.remove('is-waiting');
+    figure.stageView = () => h('figure', { class: `lp-figure lp-stage__item${photo ? ' is-photo' : ''}` },
+      h('div', { class: 'lp-figure__frame' }, h('img', { src, alt, decoding: 'async', onclick: () => img.click() })),
+      alt ? h('figcaption', { text: alt }) : null);
     let pending = null;
     new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) { clearTimeout(pending); pending = null; return; }
@@ -1003,13 +1008,82 @@ export function setupLearnPortal(root, client) {
       }, 700);
     }, { threshold: 0.5 }).observe(figure);
     img.addEventListener('click', () => {
-      if (figure.classList.contains('is-waiting')) return;
+      if (figure.classList.contains('is-waiting') && !document.querySelector('.lp.has-stage')) return;
       const zoom = $('#lp-zoom');
       zoom.replaceChildren(h('img', { src, alt }), h('button', { type: 'button', class: 'btn btn--gold', onclick: () => zoom.close() }, 'Close'));
       zoom.onclick = (event) => { if (event.target === zoom) zoom.close(); };
       zoom.showModal();
     });
     return figure;
+  }
+
+  // A step-by-step slide deck built from the step paragraphs after a "Slides:" line. It has an inline view
+  // (phones: pinned while its steps scroll) and a view for the side panel (wider screens); both stay in step.
+  function stepDeck(title) {
+    const steps = [];
+    const views = [];
+    let current = 0;
+    const go = (index) => {
+      if (!steps.length) return;
+      current = Math.max(0, Math.min(steps.length - 1, index));
+      for (const view of views) view.paint();
+    };
+    const makeView = () => {
+      const track = h('div', { class: 'lp-deck__track' });
+      const dots = h('div', { class: 'lp-deck__dots', role: 'tablist', 'aria-label': 'Steps' });
+      const count = h('span', { class: 'lp-deck__count', 'aria-live': 'polite' });
+      const prev = h('button', { type: 'button', class: 'lp-deck__nav', 'aria-label': 'Previous step', onclick: () => go(current - 1) }, svg('arrowLeft'));
+      const next = h('button', { type: 'button', class: 'lp-deck__nav', 'aria-label': 'Next step', onclick: () => go(current + 1) }, svg('arrow'));
+      const view = h('section', { class: 'lp-deck', 'aria-roledescription': 'carousel', 'aria-label': title, tabindex: '0' },
+        h('div', { class: 'lp-deck__head' }, h('p', { class: 'lp-deck__title', text: title }), count),
+        h('div', { class: 'lp-deck__window' }, track),
+        h('div', { class: 'lp-deck__foot' }, prev, dots, next));
+      view.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowRight') { event.preventDefault(); go(current + 1); }
+        if (event.key === 'ArrowLeft') { event.preventDefault(); go(current - 1); }
+      });
+      let startX = null;
+      track.addEventListener('pointerdown', (event) => { startX = event.clientX; });
+      track.addEventListener('pointerup', (event) => {
+        if (startX === null) return;
+        const moved = event.clientX - startX;
+        startX = null;
+        if (Math.abs(moved) > 40) go(current + (moved < 0 ? 1 : -1));
+      });
+      view.paint = () => {
+        if (track.children.length !== steps.length) {
+          track.replaceChildren(...steps.map((step, i) => h('div', { class: 'lp-deck__slide', role: 'group', 'aria-label': `Step ${i + 1} of ${steps.length}` },
+            h('span', { class: 'lp-deck__num', text: String(i + 1) }),
+            step.title ? h('p', { class: 'lp-deck__step', text: step.title }) : null,
+            h('p', { class: 'lp-deck__body', text: step.body }))));
+          dots.replaceChildren(...steps.map((step, i) => h('button', { type: 'button', class: 'lp-deck__dot', role: 'tab', 'aria-label': `Step ${i + 1}${step.title ? `: ${step.title}` : ''}`, onclick: () => go(i) })));
+        }
+        track.style.transform = `translateX(${-100 * current}%)`;
+        [...track.children].forEach((slide, i) => slide.classList.toggle('is-current', i === current));
+        [...dots.children].forEach((dot, i) => dot.setAttribute('aria-selected', String(i === current)));
+        count.textContent = `${current + 1} / ${steps.length}`;
+        prev.disabled = current === 0;
+        next.disabled = current === steps.length - 1;
+      };
+      views.push(view);
+      view.paint();
+      return view;
+    };
+    const inline = makeView();
+    inline.classList.add('lp-deck--inline');
+    inline.deck = true;
+    inline.stageView = () => { const view = makeView(); view.classList.add('lp-stage__item'); return view; };
+    return {
+      root: inline,
+      add(step, paragraph) {
+        paragraph.step = { go: () => go(steps.length ? paragraph.stepIndex : 0) };
+        paragraph.stepIndex = steps.length;
+        paragraph.dataset.step = String(steps.length + 1);
+        paragraph.classList.add('lp-step');
+        steps.push(step);
+        for (const view of views) view.paint();
+      },
+    };
   }
 
   // A question pops up, is read aloud, and waits for an answer or the timer; Continue closes it.
@@ -1150,6 +1224,45 @@ export function setupLearnPortal(root, client) {
     document.addEventListener('keydown', (event) => { if (event.key === 'Escape') hide(); });
   }
 
+  // Wider screens: text on the left, a sticky panel on the right with the visual for the part being read
+  // (the last image or step deck before it). It follows Listen, or the paragraph in the middle of the screen.
+  function setupStage(blocks) {
+    const stage = $('#lesson-stage');
+    const layout = root.querySelector('.lp');
+    const visuals = blocks.filter((el) => el.stageView);
+    onReadingMark = null;
+    layout.classList.toggle('has-stage', visuals.length > 0);
+    stage.replaceChildren();
+    if (!visuals.length) return;
+    const wide = matchMedia('(min-width: 1000px)');
+    let shown = null;
+    const visualFor = (el) => {
+      let at = blocks.indexOf(el);
+      while (at >= 0 && !blocks[at].stageView) at -= 1;
+      return at >= 0 ? blocks[at] : visuals[0];
+    };
+    const follow = (el) => {
+      if (!blocks.includes(el)) return;
+      el.step?.go();
+      if (!wide.matches) return;
+      const visual = visualFor(el);
+      if (visual === shown) return;
+      shown = visual;
+      visual.reveal?.();
+      stage.replaceChildren(visual.stageView());
+    };
+    onReadingMark = follow;
+    follow(visuals[0]);
+    wide.addEventListener('change', () => { shown = null; follow(visuals[0]); });
+    // Reading silently: the paragraph crossing the middle of the screen is the one being read.
+    const middle = new IntersectionObserver((entries) => {
+      if (lessonAudio?.isPlaying?.()) return;
+      const hit = entries.find((entry) => entry.isIntersecting);
+      if (hit) follow(hit.target);
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    for (const el of blocks) middle.observe(el);
+  }
+
   async function renderLesson() {
     const lessonId = new URLSearchParams(location.search).get('id') || '';
     const data = await loadLessonData(client, siteBrand, lessonId);
@@ -1172,14 +1285,21 @@ export function setupLearnPortal(root, client) {
     const seenTerms = new Set();
     const parsed = readingBlocks(lesson.reading);
     let wrapUps = parsed.filter((block) => block.recall?.wrapUp).map((block) => block.recall);
-    const blocks = parsed.filter((block) => !block.recall?.wrapUp).map((block) => (block.heading
-      ? h('h2', { class: 'lp-h', text: block.text })
-      : block.recall ? questionMarker(block.recall)
-      : block.image ? lessonFigure(block.image)
-      : h('p', {}, markTerms(block.text, data.glossary, seenTerms).map((part) => (typeof part === 'string'
-        ? part
-        : h('button', { type: 'button', class: 'lp-term', 'aria-haspopup': 'dialog', onclick: () => showTerm(part.term) }, part.text))))));
+    const paragraph = (text) => h('p', {}, markTerms(text, data.glossary, seenTerms).map((part) => (typeof part === 'string'
+      ? part
+      : h('button', { type: 'button', class: 'lp-term', 'aria-haspopup': 'dialog', onclick: () => showTerm(part.term) }, part.text))));
+    let deck = null; // the step deck the next paragraphs belong to, until a heading
+    const blocks = parsed.filter((block) => !block.recall?.wrapUp).map((block) => {
+      if (block.heading) { deck = null; return h('h2', { class: 'lp-h', text: block.text }); }
+      if (block.slides) { deck = stepDeck(block.slides.title); return deck.root; }
+      if (block.recall) return questionMarker(block.recall);
+      if (block.image) return lessonFigure(block.image);
+      const p = paragraph(block.text);
+      if (deck) deck.add(stepParts(block.text), p);
+      return p;
+    });
     $('#lesson-reading').replaceChildren(...blocks);
+    setupStage(blocks);
     setupLessonAudio(data.glossary.filter((t) => seenTerms.has(t.term.toLowerCase())), [$('#lesson-title'), ...blocks], data.recorded);
     setupHighlights(lesson.lesson_id);
     // ponytail: video player and file downloads wait for the video host and private file bucket (L05).

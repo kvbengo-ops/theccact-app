@@ -38,7 +38,10 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
         </div>
         <p class="lp-hl-tip">Tip: select any text to highlight or underline it.</p>
 
-        <div id="lesson-reading" class="lp-reading"></div>
+        <div class="lp-body">
+          <div id="lesson-reading" class="lp-reading"></div>
+          <aside id="lesson-stage" class="lp-stage" aria-label="Visual for this part"></aside>
+        </div>
 
         <details id="lesson-terms" class="editorial-card lp-terms" hidden>
           <summary>Medical terms in this lesson</summary>
@@ -82,6 +85,48 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
 
 <style is:global>
   .lp { max-width: 760px; overflow-wrap: anywhere; }
+  .lp-stage { display: none; }
+  @media (min-width: 1000px) {
+    .lp.has-stage { max-width: 1240px; }
+    .lp.has-stage .lp-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); gap: 40px; align-items: start; }
+    .lp.has-stage .lp-stage { display: block; position: sticky; top: 96px; }
+    .lp.has-stage .lp-reading .lp-figure, .lp.has-stage .lp-reading .lp-deck--inline { display: none; }
+  }
+  .lp-stage__item { animation: lp-stage-in 0.55s ease both; }
+  @keyframes lp-stage-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
+  .lp-figure.is-photo:not(.is-waiting) img { animation: lp-photo-zoom 16s ease-in-out infinite alternate; }
+  @keyframes lp-photo-zoom { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+  /* Step slide decks */
+  .lp-deck { margin: 4px 0 24px; padding: 16px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--surface); white-space: normal; outline: none; }
+  .lp-deck:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 45%, transparent); }
+  .lp-deck--inline { position: sticky; top: 80px; z-index: 5; box-shadow: 0 12px 24px -18px rgb(10 15 30 / 0.5); }
+  .lp-deck__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .lp-deck__title { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-gold-dark); }
+  .lp-deck__count { font-size: 13px; font-weight: 700; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+  .lp-deck__window { overflow: hidden; border-radius: 10px; }
+  .lp-deck__track { display: flex; transition: transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1); touch-action: pan-y; cursor: grab; }
+  .lp-deck__slide { flex: 0 0 100%; min-height: 150px; padding: 20px 22px; border-radius: 10px; background: linear-gradient(135deg, var(--color-navy), color-mix(in srgb, var(--color-navy) 75%, var(--color-gold))); color: #fff; }
+  .lp-deck__num { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--color-gold); color: var(--color-navy); font-weight: 800; }
+  .lp-deck__step { margin: 12px 0 6px; font-family: var(--font-serif); font-size: 24px; font-weight: 700; line-height: 1.2; }
+  .lp-deck__body { margin: 0; font-size: 16px; line-height: 1.55; color: rgb(255 255 255 / 0.9); }
+  .lp-deck__slide.is-current .lp-deck__num { animation: lp-pop 0.5s ease; }
+  .lp-deck__slide.is-current .lp-deck__step, .lp-deck__slide.is-current .lp-deck__body { animation: lp-rise 0.5s ease both; }
+  .lp-deck__slide.is-current .lp-deck__body { animation-delay: 0.08s; }
+  @keyframes lp-pop { 0% { transform: scale(0.6); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
+  @keyframes lp-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .lp-deck__foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+  .lp-deck__nav { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--color-border); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: pointer; }
+  .lp-deck__nav:disabled { opacity: 0.35; cursor: default; }
+  .lp-deck__nav svg { width: 18px; height: 18px; }
+  .lp-deck__dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .lp-deck__dot { width: 10px; height: 10px; padding: 0; border: 0; border-radius: 50%; background: var(--color-border); cursor: pointer; transition: transform 0.2s ease, background 0.2s ease; }
+  .lp-deck__dot[aria-selected='true'] { background: var(--color-gold); transform: scale(1.3); }
+  .lp-reading .lp-step { position: relative; padding-left: 40px; }
+  .lp-reading .lp-step::before { content: attr(data-step); position: absolute; left: 0; top: 2px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--color-sand); color: var(--color-gold-dark); font-size: 14px; font-weight: 800; }
+  @media (prefers-reduced-motion: reduce) {
+    .lp-stage__item, .lp-figure.is-photo img, .lp-deck__slide.is-current *, .lp-deck__track { animation: none !important; transition: none !important; }
+  }
   .lp-kicker { margin: 0 0 6px; font-size: 14px; font-weight: 700; color: var(--color-text-muted); }
   .lp-title { margin: 0 0 8px; font-family: var(--font-serif); font-size: clamp(1.9rem, 5vw, 2.7rem); line-height: 1.12; color: var(--ink); }
   .lp-subtitle { margin: 0 0 16px; font-family: var(--font-serif); font-size: 26px; color: var(--ink); }

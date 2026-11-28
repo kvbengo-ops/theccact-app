@@ -89,3 +89,21 @@ test('an image line becomes an image block; anything else stays text', async () 
   assert.equal(notHttps.image, undefined);
   assert.equal(inline.image, undefined);
 });
+
+test('a Slides line starts a step deck; steps split into title and body', async () => {
+  const { readingBlocks, stepParts } = await import('../src/scripts/learn-reading.mjs');
+  const [marker, step, plain] = readingBlocks('Slides: The stages\n\nPrepare: verify the order.\n\nJust a sentence.');
+  assert.deepEqual(marker.slides, { title: 'The stages' });
+  assert.equal(step.slides, undefined);
+  assert.equal(plain.slides, undefined);
+  assert.deepEqual(stepParts('Prepare: verify the order, identify the patient.'), { title: 'Prepare', body: 'verify the order, identify the patient.' });
+  assert.deepEqual(stepParts('No colon here.'), { title: '', body: 'No colon here.' });
+  assert.deepEqual(stepParts('Ratio: 1:2 dilution'), { title: 'Ratio', body: '1:2 dilution' });
+});
+
+test('an image can be marked as a photo', async () => {
+  const { readingBlocks } = await import('../src/scripts/learn-reading.mjs');
+  const [photo, diagram] = readingBlocks('![Nurse at the pump](https://x/a.webp "photo")\n\n![Formulas](https://x/b.webp)');
+  assert.deepEqual(photo.image, { alt: 'Nurse at the pump', src: 'https://x/a.webp', photo: true });
+  assert.deepEqual(diagram.image, { alt: 'Formulas', src: 'https://x/b.webp' });
+});

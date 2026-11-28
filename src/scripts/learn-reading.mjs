@@ -26,9 +26,14 @@ export function readingBlocks(text) {
   return String(text ?? '').split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean)
     .map((block) => {
       if (block.startsWith('## ')) return { heading: true, text: block.slice(3).trim() };
+      // "Slides: Title" turns the paragraphs after it (up to the next heading) into a step-by-step slide deck.
+      // Each step paragraph reads "Step title: what to do". The marker itself is shown, not read aloud.
+      const slides = block.match(/^Slides:\s*(.+)$/i);
+      if (slides) return { heading: false, text: block, slides: { title: slides[1].trim() } };
       // An image on its own line: ![caption](https://...). Shown, not read aloud.
-      const image = block.match(/^!\[([^\]\n]*)\]\((https:\/\/[^\s)]+)\)$/);
-      if (image) return { heading: false, text: block, image: { alt: image[1].trim(), src: image[2] } };
+      // ![caption](https://... "photo") marks a photo-like picture: it gets a slow zoom, diagrams stay still.
+      const image = block.match(/^!\[([^\]\n]*)\]\((https:\/\/[^\s)]+)(?:\s+"([^"]*)")?\)$/);
+      if (image) return { heading: false, text: block, image: { alt: image[1].trim(), src: image[2], ...(image[3] === 'photo' && { photo: true }) } };
       const recall = parseRecall(block);
       return recall ? { heading: false, text: block, recall } : { heading: false, text: block };
     });
@@ -113,4 +118,10 @@ export function markTerms(text, terms = [], seen = new Set()) {
   }
   if (last < text.length) parts.push(text.slice(last));
   return parts;
+}
+
+// Splits "Step title: what to do" into its parts. A step with no colon is all body.
+export function stepParts(text) {
+  const match = String(text ?? '').match(/^([^:\n]{1,60}):\s*([\s\S]+)$/);
+  return match ? { title: match[1].trim(), body: match[2].trim() } : { title: '', body: String(text ?? '').trim() };
 }
