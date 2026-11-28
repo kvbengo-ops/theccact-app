@@ -51,6 +51,8 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
           <button type="button" data-hl="remove">Remove</button>
         </div>
 
+        <dialog id="lp-zoom" class="lp-zoom" aria-label="Image, full size"></dialog>
+
         <dialog id="lp-wrapup" class="lp-wrapup" aria-label="Wrap-up question"></dialog>
 
         <div id="lp-term-card" class="lp-term-card" popover role="dialog" aria-labelledby="lp-term-name">
@@ -150,7 +152,18 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
   .lp-hl-swatch { width: 14px; height: 14px; border-radius: 3px; background: #f5d547; }
   .lp-hl-under { text-decoration: underline 2px #e3c98a; text-underline-offset: 3px; }
   .lp-figure { margin: 4px 0 28px; white-space: normal; }
-  .lp-figure img { display: block; width: 100%; height: auto; max-height: 460px; object-fit: contain; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; }
+  .lp-figure__frame { position: relative; overflow: hidden; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; }
+  .lp-figure img { display: block; width: 100%; height: auto; max-height: 460px; object-fit: contain; cursor: zoom-in; transition: opacity 0.7s ease, filter 0.7s ease, transform 0.7s ease; }
+  .lp-figure__wait { position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; font-weight: 700; color: var(--color-text-muted); background: color-mix(in srgb, var(--color-sand) 70%, transparent); transition: opacity 0.5s ease; }
+  .lp-figure:not(.is-waiting) .lp-figure__wait { opacity: 0; pointer-events: none; }
+  .lp-figure.is-waiting img { opacity: 0.25; filter: blur(14px); transform: scale(0.97); cursor: default; }
+  .lp-figure.is-waiting figcaption { opacity: 0; }
+  .lp-figure figcaption { transition: opacity 0.7s ease; }
+  @media (prefers-reduced-motion: reduce) { .lp-figure img, .lp-figure__wait, .lp-figure figcaption { transition: none; } .lp-figure.is-waiting img { transform: none; } }
+  .lp-zoom { width: min(1100px, calc(100vw - 16px)); max-height: calc(100dvh - 16px); padding: 12px; border: 0; border-radius: 12px; background: #fff; }
+  .lp-zoom::backdrop { background: rgb(10 14 24 / 0.8); }
+  .lp-zoom img { display: block; width: 100%; height: auto; max-height: calc(100dvh - 110px); object-fit: contain; }
+  .lp-zoom .btn { margin-top: 10px; }
   .lp-figure figcaption { margin-top: 8px; font-size: 14px; color: var(--color-text-muted); }
   .lp-recall__why { margin: 12px 0 0; line-height: 1.55; }
   .lp-wrapup { width: min(560px, calc(100vw - 24px)); padding: 20px; border: 0; border-radius: 14px; background: var(--surface); color: var(--color-text); }

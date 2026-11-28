@@ -836,6 +836,9 @@ export function setupLearnPortal(root, client) {
       for (const old of root.querySelectorAll('.is-reading')) old.classList.remove('is-reading');
       if (!el) return;
       el.classList.add('is-reading');
+      let before = el.previousElementSibling;
+      while (before?.classList.contains('lp-question-mark')) before = before.previousElementSibling;
+      if (before?.reveal) before.reveal();
       if ($('#listen-autoscroll')?.checked) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
     };
     const autoScroll = $('#listen-autoscroll');
@@ -980,6 +983,33 @@ export function setupLearnPortal(root, client) {
     }, { threshold: 0.6 }).observe(card);
     card.recall = { prompt: recallPrompt(recall), why: recall.why, wait: (fn) => { if (settled) fn(); else { waiting.push(fn); start(); } } };
     return card;
+  }
+
+  // An image waits, blurred, until its section is read: when Listen reaches the section, or (reading silently)
+  // once it is on screen. Tap a shown image to see it full size.
+  function lessonFigure({ src, alt }) {
+    const img = h('img', { src, alt, loading: 'lazy', decoding: 'async' });
+    const figure = h('figure', { class: 'lp-figure is-waiting' },
+      h('div', { class: 'lp-figure__frame' }, img, h('span', { class: 'lp-figure__wait', 'aria-hidden': 'true', text: 'Appears when this part is read' })),
+      alt ? h('figcaption', { text: alt }) : null);
+    figure.reveal = () => figure.classList.remove('is-waiting');
+    let pending = null;
+    new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) { clearTimeout(pending); pending = null; return; }
+      if (pending || !figure.classList.contains('is-waiting')) return;
+      pending = setTimeout(() => {
+        pending = null;
+        if (!lessonAudio?.isPlaying?.()) figure.reveal(); // while listening, the voice reveals it
+      }, 700);
+    }, { threshold: 0.5 }).observe(figure);
+    img.addEventListener('click', () => {
+      if (figure.classList.contains('is-waiting')) return;
+      const zoom = $('#lp-zoom');
+      zoom.replaceChildren(h('img', { src, alt }), h('button', { type: 'button', class: 'btn btn--gold', onclick: () => zoom.close() }, 'Close'));
+      zoom.onclick = (event) => { if (event.target === zoom) zoom.close(); };
+      zoom.showModal();
+    });
+    return figure;
   }
 
   // A question pops up, is read aloud, and waits for an answer or the timer; Continue closes it.
@@ -1145,9 +1175,7 @@ export function setupLearnPortal(root, client) {
     const blocks = parsed.filter((block) => !block.recall?.wrapUp).map((block) => (block.heading
       ? h('h2', { class: 'lp-h', text: block.text })
       : block.recall ? questionMarker(block.recall)
-      : block.image ? h('figure', { class: 'lp-figure' },
-        h('img', { src: block.image.src, alt: block.image.alt, loading: 'lazy', decoding: 'async' }),
-        block.image.alt ? h('figcaption', { text: block.image.alt }) : null)
+      : block.image ? lessonFigure(block.image)
       : h('p', {}, markTerms(block.text, data.glossary, seenTerms).map((part) => (typeof part === 'string'
         ? part
         : h('button', { type: 'button', class: 'lp-term', 'aria-haspopup': 'dialog', onclick: () => showTerm(part.term) }, part.text))))));
