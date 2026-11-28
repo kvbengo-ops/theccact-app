@@ -17,6 +17,8 @@ import {
   inviteMailto,
   parseQuestionOptions,
   formatQuestionOptions,
+  parseGlossary,
+  formatGlossary,
 } from '../src/lib/admin-helpers.mjs';
 
 test('slugify makes URL-safe partner slugs that pass the database rule', () => {
@@ -120,4 +122,18 @@ test('quick-check answers: one per line, * marks the correct ones, and the rules
   assert.equal(formatQuestionOptions(['True', 'False'], [0]), '*True\nFalse');
   const round = parseQuestionOptions(formatQuestionOptions(['A', 'B', 'C'], [1, 2]), 'multiple');
   assert.deepEqual(round, { options: ['A', 'B', 'C'], correct: [1, 2] });
+});
+
+test('glossary lines: term | how to say it | meaning, checked like the database', () => {
+  const text = 'tachycardia | tak-ih-KAR-dee-uh | A fast heart rate.\n\nword root |  | The main part | of a word.';
+  assert.deepEqual(parseGlossary(text), { terms: [
+    { term: 'tachycardia', pronunciation: 'tak-ih-KAR-dee-uh', definition: 'A fast heart rate.' },
+    { term: 'word root', pronunciation: '', definition: 'The main part | of a word.' },
+  ] });
+  assert.match(parseGlossary('edema - swelling').error, /Line 1: write it as/);
+  assert.match(parseGlossary('a | | x\nA | | y').error, /Line 2: "A" is already/);
+  assert.match(parseGlossary(`${'x'.repeat(81)} | | y`).error, /too long/);
+  assert.deepEqual(parseGlossary(''), { terms: [] });
+  const round = parseGlossary(formatGlossary(parseGlossary(text).terms));
+  assert.deepEqual(round, parseGlossary(text));
 });

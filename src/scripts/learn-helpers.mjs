@@ -305,10 +305,13 @@ export async function loadLessonData(client, siteBrand, lessonId) {
     if (result.error) throw new Error('Unable to load the quick check right now. Please try again.');
     questions = result.data;
   }
+  // Medical terms for the course. Optional: a missing glossary never blocks the lesson.
+  const glossary = await client.rpc('learn_glossary', { p_course: row.course_id }).then((r) => (r.error ? [] : r.data ?? []), () => []);
   return {
     state: 'open',
     lesson: row,
     questions,
+    glossary,
     course: overview.course,
     number: index + 1,
     total: lessons.length,

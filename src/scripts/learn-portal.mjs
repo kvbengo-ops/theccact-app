@@ -38,10 +38,13 @@ import {
   sanitizeLearnNext,
   sendStudentSignInLink,
 } from './learn-helpers.mjs';
+import { markTerms, pickVoice, readingBlocks, speechChunks } from './learn-reading.mjs';
 
 const EXTRA_ICONS = {
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
   play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+  pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
 };
 
 function h(tag, props = {}, ...kids) {
@@ -702,6 +705,116 @@ export function setupLearnPortal(root, client) {
     setState('app');
   }
 
+  // Read aloud with the device's own voice (free, no setup), plus medical-term cards.
+  // ponytail: browser voices vary by device; swap `say` for pre-made audio files if the client wants one natural voice everywhere.
+  let lessonAudio = null;
+  function setupLessonAudio(terms, elements) {
+    const speech = 'speechSynthesis' in window ? window.speechSynthesis : null;
+    let voice = null;
+    if (speech) {
+      const loadVoice = () => { voice = pickVoice(speech.getVoices()); };
+      loadVoice();
+      speech.addEventListener?.('voiceschanged', loadVoice);
+      speech.cancel();
+      addEventListener('pagehide', () => speech.cancel());
+    }
+    const say = (text, speed, onstart, onend) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      if (voice) { utterance.voice = voice; utterance.lang = voice.lang; } else utterance.lang = 'en-CA';
+      utterance.rate = speed;
+      utterance.onstart = onstart ?? null;
+      utterance.onend = onend ?? null;
+      utterance.onerror = onend ?? null;
+      speech.speak(utterance);
+    };
+
+    const play = $('#listen-play');
+    const stop = $('#listen-stop');
+    const rate = $('#listen-rate');
+    $('#lesson-listen').hidden = !speech;
+    const items = elements.flatMap((el) => speechChunks(el.textContent).map((text) => ({ el, text })));
+    let index = 0;
+    let state = 'idle'; // idle | playing | paused
+    let token = 0; // ignores end events from speech we cancelled
+    const mark = (el) => {
+      for (const old of root.querySelectorAll('.is-reading')) old.classList.remove('is-reading');
+      if (!el) return;
+      el.classList.add('is-reading');
+      const box = el.getBoundingClientRect();
+      if (box.top < 80 || box.bottom > innerHeight) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    };
+    const paint = () => {
+      play.replaceChildren(svg(state === 'playing' ? 'pause' : 'volume'), state === 'playing' ? 'Pause' : state === 'paused' ? 'Resume' : 'Listen to this lesson');
+      play.setAttribute('aria-pressed', String(state === 'playing'));
+      stop.hidden = state === 'idle';
+    };
+    const step = () => {
+      if (state !== 'playing') return;
+      if (index >= items.length) { state = 'idle'; index = 0; mark(null); paint(); return; }
+      const mine = ++token;
+      const item = items[index];
+      say(item.text, Number(rate.value), () => mark(item.el), () => {
+        if (mine !== token || state !== 'playing') return;
+        index += 1;
+        step();
+      });
+    };
+    // Pausing cancels and keeps the place: speechSynthesis.pause() is unreliable on phones.
+    const halt = (next) => {
+      state = next;
+      token += 1;
+      speech?.cancel();
+      if (next === 'idle') { index = 0; mark(null); }
+      paint();
+    };
+    if (speech) {
+      play.onclick = () => {
+        if (state === 'playing') return halt('paused');
+        state = 'playing';
+        paint();
+        step();
+      };
+      stop.onclick = () => halt('idle');
+      rate.onchange = () => { if (state === 'playing') { token += 1; speech.cancel(); step(); } };
+      paint();
+    }
+    lessonAudio = speech && {
+      sayWord(word) {
+        if (state === 'playing') halt('paused');
+        speech.cancel();
+        say(word, 0.8);
+      },
+    };
+
+    const speakButton = (word) => (lessonAudio
+      ? h('button', { type: 'button', class: 'lp-speak', 'aria-label': `Say ${word}`, title: `Say ${word}`, onclick: () => lessonAudio.sayWord(word) }, svg('volume'))
+      : null);
+    $('#lesson-terms').hidden = !terms.length;
+    $('#lesson-terms-list').replaceChildren(...terms.flatMap((t) => [
+      h('dt', {}, h('span', { text: t.term }), speakButton(t.term)),
+      h('dd', {}, t.pronunciation ? h('span', { class: 'lp-say', text: t.pronunciation }) : null, h('span', { text: t.definition })),
+    ]));
+  }
+
+  function showTerm(term) {
+    const card = $('#lp-term-card');
+    $('#lp-term-name').textContent = term.term;
+    $('#lp-term-say').textContent = term.pronunciation || '';
+    $('#lp-term-say').hidden = !term.pronunciation;
+    $('#lp-term-def').textContent = term.definition;
+    const speak = $('#lp-term-speak');
+    speak.hidden = !lessonAudio;
+    speak.replaceChildren(svg('volume'), 'Say it');
+    speak.onclick = () => lessonAudio?.sayWord(term.term);
+    if (card.showPopover) {
+      if (card.matches(':popover-open')) card.hidePopover();
+      card.showPopover();
+    } else {
+      card.hidden = false;
+    }
+    (lessonAudio ? speak : card.querySelector('[data-close]'))?.focus();
+  }
+
   async function renderLesson() {
     const lessonId = new URLSearchParams(location.search).get('id') || '';
     const data = await loadLessonData(client, siteBrand, lessonId);
@@ -720,8 +833,15 @@ export function setupLearnPortal(root, client) {
     $('#lesson-kicker').textContent = `${course.title} · Lesson ${number} of ${total}`;
     $('#lesson-course-link').href = courseOverviewUrl(course.courseId);
 
-    const paragraphs = String(lesson.reading ?? '').split(/\n\s*\n/).filter((text) => text.trim());
-    $('#lesson-reading').replaceChildren(...paragraphs.map((text) => h('p', { text: text.trim() })));
+    // Reading, with each medical term underlined the first time it appears.
+    const seenTerms = new Set();
+    const blocks = readingBlocks(lesson.reading).map((block) => (block.heading
+      ? h('h2', { class: 'lp-h', text: block.text })
+      : h('p', {}, markTerms(block.text, data.glossary, seenTerms).map((part) => (typeof part === 'string'
+        ? part
+        : h('button', { type: 'button', class: 'lp-term', 'aria-haspopup': 'dialog', onclick: () => showTerm(part.term) }, part.text))))));
+    $('#lesson-reading').replaceChildren(...blocks);
+    setupLessonAudio(data.glossary.filter((t) => seenTerms.has(t.term.toLowerCase())), [$('#lesson-title'), ...blocks]);
     // ponytail: video player and file downloads wait for the video host and private file bucket (L05).
     $('#lesson-video-note').hidden = !lesson.video_id;
 

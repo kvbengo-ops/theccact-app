@@ -141,3 +141,28 @@ export function parseQuestionOptions(text, type) {
 export function formatQuestionOptions(options = [], correct = []) {
   return options.map((option, index) => `${correct.includes(index) ? '*' : ''}${option}`).join('\n');
 }
+
+/** Course glossary, typed one term per line: term | how to say it | meaning. The middle part may be empty. */
+export function parseGlossary(text) {
+  const terms = [];
+  const seen = new Set();
+  const lines = String(text ?? '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  for (const [index, line] of lines.entries()) {
+    const parts = line.split('|').map((part) => part.trim());
+    const [term, pronunciation, ...rest] = parts;
+    const definition = rest.join(' | ').trim();
+    const where = `Line ${index + 1}`;
+    if (parts.length < 3 || !term || !definition) return { error: `${where}: write it as term | how to say it | meaning.` };
+    if (term.length > 80) return { error: `${where}: the term is too long (80 characters at most).` };
+    if (pronunciation.length > 120) return { error: `${where}: "how to say it" is too long (120 characters at most).` };
+    if (definition.length > 600) return { error: `${where}: the meaning is too long (600 characters at most).` };
+    if (seen.has(term.toLowerCase())) return { error: `${where}: "${term}" is already in the list.` };
+    seen.add(term.toLowerCase());
+    terms.push({ term, pronunciation, definition });
+  }
+  return { terms };
+}
+
+export function formatGlossary(terms = []) {
+  return terms.map((t) => `${t.term} | ${t.pronunciation ?? ''} | ${t.definition}`).join('\n');
+}

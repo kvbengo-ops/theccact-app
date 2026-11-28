@@ -6,12 +6,14 @@ import {
   countByStatus,
   formatDate,
   formatQuestionOptions,
+  formatGlossary,
   initials,
   inviteLink,
   inviteMailto,
   inviteStatus,
   matchesQuery,
   parseQuestionOptions,
+  parseGlossary,
   QUESTION_TYPES,
   SLUG_PATTERN,
   slugify,
@@ -699,6 +701,35 @@ export function setupAdmin(root, client) {
       courseEditor.append(editor('lessons', null, module.id, lessons.length ? Math.max(...lessons.map((l) => l.position)) + 1 : 0));
     }
     courseEditor.append(editor('modules', null, course.id, modulesResult.data.length ? Math.max(...modulesResult.data.map((m) => m.position)) + 1 : 0));
+    // Medical terms: underlined in lessons; students tap them for the meaning and pronunciation.
+    courseEditor.append(h('h2', { text: 'Medical terms' }));
+    const glossaryResult = await client.from('glossary_terms').select('term, pronunciation, definition').eq('course_id', course.id).order('term');
+    if (glossaryResult.error) {
+      courseEditor.append(h('p', { class: 'muted', text: 'Medical terms need a database update first (migration 202611280001_learn_glossary).' }));
+    } else {
+      const glossaryForm = h('form', { class: 'invite-form' });
+      const box = field(glossaryForm, 'glossary', 'One term per line: term | how to say it | meaning. Leave "how to say it" empty if it is obvious.', 'textarea', formatGlossary(glossaryResult.data), { rows: 10, placeholder: 'tachycardia | tak-ih-KAR-dee-uh | A fast heart rate: over 100 beats per minute at rest.' });
+      const glossaryError = h('p', { class: 'form-error', role: 'alert', hidden: true });
+      glossaryForm.append(glossaryError, button('Save medical terms'));
+      glossaryForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const parsed = parseGlossary(box.value);
+        if (parsed.error) return showError(glossaryError, parsed.error);
+        showError(glossaryError, '');
+        const rows = (list) => list.map((t) => ({ course_id: course.id, ...t }));
+        // Replace the whole list; if the new list is refused, put the old one back.
+        const cleared = await client.from('glossary_terms').delete().eq('course_id', course.id);
+        if (cleared.error) return showError(glossaryError, 'Could not save. Try again.');
+        const saved = parsed.terms.length ? await client.from('glossary_terms').insert(rows(parsed.terms)) : {};
+        if (saved.error) {
+          if (glossaryResult.data.length) await client.from('glossary_terms').insert(rows(glossaryResult.data));
+          return showError(glossaryError, 'Could not save. Check the terms and try again.');
+        }
+        glossaryResult.data = parsed.terms;
+        toast(`Saved ${parsed.terms.length} ${parsed.terms.length === 1 ? 'term' : 'terms'}.`);
+      });
+      courseEditor.append(glossaryForm);
+    }
     courseEditor.append(h('h2', { text: 'Students' }));
     const enrollForm = h('form', { class: 'invite-form' });
     field(enrollForm, 'students', 'Email addresses (one per line; optionally add a comma and student name)', 'textarea', '', { required: true, rows: 5 });
