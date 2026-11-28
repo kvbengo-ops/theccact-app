@@ -147,3 +147,6 @@ update public.questions q set
     else 'Lesson 3, Abbreviations you will see on shift: ' end || q.review_at
 where q.lesson_id in ('5a3b1e00-0000-4000-8000-00000000c001', '5a3b1e00-0000-4000-8000-00000000c002', '5a3b1e00-0000-4000-8000-00000000c003');
 ;
+
+-- The course quiz is the final exam: 15 minutes, 3 attempts (needs 202611290001_learn_exams.sql).
+update public.lessons set exam = 'final', exam_minutes = 15, title = 'Final exam' where id = '5a3b1e00-0000-4000-8000-00000000c004';
