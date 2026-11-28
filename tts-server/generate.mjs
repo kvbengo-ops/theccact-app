@@ -11,7 +11,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { KokoroTTS } from 'kokoro-js';
-import { normalizeSpeech as normalize, readingBlocks, speechChunks } from '../src/scripts/learn-reading.mjs';
+import { normalizeSpeech as normalize, readingBlocks, speechChunks, spokenText } from '../src/scripts/learn-reading.mjs';
 
 const envFile = new URL('../.env.local', import.meta.url);
 if (existsSync(envFile)) {
@@ -36,7 +36,8 @@ const BUCKET = 'lesson-audio';
 const VOICE = process.env.TTS_VOICE || 'af_heart';
 const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 const storage = db.storage.from(BUCKET);
-const clipName = (text) => `${createHash('sha1').update(`${VOICE}|${text}`).digest('hex').slice(0, 16)}.mp3`;
+// Named by what is actually said, so a new pronunciation rule re-records only the clips it changes.
+const clipName = (text) => `${createHash('sha1').update(`${VOICE}|${spokenText(text)}`).digest('hex').slice(0, 16)}.mp3`;
 const must = ({ data, error }, what) => {
   if (error) throw new Error(`${what}: ${error.message}`);
   return data;
@@ -71,7 +72,7 @@ async function syncFolder(folder, entries) {
     keep.add(entry.file);
     if (existing.has(entry.file)) continue;
     process.stdout.write(`  recording: ${entry.text.slice(0, 60)}${entry.text.length > 60 ? '…' : ''}\n`);
-    const mp3 = await record(entry.text);
+    const mp3 = await record(spokenText(entry.text));
     must(await storage.upload(`${folder}/${entry.file}`, mp3, { contentType: 'audio/mpeg', cacheControl: '31536000', upsert: true }), 'Upload clip');
     made += 1;
   }

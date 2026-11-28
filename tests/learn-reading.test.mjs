@@ -55,3 +55,12 @@ test('recorded audio: lesson clips by text, term clips by name, nothing when the
   const empty = await loadRecordedAudio(client({}), 'c', 'l');
   assert.equal(empty.text.size + empty.terms.size, 0);
 });
+
+test('spoken text fixes abbreviations voices misread, without touching other words', async () => {
+  const { spokenText } = await import('../src/scripts/learn-reading.mjs');
+  assert.equal(spokenText('Peripheral IV therapy. IVs and PIVs. An older adult with a 22G PIV.'),
+    'Peripheral I.V. therapy. I.V.s and P I Vs. An older adult with a 22 gauge P I V.');
+  assert.equal(spokenText("WHO's 2024 guideline; Geeky Medics OSCE Guide"), "W H O's 2024 guideline; Geeky Medics O S C E Guide");
+  assert.equal(spokenText('Sodium (Na+): balance. Calcium (Ca2+) and Mg (Mg2+), Potassium (K+).'), 'Sodium: balance. Calcium and Mg, Potassium.');
+  assert.equal(spokenText('Ivy, IVORY, who, Lecture 4, 0.9% sodium chloride'), 'Ivy, IVORY, who, Lecture 4, 0.9% sodium chloride');
+});

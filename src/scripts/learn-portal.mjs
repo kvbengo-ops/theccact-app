@@ -38,7 +38,7 @@ import {
   sanitizeLearnNext,
   sendStudentSignInLink,
 } from './learn-helpers.mjs';
-import { markTerms, normalizeSpeech, pickVoice, readingBlocks, speechChunks } from './learn-reading.mjs';
+import { markTerms, normalizeSpeech, pickVoice, readingBlocks, speechChunks, spokenText } from './learn-reading.mjs';
 
 const EXTRA_ICONS = {
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
@@ -721,7 +721,7 @@ export function setupLearnPortal(root, client) {
     synth.cancel();
     return {
       speak(text, speed, onstart, onend) {
-        const utterance = new SpeechSynthesisUtterance(text);
+        const utterance = new SpeechSynthesisUtterance(spokenText(text));
         if (voice) { utterance.voice = voice; utterance.lang = voice.lang; } else utterance.lang = 'en-CA';
         utterance.rate = speed;
         utterance.onstart = onstart ?? null;
@@ -739,7 +739,7 @@ export function setupLearnPortal(root, client) {
     let current = null;
     const clip = (text) => {
       if (!clips.has(text)) {
-        clips.set(text, fetch(`${baseUrl}/speak`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) })
+        clips.set(text, fetch(`${baseUrl}/speak`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: spokenText(text) }) })
           .then((res) => { if (!res.ok) throw new Error('TTS failed'); return res.blob(); })
           .then((blob) => URL.createObjectURL(blob))
           .catch((error) => { clips.delete(text); throw error; }));

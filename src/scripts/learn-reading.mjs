@@ -3,6 +3,19 @@
 // Recorded clips are matched to text with this, both when recording (tts-server/generate.mjs) and when playing.
 export const normalizeSpeech = (text) => String(text ?? '').replace(/\s+/g, ' ').trim();
 
+// How to say text that voices misread. Applied only to speech; students still see the original text.
+// Kokoro reads "IV" as "roman four" and "WHO" as "who". Add a rule when a recording mispronounces something.
+const SAY = [
+  [/\s*\((?:Na|K|Ca2?|Mg2?)\+\)/g, ''], // "Sodium (Na+)": the name is already said
+  [/\bPIV(s?)\b/g, 'P I V$1'],
+  [/\bIVs\b/g, 'I.V.s'],
+  [/\bIV\b/g, 'I.V.'],
+  [/\bWHO(?=['’]s\b|\b)/g, 'W H O'],
+  [/\bOSCE\b/g, 'O S C E'],
+  [/\b(\d{2})G\b/g, '$1 gauge'],
+];
+export const spokenText = (text) => SAY.reduce((said, [pattern, replacement]) => said.replace(pattern, replacement), String(text ?? ''));
+
 // Lesson text: blank lines separate blocks; a block starting with "## " is a heading.
 export function readingBlocks(text) {
   return String(text ?? '').split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean)
