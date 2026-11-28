@@ -1,9 +1,7 @@
 ---
 import { COURSES_PAGE } from '../content/pages.mjs';
 import { TEACHABLE_CATALOG_URL } from '../content/site.mjs';
-import { pageUrl, SITE_BRAND } from '../lib/links.mjs';
-import { learningOrigin } from '../lib/learning-sites.mjs';
-import { SAMPLE_COURSE_ID } from '../scripts/learn-brand.mjs';
+import { pageUrl } from '../lib/links.mjs';
 import EnrolLink from './EnrolLink.astro';
 import PageHero from './PageHero.astro';
 
@@ -13,9 +11,6 @@ interface Props {
 
 const { partner = null } = Astro.props;
 const contactHref = pageUrl('contact', partner);
-
-// Test checkout on the learning portal (no payment). Main site only: affiliate pages keep Teachable for attribution.
-const sampleHref = `${learningOrigin(SITE_BRAND) ?? ''}/learn/checkout/?course=${SAMPLE_COURSE_ID}`;
 ---
 
 <PageHero
@@ -45,21 +40,6 @@ const sampleHref = `${learningOrigin(SITE_BRAND) ?? ''}/learn/checkout/?course=$
     </ul>
   </div>
 </section>
-
-{!partner && (
-  <section class="band band--cream" aria-labelledby="sample-course-heading">
-    <div class="container">
-      <div class="editorial-card sample-course">
-        <div>
-          <p class="section-eyebrow">Learning Portal · Test</p>
-          <h2 id="sample-course-heading" class="section-heading">Sample Course (TEST)</h2>
-          <p class="section-lead">3 short lessons and a quick check. Test checkout, no charge.</p>
-        </div>
-        <a href={sampleHref} class="btn btn--gold">Buy now · Free</a>
-      </div>
-    </div>
-  </section>
-)}
 
 {COURSES_PAGE.categories.map((category, index) => (
   <section
@@ -216,9 +196,6 @@ const sampleHref = `${learningOrigin(SITE_BRAND) ?? ''}/learn/checkout/?course=$
 </section>
 
 <style>
-  .sample-course { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; }
-  .sample-course .section-heading, .sample-course .section-lead { margin-bottom: 0; }
-
   .highlights-bar {
     margin: 0;
     padding: 0;

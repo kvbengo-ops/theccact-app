@@ -2,7 +2,7 @@
 import LearnLayout from '../../layouts/LearnLayout.astro';
 import Icon from '../../components/Icon.astro';
 import { BRAND } from '../../content/site.mjs';
-import { PLATFORM_NAME, SAMPLE_COURSE_ID, WEBSITE } from '../../scripts/learn-brand.mjs';
+import { PLATFORM_NAME, WEBSITE } from '../../scripts/learn-brand.mjs';
 import '../../styles/learn-auth.css';
 ---
 
@@ -21,7 +21,6 @@ import '../../styles/learn-auth.css';
 
       <div class="welcome__actions">
         <a href={`${WEBSITE}/courses/`} class="btn btn--gold auth__submit">Browse courses</a>
-        <a href={`/learn/checkout/?course=${SAMPLE_COURSE_ID}`} class="btn btn--outline-navy welcome__secondary">Try the free sample course</a>
       </div>
 
       <p class="welcome__note">Enrolled with a different email?</p>
@@ -39,7 +38,6 @@ import '../../styles/learn-auth.css';
   .welcome__icon svg { width: 28px; height: 28px; }
   .welcome__actions { display: grid; gap: 10px; }
   .welcome__actions .btn { width: 100%; min-height: 48px; }
-  .welcome__secondary { border-radius: 10px; }
   .welcome__note { margin: 22px 0 2px; font-size: 13.5px; color: var(--color-text-muted); }
   .welcome__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; }
   .welcome__links a.learn-login-swap { display: inline-flex; align-items: center; }

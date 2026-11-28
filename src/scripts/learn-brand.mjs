@@ -7,4 +7,5 @@ export const PLATFORM_NAME = 'Learning Portal'; // placeholder until the owner p
 export const WEBSITE = SITE_BRAND === 'cces' ? 'https://thecces.com' : 'https://theccact.netlify.app';
 
 // Free test-checkout course per brand (created in Supabase; self_enroll).
+// ponytail: links to it removed from /courses/ and /learn/welcome/ for now (2026-11-28); re-add them to bring it back.
 export const SAMPLE_COURSE_ID = SITE_BRAND === 'cces' ? '5a3b1e00-0000-4000-8000-000000000401' : '5a3b1e00-0000-4000-8000-000000000301';
