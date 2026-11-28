@@ -15,6 +15,8 @@ import {
   inviteStatus,
   inviteLink,
   inviteMailto,
+  parseQuestionOptions,
+  formatQuestionOptions,
 } from '../src/lib/admin-helpers.mjs';
 
 test('slugify makes URL-safe partner slugs that pass the database rule', () => {
@@ -103,4 +105,19 @@ test("invites: valid email and type, status, link to the right form, ready-to-se
   const body = decodeURIComponent(mail.split("&body=")[1]);
   assert.match(body, /^Hello Maria,/);
   assert.ok(body.includes("https://x.test/a?invite=t2") && body.includes("CCES affiliate"));
+});
+
+test('quick-check answers: one per line, * marks the correct ones, and the rules match the database', () => {
+  assert.deepEqual(parseQuestionOptions('Start quickly\n* Explain and ask for consent \n\nAsk the family', 'single'),
+    { options: ['Start quickly', 'Explain and ask for consent', 'Ask the family'], correct: [1] });
+  assert.deepEqual(parseQuestionOptions('*Closing the door\nTalking over the client\n*Covering the client', 'multiple'),
+    { options: ['Closing the door', 'Talking over the client', 'Covering the client'], correct: [0, 2] });
+  assert.match(parseQuestionOptions('*Only one', 'single').error, /at least two/);
+  assert.match(parseQuestionOptions('A\nB', 'single').error, /\* in front/);
+  assert.match(parseQuestionOptions('*A\n*B', 'single').error, /Multiple choice/);
+  assert.match(parseQuestionOptions('*True\nFalse\nMaybe', 'true_false').error, /exactly two/);
+  assert.match(parseQuestionOptions('*\nB', 'single').error, /answer text/);
+  assert.equal(formatQuestionOptions(['True', 'False'], [0]), '*True\nFalse');
+  const round = parseQuestionOptions(formatQuestionOptions(['A', 'B', 'C'], [1, 2]), 'multiple');
+  assert.deepEqual(round, { options: ['A', 'B', 'C'], correct: [1, 2] });
 });

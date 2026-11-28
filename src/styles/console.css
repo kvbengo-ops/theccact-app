@@ -275,3 +275,10 @@
 .console .chip--open { color: var(--color-gold-badge); border-color: var(--color-divider); background: var(--color-sand); }
 .console .chip--used { color: var(--color-success); border-color: var(--color-success); }
 .console .chip--revoked { color: var(--color-text-muted); border-color: var(--color-border); }
+
+/* Quick-check editor under each lesson */
+.console .q-check { max-width: 760px; margin: -8px 0 24px 24px; padding: 12px 16px; border: 1px dashed var(--color-navy-outline); border-radius: 8px; background: var(--color-sand, #f6f1e7); }
+.console .q-check summary { cursor: pointer; font-weight: 700; color: var(--color-navy); min-height: 32px; display: flex; align-items: center; }
+.console .q-check[open] summary { margin-bottom: 12px; }
+.console .q-form { margin-bottom: 12px; }
+.console .q-form__actions { display: flex; flex-wrap: wrap; gap: 10px; }

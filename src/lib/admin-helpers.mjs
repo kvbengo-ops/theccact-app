@@ -118,3 +118,26 @@ export function inviteMailto(link, { email, note }, brandName) {
   ].join('\n');
   return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(`Your invitation to become a ${brandName} affiliate`)}&body=${encodeURIComponent(body)}`;
 }
+
+export const QUESTION_TYPES = [
+  ['single', 'Single choice'],
+  ['multiple', 'Multiple choice (more than one right answer)'],
+  ['true_false', 'True or false'],
+];
+
+/** Quick-check answers are typed one per line, with * before each correct one. */
+export function parseQuestionOptions(text, type) {
+  const lines = String(text ?? '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const options = lines.map((line) => line.replace(/^\*\s*/, ''));
+  const correct = lines.flatMap((line, index) => (line.startsWith('*') ? [index] : []));
+  if (options.some((option) => !option)) return { error: 'Each * needs answer text after it.' };
+  if (options.length < 2) return { error: 'Add at least two answers, one per line.' };
+  if (type === 'true_false' && options.length !== 2) return { error: 'A true or false question has exactly two answers.' };
+  if (!correct.length) return { error: 'Put * in front of the correct answer.' };
+  if (type !== 'multiple' && correct.length > 1) return { error: 'Only one answer can be correct. Choose "Multiple choice" to allow more.' };
+  return { options, correct };
+}
+
+export function formatQuestionOptions(options = [], correct = []) {
+  return options.map((option, index) => `${correct.includes(index) ? '*' : ''}${option}`).join('\n');
+}

@@ -5,11 +5,14 @@ import {
   CONTENT_FIELDS,
   countByStatus,
   formatDate,
+  formatQuestionOptions,
   initials,
   inviteLink,
   inviteMailto,
   inviteStatus,
   matchesQuery,
+  parseQuestionOptions,
+  QUESTION_TYPES,
   SLUG_PATTERN,
   slugify,
   validateAvatar,
@@ -549,6 +552,7 @@ export function setupAdmin(root, client) {
   const courseEditor = $('#course-editor');
   const courseError = $('#courses-error');
   let courses = [];
+  const openChecks = new Set(); // lessons whose quick-check editor is open, kept across saves
   const field = (form, name, label, type = 'text', value = '', attrs = {}) => {
     const id = `learn-${name}-${Math.random().toString(36).slice(2)}`;
     const input = h(type === 'textarea' ? 'textarea' : 'input', { id, name, ...(type === 'textarea' ? {} : { type }), ...attrs });
@@ -626,11 +630,72 @@ export function setupAdmin(root, client) {
       });
       return f;
     };
+    const questionsResult = lessonsResult.data.length
+      ? await client.from('questions').select('*').in('lesson_id', lessonsResult.data.map((l) => l.id)).order('position').order('id')
+      : { data: [] };
+    if (questionsResult.error) return showError(courseError, 'Could not load quick-check questions.');
+    // Quick check under each lesson. Saving refreshes only this block, so the page does not jump.
+    const checkBlock = (lesson, questions) => {
+      const block = h('details', { class: 'q-check' });
+      block.open = openChecks.has(lesson.id);
+      block.addEventListener('toggle', () => { if (block.open) openChecks.add(lesson.id); else openChecks.delete(lesson.id); });
+      const count = questions.length;
+      block.append(h('summary', { text: `Quick check: ${count ? `${count} ${count === 1 ? 'question' : 'questions'}` : 'none yet, so students click Mark as done'}` }));
+      const refresh = async () => {
+        const { data, error } = await client.from('questions').select('*').eq('lesson_id', lesson.id).order('position').order('id');
+        if (error) return showError(courseError, 'Could not load quick-check questions.');
+        block.replaceWith(checkBlock(lesson, data));
+      };
+      const questionForm = (q, position) => {
+        const f = h('form', { class: 'invite-form q-form' });
+        const typeId = `q-type-${Math.random().toString(36).slice(2)}`;
+        const type = h('select', { id: typeId, name: 'type' }, ...QUESTION_TYPES.map(([value, text]) => h('option', { value, text })));
+        type.value = q?.type || 'single';
+        f.append(h('div', { class: 'field' }, h('label', { for: typeId, text: 'Type' }), type));
+        field(f, 'text', 'Question', 'textarea', q?.text, { required: true, rows: 2 });
+        const answers = field(f, 'answers', 'Answers, one per line. Put * in front of each correct answer.', 'textarea', q ? formatQuestionOptions(q.options, q.correct_answers) : '', { required: true, rows: 4, placeholder: 'Start right away\n*Explain what you will do and ask for consent\nAsk a family member' });
+        type.addEventListener('change', () => { if (type.value === 'true_false' && !answers.value.trim()) answers.value = '*True\nFalse'; });
+        field(f, 'explanation', 'Explanation, shown after the student answers', 'textarea', q?.explanation, { rows: 2 });
+        field(f, 'review_at', 'What to review if wrong (optional), e.g. "Reading, paragraph 2"', 'text', q?.review_at, { maxlength: 200 });
+        field(f, 'position', 'Order', 'number', q?.position ?? position, { required: true, step: '1' });
+        const error = h('p', { class: 'form-error', role: 'alert', hidden: true });
+        const actions = h('div', { class: 'q-form__actions' }, button(q ? 'Save question' : 'Add question'));
+        if (q) {
+          const remove = h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete question' });
+          remove.addEventListener('click', async () => {
+            if (!confirm('Delete this question?')) return;
+            const result = await client.from('questions').delete().eq('id', q.id);
+            if (result.error) return showError(error, 'Could not delete. Try again.');
+            toast('Question deleted.');
+            await refresh();
+          });
+          actions.append(remove);
+        }
+        f.append(error, actions);
+        f.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const text = f.elements.text.value.trim();
+          if (!text) return showError(error, 'Write the question.');
+          const parsed = parseQuestionOptions(answers.value, type.value);
+          if (parsed.error) return showError(error, parsed.error);
+          showError(error, '');
+          const values = { lesson_id: lesson.id, type: type.value, text, options: parsed.options, correct_answers: parsed.correct, explanation: f.elements.explanation.value.trim(), review_at: f.elements.review_at.value.trim() || null, position: Number(f.elements.position.value) };
+          const result = q ? await client.from('questions').update(values).eq('id', q.id) : await client.from('questions').insert(values);
+          if (result.error) return showError(error, 'Could not save. Check the answers and try again.');
+          toast(q ? 'Question saved.' : 'Question added.');
+          await refresh();
+        });
+        return f;
+      };
+      for (const q of questions) block.append(questionForm(q));
+      block.append(questionForm(null, count ? Math.max(...questions.map((q) => q.position)) + 1 : 0));
+      return block;
+    };
     courseEditor.append(h('h2', { text: 'Modules and lessons' }));
     for (const module of modulesResult.data) {
       courseEditor.append(editor('modules', module, course.id, 0));
       const lessons = lessonsResult.data.filter((lesson) => lesson.module_id === module.id);
-      for (const lesson of lessons) courseEditor.append(editor('lessons', lesson, module.id, 0));
+      for (const lesson of lessons) courseEditor.append(editor('lessons', lesson, module.id, 0), checkBlock(lesson, questionsResult.data.filter((q) => q.lesson_id === lesson.id)));
       courseEditor.append(editor('lessons', null, module.id, lessons.length ? Math.max(...lessons.map((l) => l.position)) + 1 : 0));
     }
     courseEditor.append(editor('modules', null, course.id, modulesResult.data.length ? Math.max(...modulesResult.data.map((m) => m.position)) + 1 : 0));
