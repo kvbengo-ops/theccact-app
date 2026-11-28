@@ -22,7 +22,7 @@ const { signedIn = false } = Astro.props;
       <a href="/learn/" class="learn-header__name">{PLATFORM_NAME}</a>
       <a href={WEBSITE} class="learn-header__powered">
         <img src={BRAND.logoSrc} alt="" width="20" height="20" />
-        <span>Powered by {BRAND.shortName}</span>
+        <span><span class="learn-header__by">Powered by </span>{BRAND.shortName}</span>
       </a>
     </div>
 
@@ -153,9 +153,23 @@ const { signedIn = false } = Astro.props;
     margin-right: auto;
   }
 
+  .learn-header__brand a {
+    white-space: nowrap;
+  }
+
   @media (max-width: 420px) {
     .learn-header a.learn-header__name {
       font-size: 20px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .learn-header a.learn-header__name {
+      font-size: 18px;
+    }
+
+    .learn-header__by {
+      display: none;
     }
   }
 

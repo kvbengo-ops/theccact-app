@@ -445,4 +445,11 @@ const vars = ([page, header, card, accent, text]: string[]) =>
   .theme-picker__keys kbd:nth-child(2) {
     margin-left: 0;
   }
+
+  @media (hover: none) {
+    .theme-picker__head kbd,
+    .theme-picker__keys {
+      display: none;
+    }
+  }
 </style>

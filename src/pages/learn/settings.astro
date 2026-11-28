@@ -95,7 +95,7 @@ const phone = BRAND.contactPhone.replace(/^WhatsApp\s*\/\s*Text:\s*/i, '');
       <div class="set-row">
         <div>
           <h3 class="set-card__sub">Theme: <span id="set-theme-name">Light</span></h3>
-          <p class="set-note">Saved on this device. Open it anytime with Ctrl + K.</p>
+          <p class="set-note">Saved on this device.<span class="set-kbd-hint"> Open it anytime with Ctrl + K.</span></p>
         </div>
         <button type="button" id="set-theme" class="btn btn--outline-navy set-btn"><Icon name="palette" />Change theme</button>
       </div>
@@ -188,7 +188,14 @@ const phone = BRAND.contactPhone.replace(/^WhatsApp\s*\/\s*Text:\s*/i, '');
   .set-info-group dd { margin: 0; font-weight: 700; color: var(--ink); }
   .set-info-course { padding: 10px 0; border-top: 1px solid var(--color-border); }
 
+  @media (hover: none) { .set-kbd-hint { display: none; } }
+
   @media (max-width: 520px) {
+    /* One swipeable row of section links instead of three wrapped rows. */
+    .set-jump { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * var(--gutter-mobile)); padding-inline: var(--gutter-mobile); }
+    .set-jump::-webkit-scrollbar { display: none; }
+    .set-jump a { flex-shrink: 0; }
+    .set-facts { grid-template-columns: 1fr 1fr; }
     .set-card { padding: 18px; }
     .set-info-group dl { grid-template-columns: 1fr; gap: 0; }
     .set-info-group dd { margin-bottom: 8px; }
