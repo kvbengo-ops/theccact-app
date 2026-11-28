@@ -34,7 +34,9 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
               <option value="1.2">Faster</option>
             </select>
           </label>
+          <label class="lp-listen__auto"><input type="checkbox" id="listen-autoscroll" checked /> Auto-scroll</label>
         </div>
+        <p class="lp-hl-tip">Tip: select any text to highlight or underline it.</p>
 
         <div id="lesson-reading" class="lp-reading"></div>
 
@@ -42,6 +44,12 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
           <summary>Medical terms in this lesson</summary>
           <dl id="lesson-terms-list"></dl>
         </details>
+
+        <div id="lp-hl-bar" class="lp-hl-bar" role="toolbar" aria-label="Mark selected text" hidden>
+          <button type="button" data-hl="mark"><span class="lp-hl-swatch" aria-hidden="true"></span>Highlight</button>
+          <button type="button" data-hl="under"><span class="lp-hl-under" aria-hidden="true">U</span>Underline</button>
+          <button type="button" data-hl="remove">Remove</button>
+        </div>
 
         <dialog id="lp-wrapup" class="lp-wrapup" aria-label="Wrap-up question"></dialog>
 
@@ -129,6 +137,18 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
   .lp-recall__bar { display: block; height: 100%; background: var(--color-gold); transition: width 0.2s linear; }
   .lp-recall__why:empty { display: none; }
   .lp-question-mark { height: 1px; }
+  .lp-listen__auto { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: var(--color-text-muted); cursor: pointer; }
+  .lp-listen__auto input { width: 18px; height: 18px; accent-color: var(--color-navy); }
+  .lp-hl-tip { margin: -12px 0 20px; font-size: 13px; color: var(--color-text-muted); }
+  mark.lp-hl { color: inherit; border-radius: 3px; }
+  mark.lp-hl--mark { background: color-mix(in srgb, #f5d547 55%, transparent); }
+  mark.lp-hl--under { background: none; text-decoration: underline 3px var(--color-gold-dark); text-underline-offset: 4px; }
+  .lp-hl-bar { position: absolute; z-index: 60; display: flex; gap: 4px; padding: 6px; border-radius: 12px; background: var(--color-navy); box-shadow: 0 12px 28px -12px rgb(10 15 30 / 0.6); }
+  .lp-hl-bar[hidden] { display: none; }
+  .lp-hl-bar button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .lp-hl-bar button:hover, .lp-hl-bar button:focus-visible { background: rgb(255 255 255 / 0.14); }
+  .lp-hl-swatch { width: 14px; height: 14px; border-radius: 3px; background: #f5d547; }
+  .lp-hl-under { text-decoration: underline 2px #e3c98a; text-underline-offset: 3px; }
   .lp-figure { margin: 4px 0 28px; white-space: normal; }
   .lp-figure img { display: block; width: 100%; height: auto; max-height: 460px; object-fit: contain; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; }
   .lp-figure figcaption { margin-top: 8px; font-size: 14px; color: var(--color-text-muted); }

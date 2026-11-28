@@ -836,9 +836,13 @@ export function setupLearnPortal(root, client) {
       for (const old of root.querySelectorAll('.is-reading')) old.classList.remove('is-reading');
       if (!el) return;
       el.classList.add('is-reading');
-      const box = el.getBoundingClientRect();
-      if (box.top < 80 || box.bottom > innerHeight) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if ($('#listen-autoscroll')?.checked) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
     };
+    const autoScroll = $('#listen-autoscroll');
+    if (autoScroll) {
+      try { autoScroll.checked = localStorage.getItem('learn-autoscroll') !== 'off'; } catch { /* storage blocked */ }
+      autoScroll.onchange = () => { try { localStorage.setItem('learn-autoscroll', autoScroll.checked ? 'on' : 'off'); } catch { /* storage blocked */ } };
+    }
     const paint = () => {
       play.replaceChildren(svg(state === 'playing' ? 'pause' : 'volume'), state === 'playing' ? 'Pause' : state === 'paused' ? 'Resume' : 'Listen to this lesson');
       play.setAttribute('aria-pressed', String(state === 'playing'));
@@ -886,6 +890,7 @@ export function setupLearnPortal(root, client) {
     }
     lessonAudio = speech && {
       isPlaying: () => state === 'playing',
+      pause: () => { if (state === 'playing') halt('paused'); },
       speak(text, onend) {
         if (state === 'playing') halt('paused');
         speech.cancel();
@@ -1027,6 +1032,94 @@ export function setupLearnPortal(root, client) {
     return marker;
   }
 
+  // Select text to highlight or underline it. Selecting pauses the voice; marks are kept per lesson on this device.
+  // shortcut: saved in this browser only, sync to the student's account if they need marks on other devices.
+  function setupHighlights(lessonId) {
+    const reading = $('#lesson-reading');
+    const bar = $('#lp-hl-bar');
+    const removeButton = bar.querySelector('[data-hl="remove"]');
+    const KEY = `learn-highlights:${lessonId}`;
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { saved = []; }
+    const blocks = [...reading.children].filter((el) => el.matches('p, h2'));
+    const store = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch { /* storage blocked */ } };
+    // Character offset of a point inside a block's text.
+    const offsetIn = (block, node, offset) => {
+      const range = document.createRange();
+      range.setStart(block, 0);
+      range.setEnd(node, offset);
+      return range.toString().length;
+    };
+    const wrap = (block, { s, e, k }) => {
+      const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      let pos = 0;
+      for (const node of nodes) {
+        const length = node.length;
+        const from = Math.max(s, pos);
+        const to = Math.min(e, pos + length);
+        if (from < to) {
+          let target = node;
+          if (to - pos < length) target.splitText(to - pos);
+          if (from > pos) target = target.splitText(from - pos);
+          const mark = document.createElement('mark');
+          mark.className = `lp-hl lp-hl--${k}`;
+          target.replaceWith(mark);
+          mark.append(target);
+        }
+        pos += length;
+      }
+    };
+    const paint = (block) => {
+      for (const mark of block.querySelectorAll('mark.lp-hl')) mark.replaceWith(...mark.childNodes);
+      block.normalize();
+      const index = blocks.indexOf(block);
+      for (const item of saved.filter((h) => h.b === index)) wrap(block, item);
+    };
+    blocks.forEach(paint);
+
+    let range = null;
+    const hide = () => { bar.hidden = true; range = null; };
+    let wait = null;
+    document.addEventListener('selectionchange', () => {
+      clearTimeout(wait);
+      wait = setTimeout(() => {
+        const selection = getSelection();
+        if (!selection.rangeCount || selection.isCollapsed) return;
+        const picked = selection.getRangeAt(0);
+        if (!reading.contains(picked.commonAncestorContainer) && picked.commonAncestorContainer !== reading) return hide();
+        if (!blocks.some((block) => picked.intersectsNode(block))) return hide();
+        range = picked.cloneRange();
+        lessonAudio?.pause?.();
+        removeButton.hidden = !blocks.some((block) => picked.intersectsNode(block) && [...block.querySelectorAll('mark.lp-hl')].some((mark) => picked.intersectsNode(mark)));
+        bar.hidden = false;
+        const box = picked.getBoundingClientRect();
+        const left = Math.min(Math.max(8, box.left + box.width / 2 - bar.offsetWidth / 2), document.documentElement.clientWidth - bar.offsetWidth - 8);
+        const above = box.top - bar.offsetHeight - 10;
+        bar.style.left = `${left + scrollX}px`;
+        bar.style.top = `${(above > 8 ? above : box.bottom + 10) + scrollY}px`;
+      }, 250);
+    });
+    bar.addEventListener('mousedown', (event) => event.preventDefault()); // keep the selection when clicking the bar
+    bar.addEventListener('click', (event) => {
+      const kind = event.target.closest('button')?.dataset.hl;
+      if (!kind || !range) return;
+      for (const block of blocks.filter((b) => range.intersectsNode(b))) {
+        const index = blocks.indexOf(block);
+        const s = block.contains(range.startContainer) ? offsetIn(block, range.startContainer, range.startOffset) : 0;
+        const e = block.contains(range.endContainer) ? offsetIn(block, range.endContainer, range.endOffset) : block.textContent.length;
+        if (kind === 'remove') saved = saved.filter((h) => h.b !== index || h.e <= s || h.s >= e);
+        else if (e > s) saved.push({ b: index, s, e, k: kind });
+        paint(block);
+      }
+      store();
+      getSelection().removeAllRanges();
+      hide();
+    });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') hide(); });
+  }
+
   async function renderLesson() {
     const lessonId = new URLSearchParams(location.search).get('id') || '';
     const data = await loadLessonData(client, siteBrand, lessonId);
@@ -1060,6 +1153,7 @@ export function setupLearnPortal(root, client) {
         : h('button', { type: 'button', class: 'lp-term', 'aria-haspopup': 'dialog', onclick: () => showTerm(part.term) }, part.text))))));
     $('#lesson-reading').replaceChildren(...blocks);
     setupLessonAudio(data.glossary.filter((t) => seenTerms.has(t.term.toLowerCase())), [$('#lesson-title'), ...blocks], data.recorded);
+    setupHighlights(lesson.lesson_id);
     // ponytail: video player and file downloads wait for the video host and private file bucket (L05).
     $('#lesson-video-note').hidden = !lesson.video_id;
 
