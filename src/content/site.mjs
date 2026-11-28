@@ -17,7 +17,7 @@ export const CCES_REWRITES = [
   ['/ccact-logo.png', '/cces-crest.png'],
   ['The CCACT Est. 2012 Continuing Education crest', 'The CCES crest'],
   ['the South East Asian community', 'the South Asian community'],
-  ['theccact@gmail.com', 'info@thecces.com'],
+  ['theccact@gmail.com', 'jrobles5556@rogers.com'],
   [' (or info@theccact.online as listed on the legacy FAQ)', ''],
   ['founders are educators with more than 25 years of experience owning and operating a private healthcare college', 'Director is an educator with more than 25 years of experience owning and operating private healthcare colleges'],
   ['Established in 2012', 'Established in 2022'],
