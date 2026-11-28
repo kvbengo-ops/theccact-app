@@ -825,8 +825,8 @@ export function setupLearnPortal(root, client) {
     const rate = $('#listen-rate');
     $('#lesson-listen').hidden = !speech;
     // A recorded block plays as one clip; anything else is spoken sentence by sentence.
-    // A recall question is spoken as its prompt and waits for the student's answer.
-    const items = elements.flatMap((el) => (el.recall ? [{ el, text: el.recall.prompt }]
+    // A question marker has no text: reaching it pops the question up.
+    const items = elements.flatMap((el) => (el.question ? [{ el, text: '' }]
       : speech?.has?.(el.textContent) ? [{ el, text: el.textContent }] : speechChunks(el.textContent).map((text) => ({ el, text }))));
     let index = 0;
     let state = 'idle'; // idle | playing | paused
@@ -853,15 +853,14 @@ export function setupLearnPortal(root, client) {
         index += 1;
         step();
       };
-      say(item.text, Number(rate.value), () => mark(item.el), () => {
-        if (mine !== token || state !== 'playing') return;
-        if (!item.el.recall) return next();
-        // Wait for an answer (or the timer), read the explanation, then carry on.
-        item.el.recall.wait(() => {
-          if (mine !== token || state !== 'playing') return;
-          if (item.el.recall.why) say(item.el.recall.why, Number(rate.value), null, next); else next();
-        });
-      });
+      if (item.el.question) {
+        // The paragraph before it has just been read: ask now (once), then carry on reading.
+        if (item.el.question.asked) return next();
+        item.el.question.asked = true;
+        askQuestion(item.el.question.recall, (text) => { speech.cancel(); say(text, Number(rate.value)); }).then(next);
+        return;
+      }
+      say(item.text, Number(rate.value), () => mark(item.el), next);
       // Kokoro takes a moment per sentence on a small server, so ask for the next one while this one plays.
       if (items[index + 1]) speech.prefetch?.(items[index + 1].text);
     };
@@ -885,6 +884,7 @@ export function setupLearnPortal(root, client) {
       paint();
     }
     lessonAudio = speech && {
+      isPlaying: () => state === 'playing',
       speak(text, onend) {
         if (state === 'playing') halt('paused');
         speech.cancel();
@@ -976,23 +976,54 @@ export function setupLearnPortal(root, client) {
     return card;
   }
 
-  // Wrap-up questions pop up one after another before the lesson is marked done.
-  function runWrapUps(list) {
+  // A question pops up, is read aloud, and waits for an answer or the timer; Continue closes it.
+  function askQuestion(recall, speak) {
     const dialog = $('#lp-wrapup');
-    return list.reduce((previous, recall) => previous.then(() => new Promise((resolve) => {
+    return new Promise((resolve) => {
       const card = recallCard(recall);
       const next = h('button', { type: 'button', class: 'btn btn--gold', hidden: true, onclick: () => { dialog.close(); resolve(); } }, 'Continue');
       dialog.replaceChildren(card, next);
       dialog.oncancel = (event) => event.preventDefault(); // answer or wait for the timer; at most 30 seconds
       dialog.showModal();
       card.querySelector('button')?.focus();
-      lessonAudio?.speak(card.recall.prompt);
+      speak?.(card.recall.prompt);
       card.recall.wait(() => {
         next.hidden = false;
         next.focus();
-        if (recall.why) lessonAudio?.speak(recall.why);
+        if (recall.why) speak?.(recall.why);
       });
-    })), Promise.resolve());
+    });
+  }
+
+  // Wrap-up questions pop up one after another before the lesson is marked done.
+  function runWrapUps(list) {
+    return list.reduce((previous, recall) => previous.then(() => askQuestion(recall, lessonAudio?.speak)), Promise.resolve());
+  }
+
+  // Where a "Recall:" question sits in the text. It pops up once the paragraph before it has been read:
+  // by the Listen voice, or by scrolling past the end of that paragraph.
+  function questionMarker(recall) {
+    const marker = h('div', { class: 'lp-question-mark', 'aria-hidden': 'true' });
+    marker.question = { recall, asked: false };
+    let pending = null;
+    new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) {
+        // Scrolled away before finishing the paragraph: not read yet.
+        clearTimeout(pending);
+        pending = null;
+        return;
+      }
+      if (pending || marker.question.asked) return;
+      // Give the reader time to read the paragraph above (about 3.5 words a second, 3 to 20 seconds).
+      const words = (marker.previousElementSibling?.textContent ?? '').split(/\s+/).length;
+      pending = setTimeout(() => {
+        pending = null;
+        if (marker.question.asked || lessonAudio?.isPlaying?.() || $('#lp-wrapup').open) return;
+        marker.question.asked = true;
+        askQuestion(recall, lessonAudio?.speak);
+      }, Math.min(20, Math.max(3, words / 3.5)) * 1000);
+    }, { rootMargin: '0px 0px -10% 0px' }).observe(marker); // the end of that paragraph is on screen
+    return marker;
   }
 
   async function renderLesson() {
@@ -1019,7 +1050,7 @@ export function setupLearnPortal(root, client) {
     let wrapUps = parsed.filter((block) => block.recall?.wrapUp).map((block) => block.recall);
     const blocks = parsed.filter((block) => !block.recall?.wrapUp).map((block) => (block.heading
       ? h('h2', { class: 'lp-h', text: block.text })
-      : block.recall ? recallCard(block.recall)
+      : block.recall ? questionMarker(block.recall)
       : h('p', {}, markTerms(block.text, data.glossary, seenTerms).map((part) => (typeof part === 'string'
         ? part
         : h('button', { type: 'button', class: 'lp-term', 'aria-haspopup': 'dialog', onclick: () => showTerm(part.term) }, part.text))))));
