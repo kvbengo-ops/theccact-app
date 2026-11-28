@@ -142,9 +142,9 @@ Acceptance (phase 2): a test student completes a 3-lesson course end to end on a
 Owner: Claude (issuing + PDF function), Gemini (design + verify page). Reviewer: Codex. Status: PDF and design BLOCKED on decision 2 (wording, CE hours). Issuing and verify lookup done (Claude, 2026-11-27).
 
 - [x] Issue automatically when every lesson is done (and practice exam passed, once phase 5 exists). Unique certificate number.
-- [ ] Branded PDF (CCACT or CCES crest and colors): name, course, completion date, CE hours where set, number.
+- [x] Branded PDF (CCACT or CCES crest and colors): name, course, completion date, CE hours where set, number. (Claude, 2026-11-28: `netlify/functions/learn-certificate.mjs`)
 - [x] (Claude, for Gemini, 2026-11-27) `/learn/verify/?n=<number>` public page; confirms genuine without private data.
-- [ ] Download from the dashboard at any time.
+- [x] Download from the dashboard at any time.
 
 ### L09 — Reminder emails
 Owner: Codex. Reviewer: Claude. Status: BLOCKED on decision 6 (sender) and provider choice (Resend or Postmark).
@@ -192,7 +192,7 @@ Owner: TBD. Status: TODO (not started until L11 is done).
 | # | Decision | Blocks | Status |
 | --- | --- | --- | --- |
 | 1 | First pilot course and who supplies its videos, text and questions | L11 | Pending |
-| 2 | Certificate wording and any accredited CE hours | L08 | Pending |
+| 2 | Certificate wording and any accredited CE hours | L08 | Wording approved 2026-11-28 ("Certificate of Completion" draft); CE hours set per course in the console |
 | 3 | Pass mark: default ~70% or per course | L01 (default 66% = 2 of 3, per-course field built either way) | Pending |
 | 4 | Lessons unlock in order for every course? | L01 (per-course flag built, default on) | Pending |
 | 5 | Video host: Bunny Stream or Mux | L05 | Pending |
