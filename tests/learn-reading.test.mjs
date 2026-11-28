@@ -64,3 +64,20 @@ test('spoken text fixes abbreviations voices misread, without touching other wor
   assert.equal(spokenText('Sodium (Na+): balance. Calcium (Ca2+) and Mg (Mg2+), Potassium (K+).'), 'Sodium: balance. Calcium and Mg, Potassium.');
   assert.equal(spokenText('Ivy, IVORY, who, Lecture 4, 0.9% sodium chloride'), 'Ivy, IVORY, who, Lecture 4, 0.9% sodium chloride');
 });
+
+test('recall and wrap-up questions are read from the lesson text', async () => {
+  const { readingBlocks, parseRecall, recallPrompt, recallSeconds } = await import('../src/scripts/learn-reading.mjs');
+  const blocks = readingBlocks('Intro.\n\nRecall: Would it still work?\nYes\n*No\nWhy: Because.\n\nWrap-up: Which is first?\nA\n*B\nC');
+  assert.equal(blocks[0].recall, undefined);
+  assert.deepEqual(blocks[1].recall, { wrapUp: false, question: 'Would it still work?', options: ['Yes', 'No'], correct: 1, why: 'Because.' });
+  assert.deepEqual(blocks[2].recall, { wrapUp: true, question: 'Which is first?', options: ['A', 'B', 'C'], correct: 1, why: '' });
+  // Not valid: no right answer, two right answers, one answer. These stay plain paragraphs.
+  assert.equal(parseRecall('Recall: Q?\nYes\nNo'), null);
+  assert.equal(parseRecall('Recall: Q?\n*Yes\n*No'), null);
+  assert.equal(parseRecall('Recall: Q?\n*Yes'), null);
+  assert.equal(parseRecall('Recalling the steps: first, second.'), null);
+  assert.equal(recallPrompt(blocks[1].recall), 'Would it still work?');
+  assert.equal(recallPrompt(blocks[2].recall), 'Which is first? A. B. C.');
+  assert.equal(recallSeconds(blocks[1].recall), 15);
+  assert.equal(recallSeconds({ question: 'word '.repeat(80), options: ['a', 'b'] }), 30);
+});

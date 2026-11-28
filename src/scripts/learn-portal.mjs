@@ -39,7 +39,7 @@ import {
   sanitizeLearnNext,
   sendStudentSignInLink,
 } from './learn-helpers.mjs';
-import { markTerms, normalizeSpeech, pickVoice, readingBlocks, speechChunks, spokenText } from './learn-reading.mjs';
+import { markTerms, normalizeSpeech, pickVoice, readingBlocks, recallPrompt, recallSeconds, speechChunks, spokenText } from './learn-reading.mjs';
 
 const EXTRA_ICONS = {
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
@@ -825,7 +825,9 @@ export function setupLearnPortal(root, client) {
     const rate = $('#listen-rate');
     $('#lesson-listen').hidden = !speech;
     // A recorded block plays as one clip; anything else is spoken sentence by sentence.
-    const items = elements.flatMap((el) => (speech?.has?.(el.textContent) ? [{ el, text: el.textContent }] : speechChunks(el.textContent).map((text) => ({ el, text }))));
+    // A recall question is spoken as its prompt and waits for the student's answer.
+    const items = elements.flatMap((el) => (el.recall ? [{ el, text: el.recall.prompt }]
+      : speech?.has?.(el.textContent) ? [{ el, text: el.textContent }] : speechChunks(el.textContent).map((text) => ({ el, text }))));
     let index = 0;
     let state = 'idle'; // idle | playing | paused
     let token = 0; // ignores end events from speech we cancelled
@@ -846,10 +848,19 @@ export function setupLearnPortal(root, client) {
       if (index >= items.length) { state = 'idle'; index = 0; mark(null); paint(); return; }
       const mine = ++token;
       const item = items[index];
-      say(item.text, Number(rate.value), () => mark(item.el), () => {
+      const next = () => {
         if (mine !== token || state !== 'playing') return;
         index += 1;
         step();
+      };
+      say(item.text, Number(rate.value), () => mark(item.el), () => {
+        if (mine !== token || state !== 'playing') return;
+        if (!item.el.recall) return next();
+        // Wait for an answer (or the timer), read the explanation, then carry on.
+        item.el.recall.wait(() => {
+          if (mine !== token || state !== 'playing') return;
+          if (item.el.recall.why) say(item.el.recall.why, Number(rate.value), null, next); else next();
+        });
       });
       // Kokoro takes a moment per sentence on a small server, so ask for the next one while this one plays.
       if (items[index + 1]) speech.prefetch?.(items[index + 1].text);
@@ -874,6 +885,11 @@ export function setupLearnPortal(root, client) {
       paint();
     }
     lessonAudio = speech && {
+      speak(text, onend) {
+        if (state === 'playing') halt('paused');
+        speech.cancel();
+        say(text, Number(rate.value), null, onend);
+      },
       sayWord(word) {
         if (state === 'playing') halt('paused');
         speech.cancel();
@@ -910,6 +926,75 @@ export function setupLearnPortal(root, client) {
     (lessonAudio ? speak : card.querySelector('[data-close]'))?.focus();
   }
 
+  // A practice question with a 15-30 second timer. Ungraded and not saved: when the timer ends it just shows the answer.
+  function recallCard(recall) {
+    const seconds = recallSeconds(recall);
+    let timer = null;
+    let settled = false;
+    const waiting = [];
+    const bar = h('span', { class: 'lp-recall__bar' });
+    const left = h('span', { class: 'lp-recall__left' });
+    const clock = h('div', { class: 'lp-recall__timer', 'aria-hidden': 'true' }, h('span', { class: 'lp-recall__track' }, bar), left);
+    const reveal = h('p', { class: 'lp-recall__why', role: 'status' });
+    const choices = recall.options.map((option, i) => h('button', { type: 'button', class: 'lp-recall__choice', onclick: () => settle(i) }, option));
+    const card = h('div', { class: 'lp-recall', role: 'group', 'aria-label': recall.wrapUp ? 'Wrap-up question' : 'Quick question' },
+      h('p', { class: 'lp-recall__kicker', text: recall.wrapUp ? 'Wrap-up question' : 'Quick question' }),
+      h('p', { class: 'lp-recall__q', text: recall.question }),
+      h('div', { class: 'lp-recall__choices' }, choices),
+      clock, reveal);
+    const start = () => {
+      if (timer || settled) return;
+      const end = Date.now() + seconds * 1000;
+      const tick = () => {
+        const ms = Math.max(0, end - Date.now());
+        left.textContent = `${Math.ceil(ms / 1000)}s`;
+        bar.style.width = `${(ms / (seconds * 1000)) * 100}%`;
+        if (!ms) settle(null);
+      };
+      tick();
+      timer = setInterval(tick, 200);
+    };
+    function settle(choice) {
+      if (settled) return;
+      settled = true;
+      clearInterval(timer);
+      clock.hidden = true;
+      choices.forEach((button, i) => {
+        button.disabled = true;
+        button.classList.toggle('is-right', i === recall.correct);
+        button.classList.toggle('is-wrong', i === choice && i !== recall.correct);
+      });
+      const lead = choice === null ? 'Time is up.' : choice === recall.correct ? 'Correct.' : 'Not quite.';
+      reveal.textContent = `${lead} The answer is: ${recall.options[recall.correct]}.${recall.why ? ` ${recall.why}` : ''}`;
+      waiting.splice(0).forEach((fn) => fn());
+    }
+    // The clock starts when the student reaches the question.
+    new IntersectionObserver((entries, observer) => {
+      if (entries.some((entry) => entry.isIntersecting)) { observer.disconnect(); start(); }
+    }, { threshold: 0.6 }).observe(card);
+    card.recall = { prompt: recallPrompt(recall), why: recall.why, wait: (fn) => { if (settled) fn(); else { waiting.push(fn); start(); } } };
+    return card;
+  }
+
+  // Wrap-up questions pop up one after another before the lesson is marked done.
+  function runWrapUps(list) {
+    const dialog = $('#lp-wrapup');
+    return list.reduce((previous, recall) => previous.then(() => new Promise((resolve) => {
+      const card = recallCard(recall);
+      const next = h('button', { type: 'button', class: 'btn btn--gold', hidden: true, onclick: () => { dialog.close(); resolve(); } }, 'Continue');
+      dialog.replaceChildren(card, next);
+      dialog.oncancel = (event) => event.preventDefault(); // answer or wait for the timer; at most 30 seconds
+      dialog.showModal();
+      card.querySelector('button')?.focus();
+      lessonAudio?.speak(card.recall.prompt);
+      card.recall.wait(() => {
+        next.hidden = false;
+        next.focus();
+        if (recall.why) lessonAudio?.speak(recall.why);
+      });
+    })), Promise.resolve());
+  }
+
   async function renderLesson() {
     const lessonId = new URLSearchParams(location.search).get('id') || '';
     const data = await loadLessonData(client, siteBrand, lessonId);
@@ -930,8 +1015,11 @@ export function setupLearnPortal(root, client) {
 
     // Reading, with each medical term underlined the first time it appears.
     const seenTerms = new Set();
-    const blocks = readingBlocks(lesson.reading).map((block) => (block.heading
+    const parsed = readingBlocks(lesson.reading);
+    let wrapUps = parsed.filter((block) => block.recall?.wrapUp).map((block) => block.recall);
+    const blocks = parsed.filter((block) => !block.recall?.wrapUp).map((block) => (block.heading
       ? h('h2', { class: 'lp-h', text: block.text })
+      : block.recall ? recallCard(block.recall)
       : h('p', {}, markTerms(block.text, data.glossary, seenTerms).map((part) => (typeof part === 'string'
         ? part
         : h('button', { type: 'button', class: 'lp-term', 'aria-haspopup': 'dialog', onclick: () => showTerm(part.term) }, part.text))))));
@@ -955,6 +1043,10 @@ export function setupLearnPortal(root, client) {
             const button = event.currentTarget;
             button.disabled = true;
             showMessage(statusEl, '');
+            if (wrapUps.length) {
+              await runWrapUps(wrapUps);
+              wrapUps = []; // asked once per visit
+            }
             try {
               await markLessonDone(client, lesson.lesson_id);
               done = true;

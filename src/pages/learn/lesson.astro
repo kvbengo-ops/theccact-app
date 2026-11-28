@@ -43,6 +43,8 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
           <dl id="lesson-terms-list"></dl>
         </details>
 
+        <dialog id="lp-wrapup" class="lp-wrapup" aria-label="Wrap-up question"></dialog>
+
         <div id="lp-term-card" class="lp-term-card" popover role="dialog" aria-labelledby="lp-term-name">
           <p id="lp-term-name" class="lp-term-card__name"></p>
           <p id="lp-term-say" class="lp-say"></p>
@@ -111,6 +113,25 @@ import { PLATFORM_NAME } from '../../scripts/learn-brand.mjs';
   .lp-feedback.is-wrong { border-left-color: var(--color-error); }
   .lp-feedback p { margin: 6px 0 0; }
   .lp-result { font-weight: 700; color: var(--ink); }
+
+  /* Recall and wrap-up questions */
+  .lp-recall { margin: 0 0 24px; padding: 18px 20px; border: 1px solid var(--color-border); border-left: 4px solid var(--color-gold); border-radius: 10px; background: var(--surface); white-space: normal; }
+  .lp-recall__kicker { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-gold-dark); }
+  .lp-recall__q { margin: 0 0 12px; font-weight: 700; color: var(--ink); line-height: 1.5; }
+  .lp-recall__choices { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lp-recall__choice { min-height: 44px; padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 15px; cursor: pointer; }
+  .lp-recall__choice:hover:not(:disabled) { border-color: var(--ink); }
+  .lp-recall__choice:disabled { cursor: default; opacity: 0.75; }
+  .lp-recall__choice.is-right { opacity: 1; border-color: var(--color-success); box-shadow: inset 0 0 0 1px var(--color-success); font-weight: 700; }
+  .lp-recall__choice.is-wrong { opacity: 1; border-color: var(--color-error); text-decoration: line-through; }
+  .lp-recall__timer { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 13px; font-weight: 700; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+  .lp-recall__track { flex: 1; height: 6px; border-radius: 999px; background: var(--color-sand); overflow: hidden; }
+  .lp-recall__bar { display: block; height: 100%; background: var(--color-gold); transition: width 0.2s linear; }
+  .lp-recall__why:empty { display: none; }
+  .lp-recall__why { margin: 12px 0 0; line-height: 1.55; }
+  .lp-wrapup { width: min(560px, calc(100vw - 24px)); padding: 20px; border: 0; border-radius: 14px; background: var(--surface); color: var(--color-text); }
+  .lp-wrapup::backdrop { background: rgb(10 14 24 / 0.6); }
+  .lp-wrapup .lp-recall { margin-bottom: 16px; border: 0; border-left: 4px solid var(--color-gold); padding: 4px 0 4px 16px; }
 
   /* Exam mode */
   .lp-exam__meta { font-weight: 700; color: var(--ink); }

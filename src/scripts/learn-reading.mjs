@@ -17,9 +17,43 @@ const SAY = [
 export const spokenText = (text) => SAY.reduce((said, [pattern, replacement]) => said.replace(pattern, replacement), String(text ?? ''));
 
 // Lesson text: blank lines separate blocks; a block starting with "## " is a heading.
+// A block starting with "Recall:" (shown in place) or "Wrap-up:" (shown as a pop-up at Mark as done) is a practice question:
+//   Recall: But what if ... would it still work?
+//   Yes
+//   *No            <- the * marks the one right answer
+//   Why: ...       <- optional, shown after answering
 export function readingBlocks(text) {
   return String(text ?? '').split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean)
-    .map((block) => (block.startsWith('## ') ? { heading: true, text: block.slice(3).trim() } : { heading: false, text: block }));
+    .map((block) => {
+      if (block.startsWith('## ')) return { heading: true, text: block.slice(3).trim() };
+      const recall = parseRecall(block);
+      return recall ? { heading: false, text: block, recall } : { heading: false, text: block };
+    });
+}
+
+export function parseRecall(block) {
+  const kind = String(block ?? '').match(/^(Recall|Wrap-up):\s*/i);
+  if (!kind) return null;
+  const lines = block.slice(kind[0].length).split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const question = lines.shift();
+  const why = (lines.find((line) => /^Why:/i.test(line)) ?? '').replace(/^Why:\s*/i, '');
+  const answers = lines.filter((line) => !/^Why:/i.test(line));
+  const correct = answers.findIndex((line) => line.startsWith('*'));
+  // Not a valid question (fewer than two answers, or not exactly one marked right): show it as a plain paragraph.
+  if (!question || answers.length < 2 || correct < 0 || answers.filter((line) => line.startsWith('*')).length !== 1) return null;
+  return { wrapUp: /^wrap/i.test(kind[1]), question, options: answers.map((line) => line.replace(/^\*\s*/, '')), correct, why };
+}
+
+// What the voice says for a question: just the question for yes/no, otherwise the choices too.
+export function recallPrompt({ question, options }) {
+  const yesNo = options.every((option) => /^(yes|no|true|false)$/i.test(option));
+  return yesNo ? question : `${question} ${options.map((option) => option.replace(/[.?!]*$/, '.')).join(' ')}`;
+}
+
+// Time to answer: about 3 words a second, between 15 and 30 seconds.
+export function recallSeconds({ question, options }) {
+  const words = `${question} ${options.join(' ')}`.split(/\s+/).length;
+  return Math.min(30, Math.max(15, Math.round(words / 3) + 8));
 }
 
 // Browsers cut off long utterances (Chrome stops after about 15 seconds), so speak sentence-sized pieces.

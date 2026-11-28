@@ -11,7 +11,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { KokoroTTS } from 'kokoro-js';
-import { normalizeSpeech as normalize, readingBlocks, speechChunks, spokenText } from '../src/scripts/learn-reading.mjs';
+import { normalizeSpeech as normalize, readingBlocks, recallPrompt, speechChunks, spokenText } from '../src/scripts/learn-reading.mjs';
 
 const envFile = new URL('../.env.local', import.meta.url);
 if (existsSync(envFile)) {
@@ -94,7 +94,8 @@ const lessons = modules.length
 for (const lesson of lessons) {
   console.log(`Lesson: ${lesson.title}`);
   // Same blocks, in the same order, as the lesson page reads: the title, then each heading or paragraph.
-  const texts = [lesson.title, ...readingBlocks(lesson.reading).map((block) => block.text)].map(normalize).filter(Boolean);
+  // Questions are recorded as their spoken prompt and their explanation, as the page plays them.
+  const texts = [lesson.title, ...readingBlocks(lesson.reading).flatMap((block) => (block.recall ? [recallPrompt(block.recall), block.recall.why] : [block.text]))].map(normalize).filter(Boolean);
   const entries = [...new Set(texts)].map((text) => ({ key: text, text }));
   const result = await syncFolder(`${courseId}/${lesson.id}`, entries);
   console.log(`  ${result.made} recorded, ${result.reused} reused, ${result.removed} removed`);
