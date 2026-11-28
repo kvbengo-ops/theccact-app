@@ -241,6 +241,7 @@ export function getFooterColumns(partner = null) {
     { label: 'Study in Canada', href: pageUrl('study-in-canada', partner) },
     { label: 'FAQ', href: pageUrl('faq', partner) },
     { label: 'Contact', href: pageUrl('contact', partner) },
+    { label: 'Student login', href: '/learn/login/' },
     { label: 'Privacy Notice', href: pageUrl('privacy', partner) },
   ];
 

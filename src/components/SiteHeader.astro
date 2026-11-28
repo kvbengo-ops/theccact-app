@@ -19,8 +19,10 @@ const navItems = getPrimaryNavItems(partner);
 const homeHref = pageUrl('', partner);
 ---
 
-<div class="announcement-bar" data-cms="announcement">
-  {BRAND.announcement}
+<div class="announcement-bar">
+  <span data-cms="announcement">{BRAND.announcement}</span>
+  <!-- Relative on purpose: the main site redirects /learn/* to the learning site when it lives elsewhere. -->
+  <a class="announcement-bar__login" href="/learn/login/">Student login</a>
 </div>
 
 <header class="site-header" data-overlay={overlay ? '' : undefined}>
@@ -154,6 +156,21 @@ const homeHref = pageUrl('', partner);
     text-align: center;
     padding: 11px 24px;
     line-height: 1.4;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 20px;
+  }
+
+  .announcement-bar__login {
+    color: var(--color-white);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .announcement-bar__login:hover {
+    color: var(--color-gold-light);
   }
 
   /* Compact navy header. On the home page it starts transparent over the film (data-overlay)
