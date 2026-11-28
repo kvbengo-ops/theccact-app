@@ -38,3 +38,20 @@ test('medical terms are marked once, whole words only, longest match first, any 
   assert.deepEqual(markTerms('Plain text.', []), ['Plain text.']);
   assert.deepEqual(markTerms('a (1+1) b', [{ term: '(1+1)' }]).length, 3);
 });
+
+test('recorded audio: lesson clips by text, term clips by name, nothing when there is no audio', async () => {
+  const { loadRecordedAudio } = await import('../src/scripts/learn-helpers.mjs');
+  const files = {
+    'c/l/index.json': { clips: [{ key: 'Hello there.', file: 'aaaaaaaaaaaaaaaa.mp3' }, { key: 'Bad', file: '../evil.mp3' }] },
+    'c/terms/index.json': { clips: [{ key: 'edema', file: 'bbbbbbbbbbbbbbbb.mp3' }] },
+  };
+  const client = (store) => ({ storage: { from: () => ({
+    download: async (path) => (store[path] ? { data: { text: async () => JSON.stringify(store[path]) } } : { error: new Error('Object not found') }),
+    createSignedUrls: async (paths) => ({ data: paths.map((p) => ({ signedUrl: `https://signed/${p}` })) }),
+  }) } });
+  const audio = await loadRecordedAudio(client(files), 'c', 'l');
+  assert.deepEqual([...audio.text], [['Hello there.', 'https://signed/c/l/aaaaaaaaaaaaaaaa.mp3']]);
+  assert.deepEqual([...audio.terms], [['edema', 'https://signed/c/terms/bbbbbbbbbbbbbbbb.mp3']]);
+  const empty = await loadRecordedAudio(client({}), 'c', 'l');
+  assert.equal(empty.text.size + empty.terms.size, 0);
+});

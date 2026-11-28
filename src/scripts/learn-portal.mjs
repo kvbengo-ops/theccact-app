@@ -38,7 +38,7 @@ import {
   sanitizeLearnNext,
   sendStudentSignInLink,
 } from './learn-helpers.mjs';
-import { markTerms, pickVoice, readingBlocks, speechChunks } from './learn-reading.mjs';
+import { markTerms, normalizeSpeech, pickVoice, readingBlocks, speechChunks } from './learn-reading.mjs';
 
 const EXTRA_ICONS = {
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
@@ -772,10 +772,49 @@ export function setupLearnPortal(root, client) {
     };
   }
 
-  function setupLessonAudio(terms, elements) {
+  // Pre-recorded Kokoro clips (the normal case once a course's audio is made). Text without a clip uses `fallback`.
+  function recordedVoice(recorded, fallback) {
+    let current = null;
+    const play = (url, speed, onstart, onend, retry) => {
+      const audio = new Audio(url);
+      current = audio;
+      audio.playbackRate = speed;
+      audio.onplaying = () => onstart?.();
+      audio.onended = () => onend?.();
+      audio.onerror = () => { if (current === audio) retry(); };
+      audio.play().catch(() => { if (current === audio) retry(); });
+    };
+    const viaFallback = (text, speed, onstart, onend) => (fallback ? fallback.speak(text, speed, onstart, onend) : onend?.());
+    return {
+      has: (text) => recorded.text.has(normalizeSpeech(text)),
+      prefetch(text) {
+        const url = recorded.text.get(normalizeSpeech(text));
+        if (url) Object.assign(new Audio(), { preload: 'auto', src: url });
+        else fallback?.prefetch?.(text);
+      },
+      speak(text, speed, onstart, onend) {
+        const url = recorded.text.get(normalizeSpeech(text));
+        if (!url) return viaFallback(text, speed, onstart, onend);
+        play(url, speed, onstart, onend, () => viaFallback(text, speed, onstart, onend));
+      },
+      sayTerm(term) {
+        const url = recorded.terms.get(term.toLowerCase());
+        if (!url) return viaFallback(term, 0.8);
+        play(url, 1, null, null, () => viaFallback(term, 0.8));
+      },
+      cancel() {
+        current?.pause();
+        current = null;
+        fallback?.cancel();
+      },
+    };
+  }
+
+  function setupLessonAudio(terms, elements, recorded) {
     const device = deviceVoice();
     const ttsUrl = root.dataset.ttsUrl;
-    const speech = ttsUrl ? kokoroVoice(ttsUrl.replace(/\/$/, ''), device) : device;
+    const live = ttsUrl ? kokoroVoice(ttsUrl.replace(/\/$/, ''), device) : device;
+    const speech = recorded.text.size || recorded.terms.size ? recordedVoice(recorded, live) : live;
     if (speech) addEventListener('pagehide', () => speech.cancel());
     const say = (text, speed, onstart, onend) => speech.speak(text, speed, onstart, onend);
 
@@ -783,7 +822,8 @@ export function setupLearnPortal(root, client) {
     const stop = $('#listen-stop');
     const rate = $('#listen-rate');
     $('#lesson-listen').hidden = !speech;
-    const items = elements.flatMap((el) => speechChunks(el.textContent).map((text) => ({ el, text })));
+    // A recorded block plays as one clip; anything else is spoken sentence by sentence.
+    const items = elements.flatMap((el) => (speech?.has?.(el.textContent) ? [{ el, text: el.textContent }] : speechChunks(el.textContent).map((text) => ({ el, text }))));
     let index = 0;
     let state = 'idle'; // idle | playing | paused
     let token = 0; // ignores end events from speech we cancelled
@@ -835,7 +875,7 @@ export function setupLearnPortal(root, client) {
       sayWord(word) {
         if (state === 'playing') halt('paused');
         speech.cancel();
-        say(word, 0.8);
+        if (speech.sayTerm) speech.sayTerm(word); else say(word, 0.8);
       },
     };
 
@@ -894,7 +934,7 @@ export function setupLearnPortal(root, client) {
         ? part
         : h('button', { type: 'button', class: 'lp-term', 'aria-haspopup': 'dialog', onclick: () => showTerm(part.term) }, part.text))))));
     $('#lesson-reading').replaceChildren(...blocks);
-    setupLessonAudio(data.glossary.filter((t) => seenTerms.has(t.term.toLowerCase())), [$('#lesson-title'), ...blocks]);
+    setupLessonAudio(data.glossary.filter((t) => seenTerms.has(t.term.toLowerCase())), [$('#lesson-title'), ...blocks], data.recorded);
     // ponytail: video player and file downloads wait for the video host and private file bucket (L05).
     $('#lesson-video-note').hidden = !lesson.video_id;
 

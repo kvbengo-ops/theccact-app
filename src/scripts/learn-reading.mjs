@@ -1,5 +1,8 @@
 // Reading tools for lessons: read aloud (browser voice) and medical-term lookups. No DOM here, so it can be tested.
 
+// Recorded clips are matched to text with this, both when recording (tts-server/generate.mjs) and when playing.
+export const normalizeSpeech = (text) => String(text ?? '').replace(/\s+/g, ' ').trim();
+
 // Lesson text: blank lines separate blocks; a block starting with "## " is a heading.
 export function readingBlocks(text) {
   return String(text ?? '').split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean)

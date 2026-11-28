@@ -4,7 +4,17 @@ Reads lesson text aloud with the open-source Kokoro voice (model `onnx-community
 
 When the site is built with `PUBLIC_TTS_URL`, the lesson page's **Listen** and **Say it** buttons use this service. Without it, or if the service is down, they use the device's own voice.
 
-## Try it locally (Windows, PowerShell)
+## Record a course (how students hear it)
+
+Students play pre-recorded clips, not live speech. After a course's lessons and medical terms are final, record them:
+
+```powershell
+npm run tts:course -- <course id>
+```
+
+This makes one MP3 per lesson title, heading and paragraph, and one per medical term, and uploads them with an `index.json` to the private `lesson-audio` bucket (`<course>/<lesson>/…`, `<course>/terms/…`). Only enrolled students can play them. Run it again after editing: unchanged clips are reused, edited text is re-recorded, unused clips are deleted. Text with no clip yet falls back to the device voice. Needs `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (read from `.env.local`) and `ffmpeg`.
+
+## Try live speech locally (Windows, PowerShell)
 
 1. Install once: `npm --prefix tts-server install`
 2. Start the voice (first start downloads the model): `npm run tts`. Leave it running; it serves `http://localhost:8880`.

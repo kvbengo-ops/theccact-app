@@ -7,7 +7,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "test": "node --test tests/*.test.mjs",
-    "tts": "npm --prefix tts-server start"
+    "tts": "npm --prefix tts-server start",
+    "tts:course": "node tts-server/generate.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",

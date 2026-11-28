@@ -1,5 +1,5 @@
 -- SAMPLE COURSE for testing the Learning Portal. Do not run on production.
--- "Medical Terminology Essentials" (CCACT): 2 modules, 3 lessons, quick checks and a glossary.
+-- "Medical Terminology Essentials" (CCACT): 3 lecture lessons, a 9-question course quiz at the end, and a glossary.
 -- Needs migrations up to 202611280001_learn_glossary.sql. Safe to re-run: it replaces the sample.
 -- Free test checkout is on: open /learn/checkout/?course=5a3b1e00-0000-4000-8000-00000000a001 to enroll yourself.
 
@@ -125,3 +125,25 @@ insert into public.glossary_terms (course_id, term, pronunciation, definition) v
   ('5a3b1e00-0000-4000-8000-00000000a001', 'STAT', 'stat', 'Immediately. A STAT order is urgent.'),
   ('5a3b1e00-0000-4000-8000-00000000a001', 'BID', 'B-I-D', 'Twice a day.'),
   ('5a3b1e00-0000-4000-8000-00000000a001', 'TID', 'T-I-D', 'Three times a day.');
+
+-- Lessons are lectures only; every question moves to a final "Course quiz" lesson (it unlocks after the lectures).
+begin;
+insert into public.modules (id, course_id, title, position) values
+  ('5a3b1e00-0000-4000-8000-00000000b003', '5a3b1e00-0000-4000-8000-00000000a001', 'Wrap-up', 2)
+on conflict (id) do nothing;
+insert into public.lessons (id, module_id, title, position, length_minutes, reading) values
+  ('5a3b1e00-0000-4000-8000-00000000c004', '5a3b1e00-0000-4000-8000-00000000b003', 'Course quiz', 0, 10,
+   'Answer these questions to finish the course. You need 6 out of 9 to pass, and you can try again as many times as you like.')
+on conflict (id) do nothing;
+update public.questions q set
+  lesson_id = '5a3b1e00-0000-4000-8000-00000000c004',
+  position = case q.lesson_id
+    when '5a3b1e00-0000-4000-8000-00000000c001' then q.position
+    when '5a3b1e00-0000-4000-8000-00000000c002' then 3 + q.position
+    else 6 + q.position end,
+  review_at = case q.lesson_id
+    when '5a3b1e00-0000-4000-8000-00000000c001' then 'Lesson 1, How medical words are built: '
+    when '5a3b1e00-0000-4000-8000-00000000c002' then 'Lesson 2, The heart and blood pressure: '
+    else 'Lesson 3, Abbreviations you will see on shift: ' end || q.review_at
+where q.lesson_id in ('5a3b1e00-0000-4000-8000-00000000c001', '5a3b1e00-0000-4000-8000-00000000c002', '5a3b1e00-0000-4000-8000-00000000c003');
+;

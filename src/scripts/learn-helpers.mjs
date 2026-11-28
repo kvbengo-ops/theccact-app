@@ -306,12 +306,16 @@ export async function loadLessonData(client, siteBrand, lessonId) {
     questions = result.data;
   }
   // Medical terms for the course. Optional: a missing glossary never blocks the lesson.
-  const glossary = await client.rpc('learn_glossary', { p_course: row.course_id }).then((r) => (r.error ? [] : r.data ?? []), () => []);
+  const [glossary, recorded] = await Promise.all([
+    client.rpc('learn_glossary', { p_course: row.course_id }).then((r) => (r.error ? [] : r.data ?? []), () => []),
+    client.storage ? loadRecordedAudio(client, row.course_id, row.lesson_id) : { text: new Map(), terms: new Map() },
+  ]);
   return {
     state: 'open',
     lesson: row,
     questions,
     glossary,
+    recorded,
     course: overview.course,
     number: index + 1,
     total: lessons.length,
@@ -538,4 +542,31 @@ export async function googleSignInEnabled(supabaseUrl, anonKey, { fetchImpl = gl
 export async function signInWithGoogle(client, redirectTo) {
   const { error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
   if (error) throw new Error('Could not start Google sign-in. Please try again or use your email.');
+}
+
+// Pre-recorded audio for a lesson and its course's medical terms (made by tts-server/generate.mjs).
+// Returns { text: Map(normalized text -> url), terms: Map(lowercase term -> url) }; empty maps when there is none.
+export async function loadRecordedAudio(client, courseId, lessonId) {
+  const none = { text: new Map(), terms: new Map() };
+  try {
+    const bucket = client.storage.from('lesson-audio');
+    const read = async (path) => {
+      const { data, error } = await bucket.download(path);
+      if (error || !data) return null;
+      try { return JSON.parse(await data.text()); } catch { return null; }
+    };
+    const [lesson, terms] = await Promise.all([read(`${courseId}/${lessonId}/index.json`), read(`${courseId}/terms/index.json`)]);
+    const wanted = [
+      ...(lesson?.clips ?? []).map((clip) => ({ map: 'text', key: clip.key, path: `${courseId}/${lessonId}/${clip.file}` })),
+      ...(terms?.clips ?? []).map((clip) => ({ map: 'terms', key: clip.key, path: `${courseId}/terms/${clip.file}` })),
+    ].filter((clip) => typeof clip.key === 'string' && /^[0-9a-f]{16}\.mp3$/.test(clip.path.split('/').pop()));
+    if (!wanted.length) return none;
+    const { data, error } = await bucket.createSignedUrls(wanted.map((clip) => clip.path), 6 * 3600);
+    if (error || !data) return none;
+    const found = { text: new Map(), terms: new Map() };
+    data.forEach((row, i) => { if (row?.signedUrl) found[wanted[i].map].set(wanted[i].key, row.signedUrl); });
+    return found;
+  } catch {
+    return none;
+  }
 }
