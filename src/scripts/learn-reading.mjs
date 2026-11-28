@@ -26,6 +26,9 @@ export function readingBlocks(text) {
   return String(text ?? '').split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean)
     .map((block) => {
       if (block.startsWith('## ')) return { heading: true, text: block.slice(3).trim() };
+      // An image on its own line: ![caption](https://...). Shown, not read aloud.
+      const image = block.match(/^!\[([^\]\n]*)\]\((https:\/\/[^\s)]+)\)$/);
+      if (image) return { heading: false, text: block, image: { alt: image[1].trim(), src: image[2] } };
       const recall = parseRecall(block);
       return recall ? { heading: false, text: block, recall } : { heading: false, text: block };
     });

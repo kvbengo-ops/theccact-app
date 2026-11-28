@@ -622,7 +622,7 @@ export function setupAdmin(root, client) {
       field(f, 'position', 'Order', 'number', item?.position ?? position, { required: true, step: '1' });
       if (table === 'lessons') {
         field(f, 'length_minutes', 'Length (minutes)', 'number', item?.length_minutes ?? 5, { min: '1', required: true });
-        field(f, 'reading', 'Reading text. Leave a blank line between paragraphs; "## " starts a heading. A practice question starts with "Recall:" (shown in place) or "Wrap-up:" (pops up at Mark as done), then one answer per line with * before the right one, then an optional "Why:" line.', 'textarea', item?.reading, { rows: 10 });
+        field(f, 'reading', 'Reading text. Leave a blank line between paragraphs; "## " starts a heading. A practice question starts with "Recall:" (shown in place) or "Wrap-up:" (pops up at Mark as done), then one answer per line with * before the right one, then an optional "Why:" line. An image goes on its own line: ![caption](https://link).', 'textarea', item?.reading, { rows: 10 });
         // Exams use this lesson's questions: a mock (unlimited tries, full review) or the final (3 tries).
         const typeId = `learn-exam-${Math.random().toString(36).slice(2)}`;
         const type = h('select', { id: typeId, name: 'exam' }, ...[['', 'Lecture'], ['mock', 'Mock exam'], ['final', 'Final exam (3 attempts)']].map(([value, text]) => h('option', { value, text })));

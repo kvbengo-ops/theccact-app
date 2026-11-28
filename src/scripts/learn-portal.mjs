@@ -826,7 +826,8 @@ export function setupLearnPortal(root, client) {
     $('#lesson-listen').hidden = !speech;
     // A recorded block plays as one clip; anything else is spoken sentence by sentence.
     // A question marker has no text: reaching it pops the question up.
-    const items = elements.flatMap((el) => (el.question ? [{ el, text: '' }]
+    const items = elements.flatMap((el) => (el.tagName === 'FIGURE' ? [] // images are shown, not read
+      : el.question ? [{ el, text: '' }]
       : speech?.has?.(el.textContent) ? [{ el, text: el.textContent }] : speechChunks(el.textContent).map((text) => ({ el, text }))));
     let index = 0;
     let state = 'idle'; // idle | playing | paused
@@ -1051,6 +1052,9 @@ export function setupLearnPortal(root, client) {
     const blocks = parsed.filter((block) => !block.recall?.wrapUp).map((block) => (block.heading
       ? h('h2', { class: 'lp-h', text: block.text })
       : block.recall ? questionMarker(block.recall)
+      : block.image ? h('figure', { class: 'lp-figure' },
+        h('img', { src: block.image.src, alt: block.image.alt, loading: 'lazy', decoding: 'async' }),
+        block.image.alt ? h('figcaption', { text: block.image.alt }) : null)
       : h('p', {}, markTerms(block.text, data.glossary, seenTerms).map((part) => (typeof part === 'string'
         ? part
         : h('button', { type: 'button', class: 'lp-term', 'aria-haspopup': 'dialog', onclick: () => showTerm(part.term) }, part.text))))));

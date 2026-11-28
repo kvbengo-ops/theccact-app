@@ -81,3 +81,11 @@ test('recall and wrap-up questions are read from the lesson text', async () => {
   assert.equal(recallSeconds(blocks[1].recall), 15);
   assert.equal(recallSeconds({ question: 'word '.repeat(80), options: ['a', 'b'] }), 30);
 });
+
+test('an image line becomes an image block; anything else stays text', async () => {
+  const { readingBlocks } = await import('../src/scripts/learn-reading.mjs');
+  const [img, notHttps, inline] = readingBlocks('![Gauge sizes and colours](https://x.supabase.co/a/b.svg)\n\n![x](http://insecure/a.png)\n\nSee ![x](https://a/b.png) here.');
+  assert.deepEqual(img.image, { alt: 'Gauge sizes and colours', src: 'https://x.supabase.co/a/b.svg' });
+  assert.equal(notHttps.image, undefined);
+  assert.equal(inline.image, undefined);
+});
