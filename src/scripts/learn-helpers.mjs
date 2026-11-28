@@ -319,6 +319,7 @@ export async function loadLessonData(client, siteBrand, lessonId) {
     course: overview.course,
     number: index + 1,
     total: lessons.length,
+    previous: index > 0 ? lessons[index - 1] : null,
     next: lessons[index + 1] ?? null,
   };
 }

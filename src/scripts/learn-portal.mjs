@@ -43,6 +43,7 @@ import { markTerms, normalizeSpeech, pickVoice, readingBlocks, speechChunks } fr
 const EXTRA_ICONS = {
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
   play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  arrowLeft: '<path d="M19 12H5M12 19l-7-7 7-7"/>',
   volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
   pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
 };
@@ -919,7 +920,7 @@ export function setupLearnPortal(root, client) {
       return;
     }
 
-    const { lesson, questions, course, number, total, next } = data;
+    const { lesson, questions, course, number, total, previous, next } = data;
     const statusEl = $('#lesson-status');
     document.title = `${lesson.title} — ${root.dataset.platformName || brandName}`;
     $('#lesson-title').textContent = lesson.title;
@@ -942,6 +943,8 @@ export function setupLearnPortal(root, client) {
     const footer = $('#lesson-footer');
     const paintFooter = () => {
       const items = [];
+      // Earlier lessons are always open, so going back never hits a lock.
+      if (previous) items.push(h('a', { class: 'btn btn--outline-navy', href: lessonUrl(previous.lessonId) }, svg('arrowLeft'), 'Previous lesson'));
       if (done) items.push(h('span', { class: 'learn-pill learn-pill--done' }, svg('check'), 'Done'));
       if (!done && !lesson.has_check) {
         items.push(h('button', {

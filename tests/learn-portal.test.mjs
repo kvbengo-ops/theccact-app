@@ -387,3 +387,23 @@ test('students must give a name, contact number and location before enrolling th
   assert.deepEqual(sent, ['learn_save_profile', { p_full_name: 'Ana Cruz', p_phone: '+1 (416) 555-0123', p_city: 'Toronto', p_province: '', p_country: 'Canada' }]);
   await assert.rejects(selfEnroll({ rpc: async () => ({ error: { hint: 'profile_required' } }) }, 'c', ''), /Add your details/);
 });
+
+test('an open lesson knows the lesson before and after it', async () => {
+  const course = '11111111-1111-4111-8111-111111111111';
+  const id = (n) => `aaaaaaa${n}-1111-4111-8111-111111111111`;
+  const outline = [1, 2, 3].map((n) => ({ module_id: 'm', module_title: 'M', lesson_id: id(n), lesson_title: `L${n}`, length_minutes: 5, done: n === 1, unlocked: n < 3 }));
+  const client = {
+    rpc: async (name) => ({
+      learn_lesson: { data: [{ lesson_id: id(2), course_id: course, title: 'L2', reading: '', has_check: false, done: false }] },
+      learn_my_courses: { data: [{ course_id: course, brand: 'ccact', title: 'C', total_lessons: 3, done_lessons: 1, next_lesson_id: id(2) }] },
+      learn_course_outline: { data: outline },
+      learn_glossary: { data: [] },
+    }[name] ?? { data: null }),
+  };
+  const data = await loadLessonData(client, 'ccact', id(2));
+  assert.equal(data.state, 'open');
+  assert.equal(data.previous.lessonId, id(1));
+  assert.equal(data.next.lessonId, id(3));
+  const first = await loadLessonData({ ...client, rpc: async (name) => (name === 'learn_lesson' ? { data: [{ lesson_id: id(1), course_id: course, title: 'L1', has_check: false }] } : client.rpc(name)) }, 'ccact', id(1));
+  assert.equal(first.previous, null);
+});
