@@ -70,6 +70,30 @@ test('bulk enrollment creates accounts and sends brand-specific sign-in links', 
   assert.ok(JSON.parse(result.body).results.every(({ ok }) => ok));
 });
 
+test('the student list includes contact details when the student gave them', async () => {
+  const rows = {
+    enrollments: [{ user_id: 'a', student_name: 'Ana', status: 'active' }, { user_id: 'b', student_name: null, status: 'active' }],
+    student_profiles: [{ user_id: 'a', phone: '+1 416 555 0123', city: 'Toronto', province: 'ON', country: 'Canada' }],
+  };
+  const handler = createHandler((url, key) => {
+    if (key === 'public') return { auth: { getUser: async () => ({ data: { user: { id: 'owner' } } }) }, rpc: async () => ({ data: true }) };
+    return {
+      auth: { admin: { getUserById: async (id) => ({ data: { user: { email: `${id}@example.com` } } }) } },
+      from(table) {
+        const result = { data: rows[table] };
+        return {
+          select() { return this; }, eq() { return this; }, in() { return this; },
+          maybeSingle: async () => ({ data: { id: 'course', brand: 'ccact' } }),
+          then(resolve) { resolve(result); },
+        };
+      },
+    };
+  });
+  const { students } = JSON.parse((await handler(event({ action: 'list', courseId: 'course' }))).body);
+  assert.deepEqual(students[0], { user_id: 'a', student_name: 'Ana', status: 'active', email: 'a@example.com', phone: '+1 416 555 0123', city: 'Toronto', province: 'ON', country: 'Canada' });
+  assert.deepEqual(students[1], { user_id: 'b', student_name: null, status: 'active', email: 'b@example.com' });
+});
+
 test('removal and email correction require an active enrollment', async () => {
   let active = false, update, changed;
   const handler = createHandler((url, key) => {

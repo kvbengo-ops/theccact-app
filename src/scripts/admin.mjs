@@ -660,13 +660,14 @@ export function setupAdmin(root, client) {
         for (const student of data.students) {
           const row = h('form', { class: 'invite-form' });
           row.append(h('p', { text: student.student_name || 'Name not supplied' }));
+          if (student.phone) row.append(h('p', { class: 'muted', text: `${student.phone} · ${[student.city, student.province, student.country].filter(Boolean).join(', ')}` }));
           field(row, 'email', 'Student email (changes their shared sign-in)', 'email', student.email, { required: true });
           const save = button('Correct email');
           const remove = h('button', { type: 'button', class: 'btn btn--danger', text: 'Remove enrollment' });
           row.append(save, remove);
           row.addEventListener('submit', async (event) => {
             event.preventDefault();
-            if (!confirm('Change this student?s sign-in email for all courses and other accounts?')) return;
+            if (!confirm("Change this student's sign-in email for all courses and other accounts?")) return;
             try { await enrollRequest({ action: 'correct', courseId: course.id, userId: student.user_id, email: row.elements.email.value }); toast('Email updated.'); await loadStudents(); } catch (error) { showError(courseError, error.message); }
           });
           remove.addEventListener('click', async () => {

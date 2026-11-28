@@ -29,10 +29,14 @@ export const createHandler = (makeClient = createClient) => async (event) => {
     if (action === 'list') {
       const { data, error } = await service.from('enrollments').select('user_id,student_name,status').eq('course_id', courseId).eq('status', 'active');
       if (error) throw error;
+      // Contact details students give at checkout (none for students the owner enrolled directly).
+      const profiles = data.length ? await service.from('student_profiles').select('user_id,phone,city,province,country').in('user_id', data.map((row) => row.user_id)) : { data: [] };
+      if (profiles.error) throw profiles.error;
       const students = await Promise.all(data.map(async (row) => {
         const result = await service.auth.admin.getUserById(row.user_id);
         if (result.error) throw result.error;
-        return { ...row, email: result.data.user.email };
+        const { user_id: _, ...profile } = profiles.data.find((p) => p.user_id === row.user_id) ?? {};
+        return { ...row, email: result.data.user.email, ...profile };
       }));
       return response(200, { students });
     }
