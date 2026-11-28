@@ -1,0 +1,13 @@
+{
+  "name": "ccact-tts-server",
+  "private": true,
+  "type": "module",
+  "description": "Kokoro text-to-speech service for the Learning Portal. Runs locally for testing and on Lightsail.",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "kokoro-js": "1.2.1"
+  }
+}

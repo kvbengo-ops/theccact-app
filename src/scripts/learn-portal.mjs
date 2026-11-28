@@ -708,25 +708,76 @@ export function setupLearnPortal(root, client) {
   // Read aloud with the device's own voice (free, no setup), plus medical-term cards.
   // ponytail: browser voices vary by device; swap `say` for pre-made audio files if the client wants one natural voice everywhere.
   let lessonAudio = null;
-  function setupLessonAudio(terms, elements) {
-    const speech = 'speechSynthesis' in window ? window.speechSynthesis : null;
+
+  // The device's own voice. Free and offline; sound varies by device.
+  function deviceVoice() {
+    const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
+    if (!synth) return null;
     let voice = null;
-    if (speech) {
-      const loadVoice = () => { voice = pickVoice(speech.getVoices()); };
-      loadVoice();
-      speech.addEventListener?.('voiceschanged', loadVoice);
-      speech.cancel();
-      addEventListener('pagehide', () => speech.cancel());
-    }
-    const say = (text, speed, onstart, onend) => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      if (voice) { utterance.voice = voice; utterance.lang = voice.lang; } else utterance.lang = 'en-CA';
-      utterance.rate = speed;
-      utterance.onstart = onstart ?? null;
-      utterance.onend = onend ?? null;
-      utterance.onerror = onend ?? null;
-      speech.speak(utterance);
+    const loadVoice = () => { voice = pickVoice(synth.getVoices()); };
+    loadVoice();
+    synth.addEventListener?.('voiceschanged', loadVoice);
+    synth.cancel();
+    return {
+      speak(text, speed, onstart, onend) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        if (voice) { utterance.voice = voice; utterance.lang = voice.lang; } else utterance.lang = 'en-CA';
+        utterance.rate = speed;
+        utterance.onstart = onstart ?? null;
+        utterance.onend = onend ?? null;
+        utterance.onerror = onend ?? null;
+        synth.speak(utterance);
+      },
+      cancel: () => synth.cancel(),
     };
+  }
+
+  // Kokoro voice from our TTS service (PUBLIC_TTS_URL; local testing for now). Falls back to the device voice if it fails.
+  function kokoroVoice(baseUrl, fallback) {
+    const clips = new Map(); // text -> Promise<object URL>
+    let current = null;
+    const clip = (text) => {
+      if (!clips.has(text)) {
+        clips.set(text, fetch(`${baseUrl}/speak`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) })
+          .then((res) => { if (!res.ok) throw new Error('TTS failed'); return res.blob(); })
+          .then((blob) => URL.createObjectURL(blob))
+          .catch((error) => { clips.delete(text); throw error; }));
+      }
+      return clips.get(text);
+    };
+    return {
+      prefetch: (text) => { clip(text).catch(() => {}); },
+      speak(text, speed, onstart, onend) {
+        const mine = {};
+        current = mine;
+        clip(text).then((url) => {
+          if (current !== mine) return;
+          const audio = new Audio(url);
+          audio.playbackRate = speed;
+          mine.audio = audio;
+          audio.onplaying = () => onstart?.();
+          audio.onended = () => onend?.();
+          audio.onerror = () => onend?.();
+          audio.play().catch(() => onend?.());
+        }, () => {
+          if (current !== mine) return;
+          if (fallback) fallback.speak(text, speed, onstart, onend); else onend?.();
+        });
+      },
+      cancel() {
+        current?.audio?.pause();
+        current = null;
+        fallback?.cancel();
+      },
+    };
+  }
+
+  function setupLessonAudio(terms, elements) {
+    const device = deviceVoice();
+    const ttsUrl = root.dataset.ttsUrl;
+    const speech = ttsUrl ? kokoroVoice(ttsUrl.replace(/\/$/, ''), device) : device;
+    if (speech) addEventListener('pagehide', () => speech.cancel());
+    const say = (text, speed, onstart, onend) => speech.speak(text, speed, onstart, onend);
 
     const play = $('#listen-play');
     const stop = $('#listen-stop');
@@ -758,6 +809,8 @@ export function setupLearnPortal(root, client) {
         index += 1;
         step();
       });
+      // Kokoro takes a moment per sentence on a small server, so ask for the next one while this one plays.
+      if (items[index + 1]) speech.prefetch?.(items[index + 1].text);
     };
     // Pausing cancels and keeps the place: speechSynthesis.pause() is unreliable on phones.
     const halt = (next) => {

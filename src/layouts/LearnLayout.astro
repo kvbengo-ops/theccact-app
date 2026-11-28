@@ -70,6 +70,7 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         data-state={requiresAuth ? 'loading' : 'ready'}
         data-supabase-url={supabaseUrl}
         data-supabase-key={supabaseKey}
+        data-tts-url={import.meta.env.PUBLIC_TTS_URL || undefined}
       >
         <div id="learn-boot" class="learn-boot" role="status" aria-live="polite">
           <p class="learn-boot__text">Checking your account…</p>
